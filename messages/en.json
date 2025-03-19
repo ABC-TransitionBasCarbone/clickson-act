@@ -1,0 +1,123 @@
+{
+  "Header": {
+    "home": "Home",
+    "calculator": "Calculator",
+    "monitoring": "Monitoring"
+  },
+
+  "User": {
+    "username": "Username",
+    "password": "Password",
+    "passcode": "Passcode (ex. AUXCUVAO)",
+    "login": "Login",
+    "signup": "Sign Up"
+  },
+
+  "HomePage": {
+    "subtitle": "Eco-friendly Calculator",
+    "titleText1": "Measure",
+    "titleText2": "the greenhouse gas emissions of your school",
+    "heroText1": "Simple, intuitive, and accurate calculations to help your school track and reduce its environmental impact.",
+    "button1": "Get Started",
+    "button2": "Learn More"
+  },
+  "Calculator": {
+    "titleText1": "CALCULATOR",
+    "titleText2": "Let's measure the greenhouse gas emissions of your institution!",
+    "heroText1": "Use the login form to access your dashboard, or ask your teacher to invite you.",
+    "howItWorksTitle": "How It Works",
+    "howItWorksBox1Title": "Input Data",
+    "howItWorksBox2Title": "Get Insights",
+    "howItWorksBox3Title": "Track Progress",
+    "howItWorksBox1Text": "Enter your school's current emissions data",
+    "howItWorksBox2Text": "Receive personalized reduction strategies",
+    "howItWorksBox3Text": "Monitor your impact over time",
+    "button1": "I am a Student",
+    "button2": "I am a Teacher",
+    "joinClassroom": "Join Classroom",
+    "joinPasscode": "Join with Passcode"
+  },
+
+  "StudentCalculator": {
+    "title": "Student Calculator",
+    "subtitle": "Enter your school's current emissions and discover actions to reduce them",
+    "currentEmissionsTitle": "Current Emissions",
+    "currentEmissionsDescription": "Enter your school's estimated CO2 emissions in kg CO2e",
+    "currentEmissionsPlaceholder": "Enter emissions in kg CO2e",
+    "calculateButton": "Calculate",
+    "availableActions": "Available Actions",
+    "totalReductionTitle": "Total Potential Reduction",
+    "totalReductionDescription": "Based on {count} selected actions",
+    "emissionsTitle1": "Emission 1",
+    "emissionsTitle2": "Emission 2",
+    "emissionsTitle3": "Emission 3",
+    "emissionsTitle4": "Emission 4",
+    "emissionsTitle5": "Emission 5",
+    "addCustomAction": "Add Action",
+    "customActionWarning": "Please complete all required fields",
+    "schoolGoalTitle": "School Goal",
+    "schoolGoalReduction": "Reduction",
+    "schoolGoalProgress": "Total Current",
+    "schoolCurrentProgress": "Based on selected actions",
+    "schoolGoalGoal": "Goal",
+    "schoolGoalDescription": "Track your progress toward the school's emissions reduction target",
+    "actions": {
+      "switchToLED": {
+        "title": "Switch to LED Lighting",
+        "description": "Replace all traditional bulbs with LED alternatives"
+      },
+      "startComposting": {
+        "title": "Start Composting",
+        "description": "Implement a school-wide composting program"
+      },
+      "reduceCarUsage": {
+        "title": "Reduce Car Usage",
+        "description": "Encourage walking, cycling, or public transport"
+      },
+      "implementRecycling": {
+        "title": "Implement Recycling",
+        "description": "Set up comprehensive recycling stations"
+      }
+    }
+  },
+
+  "TeacherDashboard": {
+    "teacherDashboard": "Teacher Dashboard",
+    "manageProjects": "Manage your projects and track student progress",
+    "addNewProject": "Add New Project",
+    "totalProjects": "Total Projects",
+    "activeProjects": "{count} active",
+    "totalStudents": "Total Students",
+    "acrossAllProjects": "Across all projects",
+    "emissionReduction": "Emission Reduction",
+    "averageReduction": "Average across all projects",
+    "activeProjectsTitle": "Active Projects",
+    "students": "Students",
+    "startDate": "Start Date",
+    "currentEmissions": "Current Emissions",
+    "reduction": "Reduction",
+    "viewDetails": "View Details",
+    "status": {
+      "active": "Active",
+      "completed": "Completed",
+      "pending": "Pending"
+    }
+  },
+
+  "MonitoringPage": {
+    "title": "Monitoring Dashboard",
+    "subtitle": "Track your progress and plan future actions",
+    "completedActionsTitle": "Completed Actions",
+    "completedActionsCount": "{count} actions",
+    "completedActionsDescription": "Actions completed since the project started",
+    "completedActionsViewAll": "View All Actions",
+    "availableActionsTitle": "Available Actions",
+    "availableActionsCount": "{count} options",
+    "availableActionsDescription": "Recommended actions to reduce emissions",
+    "availableActionsViewAll": "View All Available Actions",
+    "viewAll": "View All",
+    "effortLow": "Low effort",
+    "effortMedium": "Medium effort",
+    "effortHigh": "High effort"
+  }
+}
