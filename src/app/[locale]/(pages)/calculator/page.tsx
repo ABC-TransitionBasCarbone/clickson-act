@@ -1,11 +1,13 @@
 "use client";
+
 import React from "react";
 import { useTranslations } from "next-intl";
 import Image from "next/image";
-import Modal from "@/components/Modal";
-import { KeyRound, RectangleEllipsis, User } from "lucide-react";
-import { Link } from "@/i18n/navigation";
 import { motion } from "motion/react";
+import Modal from "@/components/Modal";
+import SignUpForm from "@/components/User/SignUpForm";
+import PassCodeForm from "@/components/User/PassCodeForm ";
+import LoginForm from "@/components/User/LoginForm ";
 
 const HeroSection = () => {
   const t = useTranslations();
@@ -30,19 +32,20 @@ const HeroSection = () => {
   );
 };
 
-const ActionButtons = ({ openModal }: { openModal: (id: string) => void }) => {
+const ActionButtons = () => {
   const t = useTranslations();
+
   return (
     <div className="mt-15 flex w-full justify-center gap-5">
       <button
-        className="btn btn-primary w-fit rounded-full font-normal"
-        onClick={() => openModal("my_modal_1")}
+        className="btn btn-primary rounded-full font-normal"
+        onClick={() => openModal("passcode")}
       >
         {t("Calculator.button1")}
       </button>
       <button
-        className="btn btn-soft w-fit rounded-full bg-white font-normal"
-        onClick={() => openModal("my_modal_2")}
+        className="btn btn-soft rounded-full bg-white font-normal"
+        onClick={() => openModal("login")}
       >
         {t("Calculator.button2")}
       </button>
@@ -84,100 +87,34 @@ const HowItWorks = () => {
   );
 };
 
-const LoginForm = () => {
-  const t = useTranslations();
-  return (
-    <>
-      <label className="input validator w-full">
-        <User strokeWidth={1.5} size={20} />
-        <input
-          type="text"
-          required
-          placeholder={t("User.username")}
-          pattern="[A-Za-z][A-Za-z0-9\-]*"
-          minLength={3}
-          maxLength={30}
-        />
-      </label>
-      <label className="input validator w-full">
-        <KeyRound strokeWidth={1.5} size={20} />
-
-        <input
-          type="password"
-          required
-          placeholder={t("User.password")}
-          minLength={8}
-        />
-      </label>
-      <Link
-        href={"/dashboard/styfrstn"}
-        className="btn btn-primary mt-4 capitalize"
-      >
-        {t("User.login")}
-      </Link>
-      <button className="btn btn-link capitalize">{t("User.signup")}</button>
-    </>
-  );
-};
-
-const PasscodeForm = () => {
-  const t = useTranslations();
-  return (
-    <>
-      <label className="input validator w-full">
-        <User strokeWidth={1.5} size={20} />
-
-        <input
-          type="input"
-          required
-          placeholder={t("User.username")}
-          pattern="[A-Za-z][A-Za-z0-9\-]*"
-          minLength={3}
-          maxLength={30}
-        />
-      </label>
-      <label className="input validator w-full">
-        <RectangleEllipsis strokeWidth={1.5} size={20} />
-        <input
-          type="password"
-          required
-          placeholder={t("User.passcode")}
-          minLength={8}
-        />
-      </label>
-      <Link
-        href={"/calculator/student/styfrstn"}
-        className="btn btn-primary mt-4"
-      >
-        {t("Calculator.joinPasscode")}
-      </Link>
-    </>
-  );
+const openModal = (id: string) => {
+  const modal = document.getElementById(id) as HTMLDialogElement | null;
+  if (modal) modal.showModal();
 };
 
 const Calculator = () => {
   const t = useTranslations();
-  const openModal = (id: string) => {
-    const modal = document.getElementById(id) as HTMLDialogElement | null;
-    if (modal) modal.showModal();
-  };
 
   return (
     <div className="relative flex h-[calc(100vh-6rem)] w-full flex-col justify-between pt-15">
-      <div className="container mx-auto mt-0 flex w-full flex-1 flex-col items-start px-4 lg:justify-between">
+      <div className="container mx-auto flex flex-1 flex-col items-start px-4 lg:justify-between">
         <HeroSection />
-
         <HowItWorks />
-
-        <ActionButtons openModal={openModal} />
+        <ActionButtons />
       </div>
 
-      <Modal id="my_modal_1" title={t("Calculator.joinClassroom")}>
-        <PasscodeForm />
+      {/* Modals */}
+      <Modal id="passcode" title={t("Calculator.joinClassroom")}>
+        <PassCodeForm />
       </Modal>
-      <Modal id="my_modal_2" title={t("User.login")}>
+      <Modal id="login" title={t("User.login")}>
         <LoginForm />
       </Modal>
+      <Modal id="signup" title={t("User.signup")}>
+        <SignUpForm />
+      </Modal>
+
+      {/* Background Image */}
       <Image
         src="/images/waveBG.png"
         alt="waveBG"

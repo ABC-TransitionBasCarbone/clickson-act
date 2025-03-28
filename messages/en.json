@@ -8,9 +8,17 @@
   "User": {
     "username": "Username",
     "password": "Password",
+    "email": "Email",
     "passcode": "Passcode (ex. AUXCUVAO)",
     "login": "Login",
-    "signup": "Sign Up"
+    "signup": "Sign Up",
+    "firstName": "First Name",
+    "lastName": "Last Name",
+    "country": "Country",
+    "city": "City",
+    "postalCode": "Postal Code",
+    "selectSchool": "Select School",
+    "enterSchool": "Enter School"
   },
 
   "HomePage": {
