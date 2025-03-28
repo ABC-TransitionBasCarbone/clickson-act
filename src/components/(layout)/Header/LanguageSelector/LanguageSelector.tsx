@@ -31,7 +31,7 @@ const LanguageSelector = () => {
   return (
     <div className="relative" ref={dropdownRef}>
       <button
-        className="btn-primary btn rounded-3xl font-normal"
+        className="btn-primary btn border-secondary bg-secondary rounded-3xl font-normal text-white"
         onClick={toggleDropdown}
         aria-haspopup="true"
         aria-expanded={isOpen}
@@ -40,7 +40,7 @@ const LanguageSelector = () => {
       </button>
 
       {isOpen && (
-        <ul className="bg-primary absolute right-0 mt-1.5 w-full rounded-2xl text-white shadow-md">
+        <ul className="bg-secondary absolute right-0 mt-1.5 w-full rounded-2xl text-white shadow-md">
           {locales.map((lang, index) => {
             const newPath = `/${lang.toLowerCase()}${pathname.replace(/^\/\w+/, "")}`;
             const isFirst = index === 0;
