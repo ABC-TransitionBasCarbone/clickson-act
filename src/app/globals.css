@@ -9,18 +9,6 @@
   --font-roboto: "Roboto", "sans-serif";
 
   --breakpoint-3xl: 1920px;
-
-  --color-primary-50: oklch(0.97 0.05 307);
-  --color-primary-100: oklch(0.94 0.06 307);
-  --color-primary-200: oklch(0.88 0.08 307);
-  --color-primary-300: oklch(0.78 0.1 307);
-  --color-primary-400: oklch(0.65 0.12 307);
-  --color-primary-500: oklch(0.54 0.14 307); /* Primary color */
-  --color-primary-600: oklch(0.46 0.13 307);
-  --color-primary-700: oklch(0.38 0.12 307);
-  --color-primary-800: oklch(0.28 0.1 307);
-  --color-primary-900: oklch(0.2 0.08 307);
-  --color-primary-950: oklch(0.13 0.06 307);
 }
 
 :root {
@@ -28,6 +16,8 @@
   --foreground: #171717;
 
   --color-primary: #9c27b0;
+  --color-secondary: #1ba3ab;
+  --color-agreen: #05d690;
 }
 
 @media (prefers-color-scheme: dark) {
