@@ -89,6 +89,12 @@ const StudentCalculator: React.FC = () => {
     { value: "nature", label: "Nature", icon: <Leaf className="h-4 w-4" /> },
   ];
 
+  const EFFORT_CATEGORIES = [
+    { value: "easy", label: "Easy", color: "#00000" },
+    { value: "medium", label: "Medium", color: "#00000" },
+    { value: "hard", label: "Hard", color: "#00000" },
+  ];
+
   const openModal = (id: string) => {
     const modal = document.getElementById(id) as HTMLDialogElement | null;
     if (modal) modal.showModal();
@@ -137,10 +143,10 @@ const StudentCalculator: React.FC = () => {
             />
           </div>
 
-          <div className="mb-8">
-            {selectedActions.length > 0 && (
+          {selectedActions.length > 0 && (
+            <div className="mb-8">
               <div className="bg-primary/10! border-primary-200! card">
-                <div className="p-6">
+                <div className="p-2.5 lg:p-5">
                   <div className="flex items-center justify-between">
                     <div>
                       <h3 className="text-lg font-semibold">
@@ -157,9 +163,12 @@ const StudentCalculator: React.FC = () => {
                     </div>
                   </div>
                 </div>
+                <button className="btn mx-2.5 mt-5 w-fit self-center lg:mx-5 lg:self-end">
+                  Add All To Monitoring Screen
+                </button>
               </div>
-            )}
-          </div>
+            </div>
+          )}
 
           {/* School Goal Card */}
           <SchoolGoalCard
@@ -185,6 +194,7 @@ const StudentCalculator: React.FC = () => {
           ])
         }
         categories={CATEGORIES}
+        effortCategories={EFFORT_CATEGORIES}
       />
     </div>
   );

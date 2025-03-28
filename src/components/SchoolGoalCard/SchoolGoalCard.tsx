@@ -16,12 +16,12 @@ const SchoolGoalCard: React.FC<{
   return (
     <div className="card border-primary-200! bg-primary-50! mb-8">
       <div className="pb-2">
-        <div className="flex items-center justify-between">
-          <h3 className="flex items-center gap-2 text-2xl font-bold">
+        <div className="mb-2.5 flex items-center justify-between">
+          <h3 className="flex items-center gap-2 text-lg font-bold lg:text-2xl">
             <Target className="text-primary-600 h-5 w-5" />
             {t("schoolGoalTitle")}
           </h3>
-          <span className="text-primary-700 text-xl font-bold">
+          <span className="text-primary-700 text-md font-bold lg:text-xl">
             {schoolGoal}% {t("schoolGoalReduction")}
           </span>
         </div>

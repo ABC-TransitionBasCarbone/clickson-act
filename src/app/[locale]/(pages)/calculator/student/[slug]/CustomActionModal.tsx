@@ -12,6 +12,7 @@ interface CustomAction {
   title: string;
   description: string;
   reduction: string;
+  effort: string;
   selected: boolean;
 }
 
@@ -21,11 +22,13 @@ type NewActionInput = Omit<CustomAction, "id" | "icon" | "selected">;
 interface CustomActionModalProps {
   onAddAction: (action: CustomAction) => void;
   categories: { value: string; label: string }[];
+  effortCategories: { value: string; label: string }[];
 }
 
 const CustomActionModal: React.FC<CustomActionModalProps> = ({
   onAddAction,
   categories,
+  effortCategories,
 }) => {
   // Use a separate type for the input state
   const [newAction, setNewAction] = useState<NewActionInput>({
@@ -33,6 +36,7 @@ const CustomActionModal: React.FC<CustomActionModalProps> = ({
     title: "",
     description: "",
     reduction: "",
+    effort: "",
   });
   const t = useTranslations("StudentCalculator");
 
@@ -64,6 +68,7 @@ const CustomActionModal: React.FC<CustomActionModalProps> = ({
       title: newAction.title,
       description: newAction.description,
       reduction: newAction.reduction,
+      effort: newAction.effort,
     };
 
     onAddAction(customAction);
@@ -72,6 +77,7 @@ const CustomActionModal: React.FC<CustomActionModalProps> = ({
       title: "",
       description: "",
       reduction: "",
+      effort: "",
     });
 
     // Close modal after adding
@@ -85,7 +91,8 @@ const CustomActionModal: React.FC<CustomActionModalProps> = ({
     newAction.category === "" ||
     newAction.title === "" ||
     newAction.description === "" ||
-    newAction.reduction === "";
+    newAction.reduction === "" ||
+    newAction.effort === "";
 
   // Function to handle modal close on Cancel
   const handleCancel = () => {
@@ -144,6 +151,25 @@ const CustomActionModal: React.FC<CustomActionModalProps> = ({
               }
               className="input w-full"
             />
+          </div>
+
+          <div className="grid gap-2">
+            <label htmlFor="category">Effort</label>
+            <select
+              id="effort"
+              value={newAction.effort}
+              onChange={(e) =>
+                setNewAction({ ...newAction, effort: e.target.value })
+              }
+              className="input w-full"
+            >
+              <option value="">Select a category</option>
+              {effortCategories.map((effort) => (
+                <option key={effort.value} value={effort.value}>
+                  {effort.label}
+                </option>
+              ))}
+            </select>
           </div>
 
           <div className="grid gap-2">
