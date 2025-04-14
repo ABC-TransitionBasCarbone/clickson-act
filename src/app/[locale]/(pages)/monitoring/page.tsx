@@ -2,7 +2,7 @@
 
 import React, { useState } from "react";
 import { motion } from "framer-motion";
-import { Check, CheckCircle2, Star, ChevronRight, Pencil } from "lucide-react";
+import { Check, CheckCircle2, Star, ChevronRight } from "lucide-react";
 import SchoolGoalCard from "@/components/SchoolGoalCard";
 import { useRouter } from "@/i18n/navigation";
 import CustomActionFormModal, { CustomAction } from "@/components/ActionModal";
