@@ -2,8 +2,8 @@
 
 import React, { useState } from "react";
 import { useTranslations } from "next-intl";
-import { useRouter } from "next/navigation";
 import { User, RectangleEllipsis } from "lucide-react";
+import { useRouter } from "@/i18n/navigation";
 
 const PassCodeForm = () => {
   const t = useTranslations();
@@ -18,8 +18,7 @@ const PassCodeForm = () => {
     e.preventDefault();
     console.log("Passcode data:", formData);
 
-    // Redirect to dashboard after passcode submission
-    router.push("/dashboard");
+    router.push("/calculator/test");
   };
 
   return (
@@ -42,7 +41,7 @@ const PassCodeForm = () => {
       <label className="input validator w-full">
         <RectangleEllipsis strokeWidth={1.5} size={20} />
         <input
-          type="password"
+          type="text"
           name="passcode"
           required
           placeholder={t("User.passcode")}

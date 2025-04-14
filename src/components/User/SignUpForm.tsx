@@ -2,7 +2,7 @@
 
 import React, { useState } from "react";
 import { useTranslations } from "next-intl";
-import { useRouter } from "next/navigation";
+import { useRouter } from "@/i18n/navigation";
 import { User, KeyRound, Mail, MapPin, Globe, Building2 } from "lucide-react";
 
 const SignUpForm = () => {
