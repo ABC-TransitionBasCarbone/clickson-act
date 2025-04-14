@@ -2,11 +2,15 @@
 
 import React, { useState } from "react";
 import { motion } from "framer-motion";
-import { Check, CheckCircle2, Star, ChevronRight } from "lucide-react";
+import { Check, CheckCircle2, Star, ChevronRight, Pencil } from "lucide-react";
 import SchoolGoalCard from "@/components/SchoolGoalCard";
 import { useRouter } from "@/i18n/navigation";
+import CustomActionFormModal, { CustomAction } from "@/components/ActionModal";
 
-const Monitoring = () => {
+const Monitoring: React.FC = () => {
+  const router = useRouter();
+
+  // Example goal data
   const [goal] = useState({
     name: "Reduce School Emissions",
     target: 45,
@@ -14,40 +18,188 @@ const Monitoring = () => {
     deadline: "December 2024",
   });
 
-  const router = useRouter();
-
-  const [completedActions] = useState([
-    { id: 1, name: "Installed LED lighting", date: "2023-09-15", reduction: 8 },
+  // Stateful arrays for completed and available actions.
+  const [completedActions, setCompletedActions] = useState<CustomAction[]>([
     {
-      id: 2,
-      name: "Implemented recycling program",
-      date: "2023-10-01",
-      reduction: 12,
-    },
-    { id: 3, name: "Reduced paper usage", date: "2023-10-20", reduction: 7 },
-  ]);
-
-  const [availableActions] = useState([
-    { id: 4, name: "Implement composting", effort: "Medium", reduction: 6 },
-    {
-      id: 5,
-      name: "Switch to renewable energy",
-      effort: "High",
-      reduction: 15,
-    },
-    {
-      id: 6,
-      name: "Install water-saving fixtures",
+      id: "1",
+      category: "energy",
+      title: "Installed LED lighting",
+      description: "Replaced incandescent bulbs with energy-efficient LEDs.",
+      reduction: "8",
       effort: "Low",
-      reduction: 4,
+      manager: "John Doe",
+      nature: "energy",
+      objectives: "Reduce energy consumption by 10%",
+      keyContacts: "john.doe@example.com",
+      steps: "Audit current lighting, purchase LEDs, install them",
+      calendar: "2023-09-15",
+      indicators: "Energy bill comparison",
+      monitoring: "Monthly check",
+      performance: "Satisfactory",
+      selected: false,
+      date: "2023-09-15",
+      icon: <></>,
     },
     {
-      id: 7,
-      name: "Organize bike-to-school week",
+      id: "2",
+      category: "waste",
+      title: "Implemented recycling program",
+      description: "Introduced a systematic recycling program in the office.",
+      reduction: "12",
       effort: "Medium",
-      reduction: 9,
+      manager: "Jane Smith",
+      nature: "waste",
+      objectives: "Cut waste disposal costs by 15%",
+      keyContacts: "jane.smith@example.com",
+      steps: "Set up bins, arrange for pickups, educate staff",
+      calendar: "2023-10-01",
+      indicators: "Waste recycled vs. landfill",
+      monitoring: "Quarterly review",
+      performance: "Excellent",
+      selected: false,
+      date: "2023-10-01",
+      icon: <></>,
+    },
+    {
+      id: "3",
+      category: "nature",
+      title: "Reduced paper usage",
+      description: "Moved to digital documentation to decrease paper waste.",
+      reduction: "7",
+      effort: "Low",
+      manager: "Alice Johnson",
+      nature: "nature",
+      objectives: "Lower paper costs by 20%",
+      keyContacts: "alice.johnson@example.com",
+      steps: "Digitize records, train staff on the system",
+      calendar: "2023-10-20",
+      indicators: "Paper purchase orders",
+      monitoring: "Monthly",
+      performance: "Good",
+      selected: false,
+      date: "2023-10-20",
+      icon: <></>,
     },
   ]);
+
+  const [availableActions, setAvailableActions] = useState<CustomAction[]>([
+    {
+      id: "4",
+      category: "waste",
+      title: "Implement composting",
+      description: "",
+      reduction: "6",
+      effort: "Medium",
+      manager: "",
+      nature: "",
+      objectives: "",
+      keyContacts: "",
+      steps: "",
+      calendar: "",
+      indicators: "",
+      monitoring: "",
+      performance: "",
+      selected: false,
+      date: new Date().toISOString(),
+      icon: <></>,
+    },
+    {
+      id: "5",
+      category: "energy",
+      title: "Switch to renewable energy",
+      description: "",
+      reduction: "15",
+      effort: "High",
+      manager: "",
+      nature: "",
+      objectives: "",
+      keyContacts: "",
+      steps: "",
+      calendar: "",
+      indicators: "",
+      monitoring: "",
+      performance: "",
+      selected: false,
+      date: new Date().toISOString(),
+      icon: <></>,
+    },
+    {
+      id: "6",
+      category: "nature",
+      title: "Install water-saving fixtures",
+      description: "",
+      reduction: "4",
+      effort: "Low",
+      manager: "",
+      nature: "",
+      objectives: "",
+      keyContacts: "",
+      steps: "",
+      calendar: "",
+      indicators: "",
+      monitoring: "",
+      performance: "",
+      selected: false,
+      date: new Date().toISOString(),
+      icon: <></>,
+    },
+    {
+      id: "7",
+      category: "transport",
+      title: "Organize bike-to-school week",
+      description: "",
+      reduction: "9",
+      effort: "Medium",
+      manager: "",
+      nature: "",
+      objectives: "",
+      keyContacts: "",
+      steps: "",
+      calendar: "",
+      indicators: "",
+      monitoring: "",
+      performance: "",
+      selected: false,
+      date: new Date().toISOString(),
+      icon: <></>,
+    },
+  ]);
+
+  // Track which action is being edited and what list it belongs to.
+  const [editingAction, setEditingAction] = useState<CustomAction | null>(null);
+  const [editingType, setEditingType] = useState<
+    "completed" | "available" | null
+  >(null);
+
+  // Function to open the modal in edit mode.
+  const handleEditClick = (
+    action: CustomAction,
+    type: "completed" | "available",
+  ) => {
+    setEditingAction(action);
+    setEditingType(type);
+    const modal = document.getElementById("custom_action") as HTMLDialogElement;
+    if (modal) modal.showModal();
+  };
+
+  // Update the proper state with the edited action.
+  const handleSubmitEdit = (updatedAction: CustomAction) => {
+    if (editingType === "completed") {
+      setCompletedActions((prev) =>
+        prev.map((action) =>
+          action.id === updatedAction.id ? updatedAction : action,
+        ),
+      );
+    } else if (editingType === "available") {
+      setAvailableActions((prev) =>
+        prev.map((action) =>
+          action.id === updatedAction.id ? updatedAction : action,
+        ),
+      );
+    }
+    setEditingAction(null);
+    setEditingType(null);
+  };
 
   return (
     <div className="bg-gray-50">
@@ -90,20 +242,24 @@ const Monitoring = () => {
               {completedActions.map((action) => (
                 <div
                   key={action.id}
-                  className="flex justify-between border-b border-gray-100 pb-3 last:border-0"
+                  className="flex cursor-pointer justify-between border-b border-gray-100 pb-3 last:border-0"
+                  onClick={() => handleEditClick(action, "completed")}
                 >
                   <div className="flex items-center gap-2">
                     <Check className="h-5 w-5 text-green-600" />
                     <div>
-                      <p className="font-medium">{action.name}</p>
+                      <p className="font-medium">{action.title}</p>
                       <p className="text-xs text-gray-500">
                         {new Date(action.date).toLocaleDateString()}
                       </p>
                     </div>
                   </div>
-                  <span className="font-medium text-green-600">
-                    -{action.reduction}%
-                  </span>
+                  <div className="flex items-center gap-2">
+                    <span className="font-medium text-green-600">
+                      -{action.reduction}%
+                    </span>
+                    <ChevronRight className="h-4 w-4 cursor-pointer text-gray-600" />
+                  </div>
                 </div>
               ))}
             </div>
@@ -133,10 +289,11 @@ const Monitoring = () => {
               {availableActions.map((action) => (
                 <div
                   key={action.id}
-                  className="flex justify-between border-b border-gray-100 pb-3 last:border-0"
+                  className="flex cursor-pointer justify-between border-b border-gray-100 pb-3 last:border-0"
+                  onClick={() => handleEditClick(action, "available")}
                 >
                   <div>
-                    <p className="font-medium">{action.name}</p>
+                    <p className="font-medium">{action.title}</p>
                     <span
                       className={`rounded-full px-2 py-0.5 text-xs ${
                         action.effort === "Low"
@@ -153,12 +310,7 @@ const Monitoring = () => {
                     <span className="font-medium text-green-600">
                       -{action.reduction}%
                     </span>
-                    <ChevronRight
-                      className="h-4 w-4 cursor-pointer"
-                      onClick={() =>
-                        router.push("/calculator/student/styfrstn")
-                      }
-                    />
+                    <ChevronRight className="h-4 w-4 cursor-pointer text-gray-600" />
                   </div>
                 </div>
               ))}
@@ -172,6 +324,26 @@ const Monitoring = () => {
           </div>
         </div>
       </motion.div>
+
+      {/* Reusable modal used for editing actions in both lists */}
+      {editingAction && (
+        <CustomActionFormModal
+          mode="edit"
+          onSubmit={handleSubmitEdit}
+          categories={[
+            { value: "energy", label: "Energy" },
+            { value: "waste", label: "Waste" },
+            { value: "transport", label: "Transport" },
+            { value: "nature", label: "Nature" },
+          ]}
+          effortCategories={[
+            { value: "easy", label: "Easy" },
+            { value: "medium", label: "Medium" },
+            { value: "hard", label: "Hard" },
+          ]}
+          initialAction={editingAction}
+        />
+      )}
     </div>
   );
 };

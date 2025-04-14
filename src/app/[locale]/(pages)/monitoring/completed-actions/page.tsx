@@ -3,18 +3,124 @@
 import React, { useState } from "react";
 import { motion } from "framer-motion";
 import { Check, CheckCircle2 } from "lucide-react";
+import ActionModal from "@/components/ActionModal";
 
-const Monitoring = () => {
-  const [completedActions] = useState([
-    { id: 1, name: "Installed LED lighting", date: "2023-09-15", reduction: 8 },
+// Sample categories and effort categories
+const CATEGORIES = [
+  { value: "energy", label: "Energy" },
+  { value: "waste", label: "Waste" },
+  { value: "transport", label: "Transport" },
+  { value: "nature", label: "Nature" },
+];
+const EFFORT_CATEGORIES = [
+  { value: "easy", label: "Easy" },
+  { value: "medium", label: "Medium" },
+  { value: "hard", label: "Hard" },
+];
+
+interface CustomAction {
+  id: string;
+  icon: React.ReactNode;
+  category: string;
+  title: string;
+  description: string;
+  reduction: string;
+  effort: string;
+  manager: string;
+  nature: string;
+  objectives: string;
+  keyContacts: string;
+  steps: string;
+  calendar: string;
+  indicators: string;
+  monitoring: string;
+  performance: string;
+  selected: boolean;
+  date: string;
+}
+
+const Monitoring: React.FC = () => {
+  // Sample data – note additional fields for more details
+  const [completedActions, setCompletedActions] = useState<CustomAction[]>([
     {
-      id: 2,
-      name: "Implemented recycling program",
-      date: "2023-10-01",
-      reduction: 12,
+      id: "1",
+      category: "energy",
+      title: "Installed LED lighting",
+      description: "Replaced incandescent bulbs with energy-efficient LEDs.",
+      reduction: "8",
+      effort: "easy",
+      manager: "John Doe",
+      nature: "energy",
+      objectives: "Reduce energy consumption by 10%",
+      keyContacts: "john.doe@example.com",
+      steps: "Audit current lighting, purchase LEDs, install",
+      calendar: "2023-09-15",
+      indicators: "Energy bill before/after",
+      monitoring: "Monthly check",
+      performance: "Satisfactory",
+      selected: false,
+      date: "2023-09-15",
+      icon: <></>,
     },
-    { id: 3, name: "Reduced paper usage", date: "2023-10-20", reduction: 7 },
+    {
+      id: "2",
+      category: "waste",
+      title: "Implemented recycling program",
+      description: "Introduced a systematic recycling program in the office.",
+      reduction: "12",
+      effort: "medium",
+      manager: "Jane Smith",
+      nature: "waste",
+      objectives: "Cut waste disposal costs by 15%",
+      keyContacts: "jane.smith@example.com",
+      steps: "Set up bins, arrange for pickups, educate staff",
+      calendar: "2023-10-01",
+      indicators: "Waste recycled vs. sent to landfill",
+      monitoring: "Quarterly review",
+      performance: "Excellent",
+      selected: false,
+      date: "2023-10-01",
+      icon: <></>,
+    },
+    {
+      id: "3",
+      category: "nature",
+      title: "Reduced paper usage",
+      description: "Moved to digital documentation to decrease paper waste.",
+      reduction: "7",
+      effort: "easy",
+      manager: "Alice Johnson",
+      nature: "nature",
+      objectives: "Lower paper costs by 20%",
+      keyContacts: "alice.johnson@example.com",
+      steps: "Digitize records, train staff on new systems",
+      calendar: "2023-10-20",
+      indicators: "Paper purchase orders",
+      monitoring: "Monthly",
+      performance: "Good",
+      selected: false,
+      date: "2023-10-20",
+      icon: <></>,
+    },
   ]);
+
+  const [editingAction, setEditingAction] = useState<CustomAction | null>(null);
+
+  const handleActionClick = (action: CustomAction) => {
+    setEditingAction(action);
+    const modal = document.getElementById("custom_action") as HTMLDialogElement;
+    if (modal) modal.showModal();
+  };
+
+  const handleSubmitEdit = (updatedAction: CustomAction) => {
+    setCompletedActions((prevActions) =>
+      prevActions.map((action) =>
+        action.id === updatedAction.id
+          ? { ...updatedAction, date: action.date }
+          : action,
+      ),
+    );
+  };
 
   return (
     <div className="bg-gray-50">
@@ -50,12 +156,13 @@ const Monitoring = () => {
             {completedActions.map((action) => (
               <div
                 key={action.id}
-                className="flex justify-between border-b border-gray-100 pb-3 last:border-0"
+                className="flex cursor-pointer justify-between rounded-md border-b border-gray-100 p-2 pb-3 last:border-0 hover:bg-gray-100"
+                onClick={() => handleActionClick(action)}
               >
                 <div className="flex items-center gap-2">
                   <Check className="h-5 w-5 text-green-600" />
                   <div>
-                    <p className="font-medium">{action.name}</p>
+                    <p className="font-medium">{action.title}</p>
                     <p className="text-xs text-gray-500">
                       {new Date(action.date).toLocaleDateString()}
                     </p>
@@ -69,6 +176,14 @@ const Monitoring = () => {
           </div>
         </div>
       </motion.div>
+
+      <ActionModal
+        mode="edit"
+        onSubmit={handleSubmitEdit}
+        categories={CATEGORIES}
+        effortCategories={EFFORT_CATEGORIES}
+        initialAction={editingAction ?? undefined}
+      />
     </div>
   );
 };

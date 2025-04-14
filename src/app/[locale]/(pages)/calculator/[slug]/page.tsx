@@ -3,7 +3,7 @@ import React, { useState } from "react";
 import { motion } from "framer-motion";
 import { Leaf, Car, Zap, Recycle } from "lucide-react";
 import { useTranslations } from "next-intl";
-import CustomActionModal from "./CustomActionModal";
+import ActionModal from "@/components/ActionModal";
 import SchoolGoalCard from "@/components/SchoolGoalCard";
 import ActionList from "./ActionList";
 import { Action } from "@/types/Action";
@@ -163,7 +163,7 @@ const StudentCalculator: React.FC = () => {
                     </div>
                   </div>
                 </div>
-                <button className="btn mx-2.5 w-fit self-center lg:mx-5 lg:self-end">
+                <button className="btn btn-soft-primary mx-2.5 w-fit self-center lg:mx-5 lg:self-end">
                   Add All To Monitoring Screen
                 </button>
               </div>
@@ -179,8 +179,10 @@ const StudentCalculator: React.FC = () => {
         </div>
       </motion.div>
 
-      <CustomActionModal
-        onAddAction={(action) =>
+      {/* New action modal in create mode */}
+      <ActionModal
+        mode="create"
+        onSubmit={(action) =>
           setActions((prev) => [
             ...prev,
             {
