@@ -2,7 +2,7 @@
 
 import React, { useState } from "react";
 import { motion } from "framer-motion";
-import { PlusCircle, Users, BarChart3, Building } from "lucide-react";
+import { PlusCircle, Users, BarChart3, Building, Pencil } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
 
@@ -53,19 +53,66 @@ const TeacherDashboard: React.FC = () => {
     },
   ]);
 
-  const handleAddProject = () => {
-    const newProject: Project = {
-      id: Date.now().toString(),
-      name: "New Project",
-      school: "Your School",
+  // State for controlling the Project Modal
+  const [isProjectModalOpen, setIsProjectModalOpen] = useState(false);
+  const [projectForm, setProjectForm] = useState({
+    name: "",
+    school: "",
+    students: 0,
+    startDate: "",
+    emissions: 0,
+    reduction: 0,
+  });
+
+  // State for controlling the School Goal Modal
+  const [isSchoolGoalModalOpen, setIsSchoolGoalModalOpen] = useState(false);
+  const [schoolGoal, setSchoolGoal] = useState(90);
+
+  // Open the Project Modal and reset form
+  const openProjectModal = () => {
+    setProjectForm({
+      name: "",
+      school: "",
       students: 0,
       startDate: new Date().toISOString().split("T")[0],
-      status: "pending",
       emissions: 0,
       reduction: 0,
+    });
+    setIsProjectModalOpen(true);
+  };
+
+  // Handle the project form submission
+  const handleProjectSubmit = () => {
+    const newProject: Project = {
+      id: Date.now().toString(),
+      name: projectForm.name || "New Project",
+      school: projectForm.school || "Your School",
+      students: projectForm.students || 0,
+      startDate: projectForm.startDate,
+      status: "pending",
+      emissions: projectForm.emissions,
+      reduction: projectForm.reduction,
     };
 
     setProjects([...projects, newProject]);
+    setIsProjectModalOpen(false);
+  };
+
+  // Handle input changes for project form
+  const handleProjectFormChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setProjectForm((prev) => ({
+      ...prev,
+      [name]:
+        name === "students" || name === "emissions" || name === "reduction"
+          ? Number(value)
+          : value,
+    }));
+  };
+
+  // Handle the school goal update
+  const handleSchoolGoalSubmit = () => {
+    setIsSchoolGoalModalOpen(false);
   };
 
   return (
@@ -86,7 +133,7 @@ const TeacherDashboard: React.FC = () => {
           </div>
           <button
             className="bg-primary-600 hover:bg-primary-700 btn btn-primary mt-4 md:mt-0"
-            onClick={handleAddProject}
+            onClick={openProjectModal}
           >
             <PlusCircle className="mr-2 h-4 w-4" />
             {t("addNewProject")}
@@ -94,19 +141,21 @@ const TeacherDashboard: React.FC = () => {
         </div>
 
         <div className="mb-8 grid gap-4 md:grid-cols-3">
-          <div className="card">
+          <div className="card relative">
             <div className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <h3 className="text-sm font-medium">{t("totalProjects")}</h3>
+              <h3 className="text-sm font-medium">{t("schoolGoal")}</h3>
               <BarChart3 className="text-muted-foreground h-4 w-4" />
             </div>
             <div>
-              <div className="text-2xl font-bold">{projects.length}</div>
+              <div className="text-2xl font-bold">{schoolGoal}%</div>
               <p className="text-muted-foreground text-xs">
-                {t("activeProjects", {
-                  count: projects.filter((p) => p.status === "active").length,
-                })}
+                {t("emissionReductionGoal")}
               </p>
             </div>
+            <Pencil
+              onClick={() => setIsSchoolGoalModalOpen(true)}
+              className="text-muted-foreground absolute right-5 bottom-5 h-4 w-4 cursor-pointer"
+            />
           </div>
 
           <div className="card">
@@ -153,7 +202,7 @@ const TeacherDashboard: React.FC = () => {
               className="card transition-shadow hover:shadow-md"
             >
               <div>
-                <div className="flex items-start justify-between">
+                <div className="mb-5 flex items-start justify-between text-xl font-bold">
                   <h3>{project.name}</h3>
                   <span
                     className={`rounded-full px-2 py-1 text-xs font-medium ${
@@ -167,7 +216,6 @@ const TeacherDashboard: React.FC = () => {
                     {t(`status.${project.status}`)}
                   </span>
                 </div>
-                <p>{project.school}</p>
               </div>
               <div>
                 <div className="grid grid-cols-2 gap-4 text-sm">
@@ -207,6 +255,101 @@ const TeacherDashboard: React.FC = () => {
           ))}
         </div>
       </motion.div>
+
+      {/* Project Creation Modal */}
+      {isProjectModalOpen && (
+        <div className="modal modal-open">
+          <div className="modal-box">
+            <h3 className="text-lg font-bold">{t("createNewProject")}</h3>
+            <div className="space-y-4 py-4">
+              <div>
+                <label htmlFor="name" className="label">
+                  <span className="label-text">{t("projectNameLabel")}</span>
+                </label>
+                <input
+                  type="text"
+                  id="name"
+                  name="name"
+                  placeholder={t("projectNamePlaceholder")}
+                  className="input input-bordered w-full"
+                  value={projectForm.name}
+                  onChange={handleProjectFormChange}
+                />
+              </div>
+              <div>
+                <label htmlFor="startDate" className="label">
+                  <span className="label-text">{t("startDateLabel")}</span>
+                </label>
+                <input
+                  type="date"
+                  id="startDate"
+                  name="startDate"
+                  className="input input-bordered w-full"
+                  value={projectForm.startDate}
+                  onChange={handleProjectFormChange}
+                />
+              </div>
+              <div>
+                <label htmlFor="emissions" className="label">
+                  <span className="label-text">{t("emissionsLabel")}</span>
+                </label>
+                <input
+                  type="number"
+                  id="emissions"
+                  name="emissions"
+                  placeholder={t("emissionsPlaceholder")}
+                  className="input input-bordered w-full"
+                  value={projectForm.emissions}
+                  onChange={handleProjectFormChange}
+                />
+              </div>
+            </div>
+            <div className="modal-action">
+              <button
+                className="btn"
+                onClick={() => setIsProjectModalOpen(false)}
+              >
+                {t("cancel")}
+              </button>
+              <button className="btn btn-primary" onClick={handleProjectSubmit}>
+                {t("submit")}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* School Goal Editing Modal */}
+      {isSchoolGoalModalOpen && (
+        <div className="modal modal-open">
+          <div className="modal-box">
+            <h3 className="text-lg font-bold">{t("editSchoolGoal")}</h3>
+            <div className="py-4">
+              <input
+                type="number"
+                placeholder={t("schoolGoal")}
+                className="input input-bordered w-full"
+                value={schoolGoal}
+                onChange={(e) => setSchoolGoal(Number(e.target.value))}
+              />
+            </div>
+            <div className="modal-action">
+              <button
+                className="btn"
+                onClick={() => setIsSchoolGoalModalOpen(false)}
+              >
+                {t("cancel")}
+              </button>
+              <button
+                className="btn btn-primary"
+                onClick={handleSchoolGoalSubmit}
+              >
+                {t("save")}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

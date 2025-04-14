@@ -1,16 +1,13 @@
 "use client";
 import React, { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-
 import {
   ArrowLeft,
   Users,
   School,
-  BarChart3,
   Clock,
   Leaf,
   Share2,
-  Download,
   Edit,
 } from "lucide-react";
 
@@ -23,6 +20,7 @@ const ProjectDetails: React.FC = () => {
   const router = useRouter();
   const [project, setProject] = useState<Project | null>(null);
   const [loading, setLoading] = useState(true);
+  const [shareButtonText, setShareButtonText] = useState("Share");
 
   useEffect(() => {
     // In a real app, fetch project details from API
@@ -54,6 +52,22 @@ const ProjectDetails: React.FC = () => {
       setLoading(false);
     }, 1000);
   }, [projectId]);
+
+  const handleShareClick = () => {
+    // Copy current URL to clipboard
+    navigator.clipboard
+      .writeText(window.location.href)
+      .then(() => {
+        setShareButtonText("Link Copied");
+        // Reset button text after 2 seconds
+        setTimeout(() => {
+          setShareButtonText("Share");
+        }, 2000);
+      })
+      .catch((err) => {
+        console.error("Failed to copy URL: ", err);
+      });
+  };
 
   if (loading) {
     return (
@@ -100,7 +114,7 @@ const ProjectDetails: React.FC = () => {
         <div className="mb-6 flex items-center">
           <button
             className="btn btn-ghost btn-sm mr-4"
-            onClick={() => router.push("/teacher-dashboard")}
+            onClick={() => router.back()}
           >
             <ArrowLeft className="mr-2 h-4 w-4" />
             Back
@@ -170,8 +184,8 @@ const ProjectDetails: React.FC = () => {
             </span>
             <div>
               <p>{project.description}</p>
-              <div className="mt-6 flex items-center border-t border-gray-100 pt-4">
-                <h3 className="ont-medium">Current Status:</h3>
+              <div className="mt-6 flex items-center gap-5 border-t border-gray-100 pt-4">
+                <h3 className="font-medium">Current Status:</h3>
                 <div className="flex items-center">
                   <span
                     className={`rounded-full px-3 py-1 text-sm font-medium ${
@@ -188,22 +202,27 @@ const ProjectDetails: React.FC = () => {
                 </div>
               </div>
             </div>
-            <div className="mt-2.5 justify-between">
+            <div className="mt-auto flex justify-between">
               <button className="btn-outline btn btn-sm">
                 <Edit className="mr-2 h-4 w-4" />
                 Edit Project
               </button>
-              <button className="btn-outline btn btn-sm">
+              <button
+                className="btn-outline btn btn-sm"
+                onClick={handleShareClick}
+              >
                 <Share2 className="mr-2 h-4 w-4" />
-                Share
+                {shareButtonText}
               </button>
             </div>
           </div>
 
           <div className="card flex-1">
             <span>
-              <h3>Carbon Reduction Actions</h3>
-              <div>Recent actions taken to reduce emissions</div>
+              <h3 className="text-2xl font-bold">Carbon Reduction Actions</h3>
+              <div className="text-muted-foreground mb-2.5 text-xs">
+                Recent actions taken to reduce emissions
+              </div>
             </span>
             <div>
               <div className="space-y-4">
@@ -227,17 +246,14 @@ const ProjectDetails: React.FC = () => {
               </div>
             </div>
             <div>
-              <button className="btn btn-sm w-full">
-                <BarChart3 className="mr-2 h-4 w-4" />
-                View Detailed Analytics
-              </button>
+              <button className="btn btn-sm w-full">View All Actions</button>
             </div>
           </div>
         </div>
 
         <div className="card">
           <div>
-            <h3>Student Participation</h3>
+            <h3 className="text-2xl font-bold">Student Participation</h3>
             <div>Overview of student activity and engagement</div>
           </div>
           <div>
@@ -249,16 +265,6 @@ const ProjectDetails: React.FC = () => {
                 This is a placeholder for future functionality.
               </p>
             </div>
-          </div>
-          <div className="justify-between">
-            <button className="btn-outline btn">
-              <Download className="mr-2 h-4 w-4" />
-              Export Data
-            </button>
-            <button>
-              <Users className="mr-2 h-4 w-4" />
-              Manage Students
-            </button>
           </div>
         </div>
       </motion.div>

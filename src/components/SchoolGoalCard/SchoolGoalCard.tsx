@@ -21,7 +21,7 @@ const SchoolGoalCard: React.FC<{
             <Target className="text-primary-600 h-5 w-5" />
             {t("schoolGoalTitle")}
           </h3>
-          <span className="text-primary-700 text-md font-bold lg:text-xl">
+          <span className="text-primary text-md font-bold lg:text-xl">
             {schoolGoal}% {t("schoolGoalReduction")}
           </span>
         </div>
@@ -29,7 +29,7 @@ const SchoolGoalCard: React.FC<{
       </div>
       <div className="mb-1 flex h-4 w-full rounded-full bg-gray-200">
         <div
-          className="bg-primary-600 z-1 h-4 rounded-full transition-all duration-500"
+          className="bg-primary z-1 h-4 rounded-full transition-all duration-500"
           style={{
             width: `${progressPercentage > 100 ? 100 : progressPercentage}%`,
           }}
