@@ -6,6 +6,9 @@ import Layout from "@/components/(layout)/Layout";
 export const metadata: Metadata = {
   title: "ClicksOnAct Calculator",
   description: "ClicksOnAct Calculator",
+  icons: {
+    icon: "/favicon.png",
+  },
 };
 
 export default async function RootLayout({
