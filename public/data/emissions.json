@@ -1,0 +1,52 @@
+[
+  {
+    "label": "emissionsTitle1",
+    "value": "",
+    "category": "energy",
+    "subcategories": [
+      { "subcategoryTitle": "subcat1_title_energy", "value": "" },
+      { "subcategoryTitle": "subcat2_title_energy", "value": "" },
+      { "subcategoryTitle": "subcat3_title_energy", "value": "" }
+    ]
+  },
+  {
+    "label": "emissionsTitle2",
+    "value": "",
+    "category": "waste",
+    "subcategories": [
+      { "subcategoryTitle": "subcat1_title_waste", "value": "" },
+      { "subcategoryTitle": "subcat2_title_waste", "value": "" },
+      { "subcategoryTitle": "subcat3_title_waste", "value": "" }
+    ]
+  },
+  {
+    "label": "emissionsTitle3",
+    "value": "",
+    "category": "transport",
+    "subcategories": [
+      { "subcategoryTitle": "subcat1_title_transport", "value": "" },
+      { "subcategoryTitle": "subcat2_title_transport", "value": "" },
+      { "subcategoryTitle": "subcat3_title_transport", "value": "" }
+    ]
+  },
+  {
+    "label": "emissionsTitle4",
+    "value": "",
+    "category": "nature",
+    "subcategories": [
+      { "subcategoryTitle": "subcat1_title_nature", "value": "" },
+      { "subcategoryTitle": "subcat2_title_nature", "value": "" },
+      { "subcategoryTitle": "subcat3_title_nature", "value": "" }
+    ]
+  },
+  {
+    "label": "emissionsTitle5",
+    "value": "",
+    "category": "energy1",
+    "subcategories": [
+      { "subcategoryTitle": "subcat1_title_energy", "value": "" },
+      { "subcategoryTitle": "subcat2_title_energy", "value": "" },
+      { "subcategoryTitle": "subcat3_title_energy", "value": "" }
+    ]
+  }
+]

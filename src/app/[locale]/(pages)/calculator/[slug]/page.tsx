@@ -1,5 +1,5 @@
 "use client";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { useTranslations } from "next-intl";
 import EmissionsInput from "./EmissionsInput";
@@ -11,14 +11,11 @@ import { SubcategoryForm } from "./SubcategoryForm";
 import { ActionsSection } from "./ActionsSection";
 import { SelectedActionsSummary } from "./SelectedActionsSummary";
 import { AddActionModalWrapper } from "./AddActionModalWrapper";
-import { Car, Leaf, Recycle, Zap } from "lucide-react";
+import { EmissionType } from "@/types/Emission";
 
-type Emission = {
-  label: string;
-  value: string;
-  category: string;
-  subcategories: { subcategoryTitle: string; value: string }[];
-};
+interface CustomAction extends Action {
+  selected: boolean;
+}
 
 const StudentCalculator: React.FC = () => {
   const t = useTranslations("StudentCalculator");
@@ -26,97 +23,9 @@ const StudentCalculator: React.FC = () => {
 
   const schoolGoal = 70;
 
-  const [emissions, setEmissions] = useState<Emission[]>([
-    {
-      label: t("emissionsTitle1"),
-      value: "",
-      category: "energy",
-      subcategories: [
-        { subcategoryTitle: t("subcat1_title_energy"), value: "" },
-        { subcategoryTitle: t("subcat2_title_energy"), value: "" },
-        { subcategoryTitle: t("subcat3_title_energy"), value: "" },
-      ],
-    },
-    {
-      label: t("emissionsTitle2"),
-      value: "",
-      category: "waste",
-      subcategories: [
-        { subcategoryTitle: t("subcat1_title_waste"), value: "" },
-        { subcategoryTitle: t("subcat2_title_waste"), value: "" },
-        { subcategoryTitle: t("subcat3_title_waste"), value: "" },
-      ],
-    },
-    {
-      label: t("emissionsTitle3"),
-      value: "",
-      category: "transport",
-      subcategories: [
-        { subcategoryTitle: t("subcat1_title_transport"), value: "" },
-        { subcategoryTitle: t("subcat2_title_transport"), value: "" },
-        { subcategoryTitle: t("subcat3_title_transport"), value: "" },
-      ],
-    },
-    {
-      label: t("emissionsTitle4"),
-      value: "",
-      category: "nature",
-      subcategories: [
-        { subcategoryTitle: t("subcat1_title_nature"), value: "" },
-        { subcategoryTitle: t("subcat2_title_nature"), value: "" },
-        { subcategoryTitle: t("subcat3_title_nature"), value: "" },
-      ],
-    },
-    {
-      label: t("emissionsTitle5"),
-      value: "",
-      category: "energy1",
-      subcategories: [
-        { subcategoryTitle: t("subcat1_title_energy"), value: "" },
-        { subcategoryTitle: t("subcat2_title_energy"), value: "" },
-        { subcategoryTitle: t("subcat3_title_energy"), value: "" },
-      ],
-    },
-  ]);
+  const [emissions, setEmissions] = useState<EmissionType[]>([]);
 
-  const [actions, setActions] = useState<Action[]>([
-    {
-      id: "1",
-      title: t("actions.switchToLED.title"),
-      description: t("actions.switchToLED.description"),
-      reduction: 15,
-      icon: (<Zap className="h-6 w-6" />) as React.ReactNode,
-      category: "energy",
-      selected: false,
-    },
-    {
-      id: "2",
-      title: t("actions.startComposting.title"),
-      description: t("actions.startComposting.description"),
-      reduction: 10,
-      icon: (<Leaf className="h-6 w-6" />) as React.ReactNode,
-      category: "nature",
-      selected: false,
-    },
-    {
-      id: "3",
-      title: t("actions.reduceCarUsage.title"),
-      description: t("actions.reduceCarUsage.description"),
-      reduction: 20,
-      category: "transport",
-      icon: (<Car className="h-6 w-6" />) as React.ReactNode,
-      selected: false,
-    },
-    {
-      id: "4",
-      title: t("actions.implementRecycling.title"),
-      description: t("actions.implementRecycling.description"),
-      reduction: 12,
-      icon: (<Recycle className="h-6 w-6" />) as React.ReactNode,
-      category: "waste",
-      selected: false,
-    },
-  ]);
+  const [actions, setActions] = useState<CustomAction[]>([]);
 
   const [filteredActions, setFilteredActions] = useState<Action[]>([]);
   const [activeEmissionCategories, setActiveEmissionCategories] = useState<
@@ -135,6 +44,30 @@ const StudentCalculator: React.FC = () => {
     const a = actions.find((x) => x.id === id);
     return sum + (a?.reduction || 0);
   }, 0);
+
+  useEffect(() => {
+    fetch("/data/actions.json")
+      .then((res) => {
+        if (!res.ok) throw new Error("Failed to fetch action file");
+        return res.json();
+      })
+      .then((data) => {
+        if (data) setActions(data);
+      })
+      .catch((error) => console.error("Error loading action file:", error));
+  }, []);
+
+  useEffect(() => {
+    fetch("/data/emissions.json")
+      .then((res) => {
+        if (!res.ok) throw new Error("Failed to fetch emission file");
+        return res.json();
+      })
+      .then((data) => {
+        if (data) setEmissions(data);
+      })
+      .catch((error) => console.error("Error loading emission file:", error));
+  }, []);
 
   const handleEmissionChange = (idx: number, val: string) => {
     setEmissions((prev) => {

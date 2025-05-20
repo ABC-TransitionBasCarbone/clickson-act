@@ -35,7 +35,13 @@ const NavLinks = ({ className }: { className?: string }) => {
             </Link>
             <span
               className={`bg-secondary transition-300 absolute bottom-0 left-0 h-0.5 w-full ${
-                pathname === path ? "visible" : "invisible group-hover:visible"
+                path === "/"
+                  ? pathname === path
+                    ? "visible"
+                    : "invisible group-hover:visible"
+                  : pathname.startsWith(path)
+                    ? "visible"
+                    : "invisible group-hover:visible"
               }`}
             />
           </li>

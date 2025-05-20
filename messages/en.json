@@ -104,6 +104,11 @@
     "subcat2_title_nature": "Green Space (m²)",
     "subcat3_title_nature": "Water Use (L)",
 
+    "Energy": "Energy",
+    "Waste": "Waste",
+    "Transport": "Transport",
+    "Nature": "Nature",
+
     "actions": {
       "switchToLED": {
         "title": "Switch to LED Lighting",

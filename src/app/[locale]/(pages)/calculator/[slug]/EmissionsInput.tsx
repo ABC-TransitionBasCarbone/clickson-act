@@ -38,7 +38,7 @@ const EmissionsInput: React.FC<EmissionsInputProps> = ({
       <div className="mt-10 mb-5 grid gap-4 lg:grid-cols-2">
         {emissions.map((e, i) => (
           <div key={i} className="flex w-full flex-col">
-            <label>{e.label}</label>
+            <label>{t(e.label)}</label>
             <input
               type="number"
               placeholder={t("currentEmissionsPlaceholder")}

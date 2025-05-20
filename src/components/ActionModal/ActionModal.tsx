@@ -1,37 +1,19 @@
 "use client";
 import Modal from "@/components/Modal";
+import { Action } from "@/types/Action";
 import { Car, Leaf, Recycle, Zap } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { ReactNode, useEffect, useState } from "react";
 
-export interface CustomAction {
-  id: string;
-  icon: ReactNode;
-  category: string;
-  title: string;
-  description: string;
-  reduction: string;
-  effort: string;
-  manager: string;
-  nature: string;
-  objectives: string;
-  keyContacts: string;
-  steps: string;
-  calendar: string;
-  indicators: string;
-  monitoring: string;
-  performance: string;
+interface CustomAction extends Action {
   selected: boolean;
-  date: string;
 }
-
-type NewActionInput = Omit<CustomAction, "id" | "icon" | "selected" | "date">;
 
 interface ActionModalProps {
   mode: "create" | "edit";
   onSubmit: (action: CustomAction) => void;
-  categories: { value: string; label: string; icon: ReactNode }[];
-  effortCategories: { value: string; label: string; color: string }[];
+  categories: { value: string; label: string }[];
+  effortCategories: { value: string; label: string }[];
   initialAction?: CustomAction;
 }
 
@@ -44,11 +26,14 @@ const ActionModal: React.FC<ActionModalProps> = ({
 }) => {
   const t = useTranslations("StudentCalculator");
 
-  const [newAction, setNewAction] = useState<NewActionInput>({
+  const [newAction, setNewAction] = useState<Action>({
+    id: "",
+    icon: null,
+    date: "",
     category: "",
     title: "",
     description: "",
-    reduction: "",
+    reduction: 0,
     effort: "",
     manager: "",
     nature: "",
@@ -61,12 +46,11 @@ const ActionModal: React.FC<ActionModalProps> = ({
     performance: "",
   });
 
-  const [isEditing, setIsEditing] = useState(mode === "create" ? true : false);
+  const [isEditing, setIsEditing] = useState(mode === "create");
 
   useEffect(() => {
     if (initialAction && mode === "edit") {
-      const { ...rest } = initialAction;
-      setNewAction(rest);
+      setNewAction({ ...initialAction });
       setIsEditing(false);
     }
   }, [initialAction, mode]);
@@ -90,6 +74,7 @@ const ActionModal: React.FC<ActionModalProps> = ({
     if (!newAction.category || !newAction.title || !newAction.reduction) return;
 
     onSubmit({
+      ...newAction,
       id:
         mode === "edit" && initialAction
           ? initialAction.id
@@ -100,7 +85,6 @@ const ActionModal: React.FC<ActionModalProps> = ({
         mode === "edit" && initialAction
           ? initialAction.date
           : new Date().toISOString(),
-      ...newAction,
     });
 
     const modal = document.getElementById("custom_action") as HTMLDialogElement;
@@ -119,7 +103,7 @@ const ActionModal: React.FC<ActionModalProps> = ({
     newAction.category === "" ||
     newAction.title === "" ||
     newAction.description === "" ||
-    newAction.reduction === "" ||
+    newAction.reduction === 0 ||
     newAction.effort === "";
 
   return (
@@ -149,8 +133,8 @@ const ActionModal: React.FC<ActionModalProps> = ({
             >
               <option value="">Select a category</option>
               {categories.map((cat) => (
-                <option key={cat.value} value={cat.value}>
-                  {cat.label}
+                <option key={cat.label} value={cat.value}>
+                  {t(cat.label)}
                 </option>
               ))}
             </select>
@@ -213,10 +197,13 @@ const ActionModal: React.FC<ActionModalProps> = ({
               type="number"
               value={newAction.reduction}
               onChange={(e) =>
-                setNewAction({ ...newAction, reduction: e.target.value })
+                setNewAction({
+                  ...newAction,
+                  reduction: Number(e.target.value),
+                })
               }
-              min="1"
-              max="100"
+              min={1}
+              max={100}
               className="input w-full"
               disabled={fieldDisabled}
             />
