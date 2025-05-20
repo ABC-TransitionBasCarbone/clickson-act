@@ -8,9 +8,11 @@ import SchoolGoalCard from "@/components/SchoolGoalCard";
 import ActionList from "./ActionList";
 import { Action } from "@/types/Action";
 import EmissionsInput from "./EmissionsInput";
+import { useUser } from "@/context/UserContext";
 
 const StudentCalculator: React.FC = () => {
   const t = useTranslations("StudentCalculator");
+  const { user } = useUser();
 
   const [emissions, setEmissions] = useState([
     { label: t("emissionsTitle1"), value: "" },
@@ -111,6 +113,7 @@ const StudentCalculator: React.FC = () => {
         transition={{ duration: 0.5 }}
         className="container mx-auto px-6 py-8"
       >
+        {user?.username}
         <div className="mx-auto max-w-3xl">
           <div className="mb-8 text-center">
             <h1 className="mb-2 text-3xl font-bold tracking-tight">

@@ -2,6 +2,7 @@ import { getMessages } from "next-intl/server";
 import type { Metadata } from "next";
 import "./globals.css";
 import Layout from "@/components/(layout)/Layout";
+import { UserProvider } from "@/context/UserContext";
 
 export const metadata: Metadata = {
   title: "ClicksOnAct Calculator",
@@ -21,7 +22,9 @@ export default async function RootLayout({
   return (
     <html data-theme="light">
       <body>
-        <Layout messages={messages}>{children}</Layout>
+        <UserProvider>
+          <Layout messages={messages}>{children}</Layout>
+        </UserProvider>
       </body>
     </html>
   );

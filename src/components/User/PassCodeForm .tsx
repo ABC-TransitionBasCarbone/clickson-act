@@ -4,10 +4,12 @@ import React, { useState } from "react";
 import { useTranslations } from "next-intl";
 import { User, RectangleEllipsis } from "lucide-react";
 import { useRouter } from "@/i18n/navigation";
+import { useUser } from "@/context/UserContext";
 
 const PassCodeForm = () => {
   const t = useTranslations();
   const router = useRouter();
+  const { setUser } = useUser();
   const [formData, setFormData] = useState({ username: "", passcode: "" });
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -16,9 +18,9 @@ const PassCodeForm = () => {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    console.log("Passcode data:", formData);
+    setUser(formData);
 
-    router.push("/calculator/test");
+    router.push(`/calculator/${formData.passcode}`);
   };
 
   return (
