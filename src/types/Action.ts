@@ -6,5 +6,6 @@ export interface Action {
   description: string;
   reduction: number;
   icon: ReactNode;
+  category: string;
   selected: false;
 }

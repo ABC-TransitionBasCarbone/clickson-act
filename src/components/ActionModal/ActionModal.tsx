@@ -30,8 +30,8 @@ type NewActionInput = Omit<CustomAction, "id" | "icon" | "selected" | "date">;
 interface ActionModalProps {
   mode: "create" | "edit";
   onSubmit: (action: CustomAction) => void;
-  categories: { value: string; label: string }[];
-  effortCategories: { value: string; label: string }[];
+  categories: { value: string; label: string; icon: ReactNode }[];
+  effortCategories: { value: string; label: string; color: string }[];
   initialAction?: CustomAction;
 }
 

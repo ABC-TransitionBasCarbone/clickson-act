@@ -1,34 +1,83 @@
 "use client";
 import React, { useState } from "react";
 import { motion } from "framer-motion";
-import { Leaf, Car, Zap, Recycle } from "lucide-react";
 import { useTranslations } from "next-intl";
-import ActionModal from "@/components/ActionModal";
-import SchoolGoalCard from "@/components/SchoolGoalCard";
-import ActionList from "./ActionList";
-import { Action } from "@/types/Action";
 import EmissionsInput from "./EmissionsInput";
 import { useUser } from "@/context/UserContext";
+import SchoolGoalCard from "@/components/SchoolGoalCard";
+import { Action } from "@/types/Action";
+
+import { SubcategoryForm } from "./SubcategoryForm";
+import { ActionsSection } from "./ActionsSection";
+import { SelectedActionsSummary } from "./SelectedActionsSummary";
+import { AddActionModalWrapper } from "./AddActionModalWrapper";
+import { Car, Leaf, Recycle, Zap } from "lucide-react";
+
+type Emission = {
+  label: string;
+  value: string;
+  category: string;
+  subcategories: { subcategoryTitle: string; value: string }[];
+};
 
 const StudentCalculator: React.FC = () => {
   const t = useTranslations("StudentCalculator");
   const { user } = useUser();
 
-  const [emissions, setEmissions] = useState([
-    { label: t("emissionsTitle1"), value: "" },
-    { label: t("emissionsTitle2"), value: "" },
-    { label: t("emissionsTitle3"), value: "" },
-    { label: t("emissionsTitle4"), value: "" },
-    { label: t("emissionsTitle5"), value: "" },
-  ]);
+  const schoolGoal = 70;
 
-  const handleEmissionChange = (index: number, value: string) => {
-    setEmissions((prev) => {
-      const updated = [...prev];
-      updated[index].value = value;
-      return updated;
-    });
-  };
+  const [emissions, setEmissions] = useState<Emission[]>([
+    {
+      label: t("emissionsTitle1"),
+      value: "",
+      category: "energy",
+      subcategories: [
+        { subcategoryTitle: t("subcat1_title_energy"), value: "" },
+        { subcategoryTitle: t("subcat2_title_energy"), value: "" },
+        { subcategoryTitle: t("subcat3_title_energy"), value: "" },
+      ],
+    },
+    {
+      label: t("emissionsTitle2"),
+      value: "",
+      category: "waste",
+      subcategories: [
+        { subcategoryTitle: t("subcat1_title_waste"), value: "" },
+        { subcategoryTitle: t("subcat2_title_waste"), value: "" },
+        { subcategoryTitle: t("subcat3_title_waste"), value: "" },
+      ],
+    },
+    {
+      label: t("emissionsTitle3"),
+      value: "",
+      category: "transport",
+      subcategories: [
+        { subcategoryTitle: t("subcat1_title_transport"), value: "" },
+        { subcategoryTitle: t("subcat2_title_transport"), value: "" },
+        { subcategoryTitle: t("subcat3_title_transport"), value: "" },
+      ],
+    },
+    {
+      label: t("emissionsTitle4"),
+      value: "",
+      category: "nature",
+      subcategories: [
+        { subcategoryTitle: t("subcat1_title_nature"), value: "" },
+        { subcategoryTitle: t("subcat2_title_nature"), value: "" },
+        { subcategoryTitle: t("subcat3_title_nature"), value: "" },
+      ],
+    },
+    {
+      label: t("emissionsTitle5"),
+      value: "",
+      category: "energy1",
+      subcategories: [
+        { subcategoryTitle: t("subcat1_title_energy"), value: "" },
+        { subcategoryTitle: t("subcat2_title_energy"), value: "" },
+        { subcategoryTitle: t("subcat3_title_energy"), value: "" },
+      ],
+    },
+  ]);
 
   const [actions, setActions] = useState<Action[]>([
     {
@@ -37,6 +86,7 @@ const StudentCalculator: React.FC = () => {
       description: t("actions.switchToLED.description"),
       reduction: 15,
       icon: (<Zap className="h-6 w-6" />) as React.ReactNode,
+      category: "energy",
       selected: false,
     },
     {
@@ -45,6 +95,7 @@ const StudentCalculator: React.FC = () => {
       description: t("actions.startComposting.description"),
       reduction: 10,
       icon: (<Leaf className="h-6 w-6" />) as React.ReactNode,
+      category: "nature",
       selected: false,
     },
     {
@@ -52,6 +103,7 @@ const StudentCalculator: React.FC = () => {
       title: t("actions.reduceCarUsage.title"),
       description: t("actions.reduceCarUsage.description"),
       reduction: 20,
+      category: "transport",
       icon: (<Car className="h-6 w-6" />) as React.ReactNode,
       selected: false,
     },
@@ -61,11 +113,58 @@ const StudentCalculator: React.FC = () => {
       description: t("actions.implementRecycling.description"),
       reduction: 12,
       icon: (<Recycle className="h-6 w-6" />) as React.ReactNode,
+      category: "waste",
       selected: false,
     },
   ]);
 
+  const [filteredActions, setFilteredActions] = useState<Action[]>([]);
+  const [activeEmissionCategories, setActiveEmissionCategories] = useState<
+    string[]
+  >([]);
+  const [showSubcategoryForm, setShowSubcategoryForm] = useState(false);
+  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
+  const [subcategoryValues, setSubcategoryValues] = useState<string[]>([
+    "",
+    "",
+    "",
+  ]);
   const [selectedActions, setSelectedActions] = useState<string[]>([]);
+
+  const totalReduction = selectedActions.reduce((sum, id) => {
+    const a = actions.find((x) => x.id === id);
+    return sum + (a?.reduction || 0);
+  }, 0);
+
+  const handleEmissionChange = (idx: number, val: string) => {
+    setEmissions((prev) => {
+      const copy = [...prev];
+      copy[idx].value = val;
+      return copy;
+    });
+  };
+
+  const handleCalculateEmissions = () => {
+    const cats: string[] = [];
+    emissions.forEach((e) => {
+      const n = parseFloat(e.value);
+      if (!isNaN(n) && n > 0 && !cats.includes(e.category))
+        cats.push(e.category);
+    });
+    setActiveEmissionCategories(cats);
+    setFilteredActions(actions.filter((a) => cats.includes(a.category)));
+    setShowSubcategoryForm(true);
+    setSelectedCategory(null);
+    setSubcategoryValues(["", "", ""]);
+  };
+
+  const handleCalculateSubcategories = () => {
+    if (selectedCategory) {
+      setFilteredActions(
+        actions.filter((a) => a.category === selectedCategory),
+      );
+    }
+  };
 
   const handleActionSelect = (actionId: string) => {
     setSelectedActions((prev) =>
@@ -74,35 +173,6 @@ const StudentCalculator: React.FC = () => {
         : [...prev, actionId],
     );
   };
-
-  const totalReduction = selectedActions.reduce((total, actionId) => {
-    const action = actions.find((a) => a.id === actionId);
-    return total + (action?.reduction || 0);
-  }, 0);
-
-  const CATEGORIES = [
-    { value: "energy", label: "Energy", icon: <Zap className="h-4 w-4" /> },
-    { value: "waste", label: "Waste", icon: <Recycle className="h-4 w-4" /> },
-    {
-      value: "transport",
-      label: "Transport",
-      icon: <Car className="h-4 w-4" />,
-    },
-    { value: "nature", label: "Nature", icon: <Leaf className="h-4 w-4" /> },
-  ];
-
-  const EFFORT_CATEGORIES = [
-    { value: "easy", label: "Easy", color: "#00000" },
-    { value: "medium", label: "Medium", color: "#00000" },
-    { value: "hard", label: "Hard", color: "#00000" },
-  ];
-
-  const openModal = (id: string) => {
-    const modal = document.getElementById(id) as HTMLDialogElement | null;
-    if (modal) modal.showModal();
-  };
-
-  const schoolGoal = 90;
 
   return (
     <div className="bg-gray-100">
@@ -113,67 +183,64 @@ const StudentCalculator: React.FC = () => {
         transition={{ duration: 0.5 }}
         className="container mx-auto px-6 py-8"
       >
-        {user?.username}
         <div className="mx-auto max-w-3xl">
           <div className="mb-8 text-center">
-            <h1 className="mb-2 text-3xl font-bold tracking-tight">
-              {t("title")}
-            </h1>
-            <p className="text-gray-400">{t("subtitle")}</p>
+            <h1 className="mb-2 text-3xl font-bold">{t("title")}</h1>
+            <p className="text-gray-400">
+              {t("hello")} {user?.username}, {t("subtitle")}
+            </p>
           </div>
 
           <EmissionsInput
             emissions={emissions}
             setEmissions={handleEmissionChange}
+            handleCalculateEmissions={handleCalculateEmissions}
           />
 
-          <div className="mb-4 flex items-center justify-between">
-            <h2 className="text-xl font-semibold">{t("availableActions")}</h2>
-            <button
-              className="btn btn-soft-primary"
-              onClick={() => openModal("custom_action")}
-            >
-              Add Action
-            </button>
-          </div>
-
-          <div className="mb-8 grid gap-4">
-            <ActionList
-              actions={actions}
-              schoolGoal={schoolGoal}
-              selectedActions={selectedActions}
-              onActionSelect={handleActionSelect}
+          {showSubcategoryForm && (
+            <SubcategoryForm
+              emissions={emissions}
+              activeEmissionCategories={activeEmissionCategories}
+              selectedCategory={selectedCategory}
+              subcategoryValues={subcategoryValues}
+              onSelectCategory={(cat) => {
+                setSelectedCategory(cat);
+                setSubcategoryValues(["", "", ""]);
+              }}
+              onSubcategoryChange={(i, v) => {
+                const copy = [...subcategoryValues];
+                copy[i] = v;
+                setSubcategoryValues(copy);
+              }}
+              onCalculate={handleCalculateSubcategories}
+              t={t}
             />
-          </div>
-
-          {selectedActions.length > 0 && (
-            <div className="mb-8">
-              <div className="bg-primary/10! border-primary-200! card">
-                <div className="p-2.5 pb-5 lg:p-5">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <h3 className="text-lg font-semibold">
-                        {t("totalReductionTitle")}
-                      </h3>
-                      <p className="text-muted-foreground text-sm">
-                        {t("totalReductionDescription", {
-                          count: selectedActions.length,
-                        })}
-                      </p>
-                    </div>
-                    <div className="text-3xl font-bold text-green-600">
-                      -{Math.ceil((totalReduction / schoolGoal) * 100)}%
-                    </div>
-                  </div>
-                </div>
-                <button className="btn btn-soft-primary mx-2.5 w-fit self-center lg:mx-5 lg:self-end">
-                  Add All To Monitoring Screen
-                </button>
-              </div>
-            </div>
           )}
 
-          {/* School Goal Card */}
+          <ActionsSection
+            filteredActions={filteredActions}
+            schoolGoal={schoolGoal}
+            selectedActions={selectedActions}
+            onActionSelect={handleActionSelect}
+            onAddActionClick={() =>
+              (
+                document.getElementById("custom_action") as HTMLDialogElement
+              )?.showModal()
+            }
+            showAddButton={showSubcategoryForm}
+            t={t}
+          />
+
+          {selectedActions.length > 0 && (
+            <SelectedActionsSummary
+              selectedActionsCount={selectedActions.length}
+              totalReductionPercent={Math.ceil(
+                (totalReduction / schoolGoal) * 100,
+              )}
+              t={t}
+            />
+          )}
+
           <SchoolGoalCard
             schoolGoal={schoolGoal}
             currentReduction={totalReduction}
@@ -182,24 +249,8 @@ const StudentCalculator: React.FC = () => {
         </div>
       </motion.div>
 
-      {/* New action modal in create mode */}
-      <ActionModal
-        mode="create"
-        onSubmit={(action) =>
-          setActions((prev) => [
-            ...prev,
-            {
-              id: action.id,
-              title: action.title,
-              description: action.description,
-              reduction: parseInt(action.reduction),
-              icon: action.icon,
-              selected: false,
-            },
-          ])
-        }
-        categories={CATEGORIES}
-        effortCategories={EFFORT_CATEGORIES}
+      <AddActionModalWrapper
+        onAddAction={(action) => setActions((prev) => [...prev, action])}
       />
     </div>
   );

@@ -48,27 +48,62 @@
 
   "StudentCalculator": {
     "title": "Student Calculator",
-    "subtitle": "Enter your school's current emissions and discover actions to reduce them",
+    "hello": "Hello",
+    "subtitle": "enter your school's current emissions and discover actions to reduce them",
+
     "currentEmissionsTitle": "Current Emissions",
-    "currentEmissionsDescription": "Enter your school's estimated CO2 emissions in kg CO2e",
-    "currentEmissionsPlaceholder": "Enter emissions in kg CO2e",
+    "currentEmissionsDescription": "Enter your school's estimated CO₂ emissions in kg CO₂e",
+    "currentEmissionsPlaceholder": "Enter emissions in kg CO₂e",
     "calculateButton": "Calculate",
+    "emptyFieldsWarning": "Please fill in at least one field.",
+
+    "selectEmissionCategory": "Subcategory Data",
+    "selectEmissionCategoryDescription": "Add Subcategory Specific Data",
+    "selectCategoryPlaceholder": "Select a category",
+
     "availableActions": "Available Actions",
-    "totalReductionTitle": "Total Potential Reduction",
-    "totalReductionDescription": "Based on {count} selected actions",
-    "emissionsTitle1": "Emission 1",
-    "emissionsTitle2": "Emission 2",
-    "emissionsTitle3": "Emission 3",
-    "emissionsTitle4": "Emission 4",
-    "emissionsTitle5": "Emission 5",
     "addCustomAction": "Add Action",
-    "customActionWarning": "Please complete all required fields",
+    "addToMonitoring": "Add All To Monitoring Screen",
+
+    "totalReductionTitle": "Total Potential Reduction",
+
+    "totalReductionDescription": "You have selected",
+    "totalReductionDescriptionActions": "actions",
     "schoolGoalTitle": "School Goal",
     "schoolGoalReduction": "Reduction",
     "schoolGoalProgress": "Total Current",
     "schoolCurrentProgress": "Based on selected actions",
     "schoolGoalGoal": "Goal",
     "schoolGoalDescription": "Track your progress toward the school's emissions reduction target",
+
+    "addActionButton": "Add Action",
+
+    "no_actions": "No actions found",
+
+    "customActionWarning": "Please fill in at least one field.",
+
+    "emissionsTitle1": "Emission 1",
+    "emissionsTitle2": "Emission 2",
+    "emissionsTitle3": "Emission 3",
+    "emissionsTitle4": "Emission 4",
+    "emissionsTitle5": "Emission 5",
+
+    "subcat1_title_energy": "Electricity Details",
+    "subcat2_title_energy": "Peak Usage Details",
+    "subcat3_title_energy": "Off‑Peak Usage Details",
+
+    "subcat1_title_waste": "Recycling Rate",
+    "subcat2_title_waste": "Landfill Amount",
+    "subcat3_title_waste": "Organic Waste",
+
+    "subcat1_title_transport": "Car Travel (km)",
+    "subcat2_title_transport": "Bus/Train Travel (km)",
+    "subcat3_title_transport": "Flight Hours",
+
+    "subcat1_title_nature": "Tree Planting Count",
+    "subcat2_title_nature": "Green Space (m²)",
+    "subcat3_title_nature": "Water Use (L)",
+
     "actions": {
       "switchToLED": {
         "title": "Switch to LED Lighting",
@@ -76,7 +111,7 @@
       },
       "startComposting": {
         "title": "Start Composting",
-        "description": "Implement a school-wide composting program"
+        "description": "Implement a school‑wide composting program"
       },
       "reduceCarUsage": {
         "title": "Reduce Car Usage",

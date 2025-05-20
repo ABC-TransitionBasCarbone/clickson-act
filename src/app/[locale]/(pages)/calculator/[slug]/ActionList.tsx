@@ -1,6 +1,7 @@
 import React from "react";
 import ActionCard from "./ActionCard";
 import { Action } from "@/types/Action";
+import { useTranslations } from "next-intl";
 
 const ActionList: React.FC<{
   actions: Action[];
@@ -8,6 +9,8 @@ const ActionList: React.FC<{
   schoolGoal: number;
   onActionSelect: (id: string) => void;
 }> = ({ actions, selectedActions, schoolGoal, onActionSelect }) => {
+  const t = useTranslations("StudentCalculator");
+
   return (
     <div className="grid gap-4">
       {actions.map((action) => (
@@ -19,6 +22,7 @@ const ActionList: React.FC<{
           onSelect={() => onActionSelect(action.id)}
         />
       ))}
+      {actions.length === 0 && t("no_actions")}
     </div>
   );
 };
