@@ -175,9 +175,15 @@ const StudentCalculator: React.FC = () => {
           )}
 
           <SchoolGoalCard
-            schoolGoal={schoolGoal}
-            currentReduction={totalReduction}
-            totalReduction={30}
+            schoolGoal={40}
+            subGoal={25}
+            subGoalYear="2028"
+            finalGoalYear="2030"
+            baseReductionPerYear={3}
+            startYear={"2025"}
+            selectedActionReductionPerYear={Math.ceil(
+              (totalReduction / schoolGoal) * 100,
+            )}
           />
         </div>
       </motion.div>

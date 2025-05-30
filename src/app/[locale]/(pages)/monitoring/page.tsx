@@ -7,18 +7,11 @@ import { useRouter } from "@/i18n/navigation";
 import CustomActionFormModal from "@/components/ActionModal";
 
 import CompletedActions from "@/components/(action)/CompletedActions";
-import AvailableActions from "@/components/(action)/AvailableActions";
 import { Action } from "@/types/Action";
+import CurrentActions from "@/components/(action)/CurrentActions";
 
 const Monitoring: React.FC = () => {
   const router = useRouter();
-
-  const [goal] = useState({
-    name: "Reduce School Emissions",
-    target: 45,
-    current: 28,
-    deadline: "December 2024",
-  });
 
   interface CustomAction extends Action {
     selected: boolean;
@@ -92,20 +85,25 @@ const Monitoring: React.FC = () => {
         </div>
 
         <SchoolGoalCard
-          schoolGoal={goal.target}
-          totalReduction={goal.current}
+          schoolGoal={40}
+          subGoal={25}
+          subGoalYear="2028-12-31"
+          finalGoalYear="2030-12-31"
+          baseReductionPerYear={3}
+          startYear={"2025"}
         />
 
         <div className="mb-6 grid gap-6 md:grid-cols-2">
+          <CurrentActions
+            currentActions={availableActions}
+            onEdit={(action) => handleEditClick(action, "available")}
+            onViewAll={() => router.push("/monitoring/available-actions")}
+          />
+
           <CompletedActions
             completedActions={completedActions}
             onEdit={(action) => handleEditClick(action, "completed")}
             onViewAll={() => router.push("/monitoring/completed-actions")}
-          />
-          <AvailableActions
-            availableActions={availableActions}
-            onEdit={(action) => handleEditClick(action, "available")}
-            onViewAll={() => router.push("/monitoring/available-actions")}
           />
         </div>
       </motion.div>
