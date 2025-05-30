@@ -1,17 +1,39 @@
-import React, { ReactNode } from "react";
+import { Action } from "@/types/Action";
+import React from "react";
+import {
+  Bolt,
+  Plug,
+  Lightbulb,
+  BatteryCharging,
+  Recycle,
+  Trash2,
+  Trash,
+  FileMinus,
+  Archive,
+  TreeDeciduous,
+  Flower,
+  Leaf,
+  Mountain,
+  Droplet,
+  Bike,
+  Bus,
+  Car,
+  Fuel,
+} from "lucide-react";
 
 interface Props {
-  action: {
-    id: string;
-    title: string;
-    description: string;
-    reduction: number;
-    icon: ReactNode;
-  };
+  action: Action;
   isSelected: boolean;
   schoolGoal: number;
   onSelect: (id: string) => void;
 }
+
+const categoryIcons: Record<string, React.FC[]> = {
+  energy: [Bolt, Plug, Lightbulb, BatteryCharging],
+  waste: [Recycle, Trash2, Trash, FileMinus, Archive],
+  nature: [TreeDeciduous, Flower, Leaf, Mountain, Droplet],
+  transport: [Bike, Bus, Car, Fuel],
+};
 
 const ActionCard: React.FC<Props> = ({
   action,
@@ -19,6 +41,9 @@ const ActionCard: React.FC<Props> = ({
   schoolGoal,
   onSelect,
 }) => {
+  const icons = categoryIcons[action.category as keyof typeof categoryIcons];
+  const Icon = icons ? icons[0] : Bolt;
+
   return (
     <div
       className={`card cursor-pointer p-2.5 transition-all ${
@@ -36,7 +61,7 @@ const ActionCard: React.FC<Props> = ({
               : "bg-gray-100 text-gray-600"
           }`}
         >
-          {action.icon && action.icon}
+          <Icon className="h-5 w-5" />
         </div>
         <div className="flex-grow">
           <h3 className="font-medium">{action.title}</h3>

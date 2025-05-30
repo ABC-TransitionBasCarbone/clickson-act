@@ -1,3 +1,4 @@
+import { useTranslations } from "next-intl";
 import React from "react";
 
 interface SubcategoryInputsProps {
@@ -11,12 +12,13 @@ const SubcategoryInputs: React.FC<SubcategoryInputsProps> = ({
   onChange,
   subcategoryTitles,
 }) => {
+  const t = useTranslations("StudentCalculator");
   return (
     <div className="mt-4 grid gap-4 lg:grid-cols-1">
       {values.map((val, idx) => (
         <div key={idx} className="flex w-full flex-col">
           <label className="mb-1 font-medium">
-            {subcategoryTitles[idx] || `Subcategory ${idx + 1}`}
+            {t(subcategoryTitles[idx])}
           </label>
           <input
             type="text"

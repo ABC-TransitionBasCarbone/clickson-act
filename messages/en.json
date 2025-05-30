@@ -61,7 +61,7 @@
     "selectEmissionCategoryDescription": "Add Subcategory Specific Data",
     "selectCategoryPlaceholder": "Select a category",
 
-    "availableActions": "Available Actions",
+    "availableActions": "Data Reporting",
     "addCustomAction": "Add Action",
     "addToMonitoring": "Add All To Monitoring Screen",
 
@@ -75,10 +75,14 @@
     "schoolCurrentProgress": "Based on selected actions",
     "schoolGoalGoal": "Goal",
     "schoolGoalDescription": "Track your progress toward the school's emissions reduction target",
+    "schoolGoalLegendProgress": "Progress",
+    "schoolGoalLegendSelectedAction": "Selected Action",
+    "schoolGoalLegendSubgoal": "Sub-Goal",
+    "schoolGoalLegendGoal": "Final Goal",
 
     "addActionButton": "Add Action",
 
-    "no_actions": "No actions found",
+    "no_actions": "Data not found",
 
     "customActionWarning": "Please fill in at least one field.",
 
@@ -127,6 +131,20 @@
         "description": "Set up comprehensive recycling stations"
       }
     }
+  },
+
+  "currentActions": {
+    "title": "Current Actions",
+    "actions": "actions",
+    "description": "Recommended actions to reduce emissions",
+    "effort": "effort",
+    "viewAll": "View All Current Actions",
+    "viewAllAvailable": "View All Available Actions"
+  },
+  "effort": {
+    "low": "Low",
+    "medium": "Medium",
+    "high": "High"
   },
 
   "TeacherDashboard": {

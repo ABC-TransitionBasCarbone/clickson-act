@@ -41,7 +41,7 @@ export const SubcategoryForm: React.FC<SubcategoryFormProps> = ({
           const e = emissions.find((x) => x.category === cat)!;
           return (
             <option key={cat} value={cat}>
-              {e.label}
+              {t(e.label)}
             </option>
           );
         })}

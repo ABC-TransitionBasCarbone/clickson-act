@@ -1,6 +1,5 @@
 export interface Action {
   id: string;
-  icon: React.ReactNode;
   category: string;
   title: string;
   description: string;

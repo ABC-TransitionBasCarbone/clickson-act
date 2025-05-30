@@ -30,7 +30,7 @@ export const SelectedActionsSummary: React.FC<SelectedActionsSummaryProps> = ({
             </div>
           </div>
         </div>
-        <button className="btn btn-soft-primary mx-2.5 w-fit self-center lg:mx-5 lg:self-end">
+        <button className="btn btn-soft-primary mx-2.5 w-fit max-lg:self-center lg:mx-5">
           {t("addToMonitoring")}
         </button>
       </div>

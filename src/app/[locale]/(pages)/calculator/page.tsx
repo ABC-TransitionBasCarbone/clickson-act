@@ -8,6 +8,8 @@ import Modal from "@/components/Modal";
 import SignUpForm from "@/components/User/SignUpForm";
 import PassCodeForm from "@/components/User/PassCodeForm ";
 import LoginForm from "@/components/User/LoginForm ";
+import { useUser } from "@/context/UserContext";
+import { useRouter } from "@/i18n/navigation";
 
 const HeroSection = () => {
   const t = useTranslations();
@@ -34,12 +36,22 @@ const HeroSection = () => {
 
 const ActionButtons = () => {
   const t = useTranslations();
+  const router = useRouter();
+  const { user } = useUser();
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+
+    if (user) openModal("passcode");
+
+    router.push(`/calculator/${user?.passcode}`);
+  };
 
   return (
     <div className="mt-15 flex w-full justify-center gap-5">
       <button
         className="btn btn-primary rounded-full font-normal"
-        onClick={() => openModal("passcode")}
+        onClick={handleSubmit}
       >
         {t("Calculator.button1")}
       </button>
