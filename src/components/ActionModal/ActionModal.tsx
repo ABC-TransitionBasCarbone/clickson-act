@@ -1,9 +1,8 @@
 "use client";
 import Modal from "@/components/Modal";
 import { Action } from "@/types/Action";
-import { Car, Leaf, Recycle, Zap } from "lucide-react";
 import { useTranslations } from "next-intl";
-import { ReactNode, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 
 interface CustomAction extends Action {
   selected: boolean;
@@ -28,7 +27,6 @@ const ActionModal: React.FC<ActionModalProps> = ({
 
   const [newAction, setNewAction] = useState<Action>({
     id: "",
-    icon: null,
     date: "",
     category: "",
     title: "",
@@ -55,21 +53,6 @@ const ActionModal: React.FC<ActionModalProps> = ({
     }
   }, [initialAction, mode]);
 
-  const getIconForCategory = (category: string): ReactNode => {
-    switch (category) {
-      case "energy":
-        return <Zap className="h-6 w-6" />;
-      case "waste":
-        return <Recycle className="h-6 w-6" />;
-      case "transport":
-        return <Car className="h-6 w-6" />;
-      case "nature":
-        return <Leaf className="h-6 w-6" />;
-      default:
-        return null;
-    }
-  };
-
   const handleSubmit = () => {
     if (!newAction.category || !newAction.title || !newAction.reduction) return;
 
@@ -79,7 +62,6 @@ const ActionModal: React.FC<ActionModalProps> = ({
         mode === "edit" && initialAction
           ? initialAction.id
           : Date.now().toString(),
-      icon: getIconForCategory(newAction.category),
       selected: initialAction?.selected ?? false,
       date:
         mode === "edit" && initialAction

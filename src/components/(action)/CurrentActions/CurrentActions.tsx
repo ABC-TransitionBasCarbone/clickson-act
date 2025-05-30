@@ -1,36 +1,40 @@
 import React from "react";
 import { Star, ChevronRight } from "lucide-react";
+
 import { Action } from "@/types/Action";
+import { useTranslations } from "next-intl";
 
 interface CustomAction extends Action {
   selected: boolean;
 }
 
-interface AvailableActionsProps {
-  availableActions: CustomAction[];
+interface CurrentActionsProps {
+  currentActions: CustomAction[];
   onEdit: (action: CustomAction) => void;
   onViewAll: () => void;
 }
 
-const AvailableActions: React.FC<AvailableActionsProps> = ({
-  availableActions,
+const CurrentActions: React.FC<CurrentActionsProps> = ({
+  currentActions,
   onEdit,
   onViewAll,
 }) => {
+  const t = useTranslations();
+
   return (
     <div className="card p-6">
       <div className="flex items-center justify-between pb-2">
         <div className="flex items-center gap-2">
           <Star className="h-5 w-5 text-yellow-500" />
-          <h2 className="text-xl font-bold">Available Actions</h2>
+          <h2 className="text-xl font-bold">{t("currentActions.title")}</h2>
         </div>
         <span className="bg-primary-100 text-primary-800 rounded-full px-2 py-1 text-xs">
-          {availableActions.length} options
+          {currentActions.length} {t("currentActions.actions")}
         </span>
       </div>
-      <p className="text-gray-600">Recommended actions to reduce emissions</p>
+      <p className="text-gray-600">{t("currentActions.description")}</p>
       <div className="mt-4 space-y-4">
-        {availableActions.map((action) => (
+        {currentActions.map((action) => (
           <div
             key={action.id}
             className="flex cursor-pointer justify-between border-b border-gray-100 pb-3 last:border-0"
@@ -47,7 +51,8 @@ const AvailableActions: React.FC<AvailableActionsProps> = ({
                       : "bg-red-100 text-red-800"
                 }`}
               >
-                {action.effort} effort
+                {t(`effort.${action.effort.toLowerCase()}`)}{" "}
+                {t("currentActions.effort")}
               </span>
             </div>
             <div className="flex items-center gap-2">
@@ -59,14 +64,22 @@ const AvailableActions: React.FC<AvailableActionsProps> = ({
           </div>
         ))}
       </div>
-      <button
-        className="btn btn-soft mt-auto w-fit self-center bg-white"
-        onClick={onViewAll}
-      >
-        View All Available Actions
-      </button>
+      <div className="flex justify-center gap-5">
+        <button
+          className="btn btn-soft mt-auto w-fit self-center bg-white"
+          onClick={onViewAll}
+        >
+          {t("currentActions.viewAll")}
+        </button>
+        <button
+          className="btn btn-soft mt-auto w-fit self-center bg-white"
+          onClick={onViewAll}
+        >
+          {t("currentActions.viewAllAvailable")}
+        </button>
+      </div>
     </div>
   );
 };
 
-export default AvailableActions;
+export default CurrentActions;
