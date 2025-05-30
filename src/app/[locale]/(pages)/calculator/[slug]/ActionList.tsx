@@ -6,9 +6,8 @@ import { useTranslations } from "next-intl";
 const ActionList: React.FC<{
   actions: Action[];
   selectedActions: string[];
-  schoolGoal: number;
   onActionSelect: (id: string) => void;
-}> = ({ actions, selectedActions, schoolGoal, onActionSelect }) => {
+}> = ({ actions, selectedActions, onActionSelect }) => {
   const t = useTranslations("StudentCalculator");
 
   return (
@@ -17,7 +16,6 @@ const ActionList: React.FC<{
         <ActionCard
           key={action.id}
           action={action}
-          schoolGoal={schoolGoal}
           isSelected={selectedActions.includes(action.id)}
           onSelect={() => onActionSelect(action.id)}
         />

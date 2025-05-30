@@ -24,7 +24,6 @@ import {
 interface Props {
   action: Action;
   isSelected: boolean;
-  schoolGoal: number;
   onSelect: (id: string) => void;
 }
 
@@ -35,12 +34,7 @@ const categoryIcons: Record<string, React.FC[]> = {
   transport: [Bike, Bus, Car, Fuel],
 };
 
-const ActionCard: React.FC<Props> = ({
-  action,
-  isSelected,
-  schoolGoal,
-  onSelect,
-}) => {
+const ActionCard: React.FC<Props> = ({ action, isSelected, onSelect }) => {
   const icons = categoryIcons[action.category as keyof typeof categoryIcons];
   const Icon = icons ? icons[0] : Bolt;
 
@@ -69,7 +63,7 @@ const ActionCard: React.FC<Props> = ({
         </div>
         <div className="text-right">
           <span className="text-lg font-bold text-green-600">
-            -{Math.ceil((action.reduction / schoolGoal) * 100)}%
+            -{action.reduction}%
           </span>
         </div>
       </div>

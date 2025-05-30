@@ -5,6 +5,8 @@ import { motion } from "framer-motion";
 import { PlusCircle, Users, BarChart3, Building, Pencil } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
+import { ProjectFormModal } from "./ProjectFormModal";
+import ProjectForm from "@/types/ProjectForm";
 
 type Project = {
   id: string;
@@ -12,6 +14,8 @@ type Project = {
   school: string;
   students: number;
   startDate: string;
+  subGoal: string;
+  finalGoal: string;
   status: "active" | "completed" | "pending";
   emissions: number;
   reduction: number;
@@ -27,6 +31,8 @@ const TeacherDashboard: React.FC = () => {
       school: "Lincoln High School",
       students: 28,
       startDate: "2023-09-01",
+      finalGoal: "2023-09-01",
+      subGoal: "2023-09-01",
       status: "active",
       emissions: 450,
       reduction: 32,
@@ -37,6 +43,8 @@ const TeacherDashboard: React.FC = () => {
       school: "Washington Elementary",
       students: 19,
       startDate: "2023-10-15",
+      finalGoal: "2023-09-01",
+      subGoal: "2023-09-01",
       status: "active",
       emissions: 320,
       reduction: 15,
@@ -47,21 +55,22 @@ const TeacherDashboard: React.FC = () => {
       school: "Jefferson Middle School",
       students: 35,
       startDate: "2023-11-05",
+      finalGoal: "2023-09-01",
+      subGoal: "2023-09-01",
       status: "completed",
       emissions: 580,
       reduction: 45,
     },
   ]);
 
-  // State for controlling the Project Modal
   const [isProjectModalOpen, setIsProjectModalOpen] = useState(false);
-  const [projectForm, setProjectForm] = useState({
+  const [projectForm, setProjectForm] = useState<ProjectForm>({
     name: "",
-    school: "",
-    students: 0,
-    startDate: "",
-    emissions: 0,
-    reduction: 0,
+    startDate: new Date().toISOString().split("T")[0],
+    finalGoal: new Date().toISOString().split("T")[0],
+    subGoal: new Date().toISOString().split("T")[0],
+    goalReductionAmount: 0,
+    reductionSubGoal: new Date().toISOString().split("T")[0],
   });
 
   // State for controlling the School Goal Modal
@@ -70,13 +79,14 @@ const TeacherDashboard: React.FC = () => {
 
   // Open the Project Modal and reset form
   const openProjectModal = () => {
+    const today = new Date().toISOString().split("T")[0];
     setProjectForm({
       name: "",
-      school: "",
-      students: 0,
-      startDate: new Date().toISOString().split("T")[0],
-      emissions: 0,
-      reduction: 0,
+      startDate: today,
+      finalGoal: today,
+      subGoal: today,
+      goalReductionAmount: 0,
+      reductionSubGoal: today,
     });
     setIsProjectModalOpen(true);
   };
@@ -86,28 +96,18 @@ const TeacherDashboard: React.FC = () => {
     const newProject: Project = {
       id: Date.now().toString(),
       name: projectForm.name || "New Project",
-      school: projectForm.school || "Your School",
-      students: projectForm.students || 0,
+      school: "Your School",
+      students: 0,
       startDate: projectForm.startDate,
       status: "pending",
-      emissions: projectForm.emissions,
-      reduction: projectForm.reduction,
+      emissions: 0,
+      reduction: Number(projectForm.goalReductionAmount) || 0, // use this for reduction
+      subGoal: projectForm.subGoal,
+      finalGoal: projectForm.finalGoal,
     };
 
     setProjects([...projects, newProject]);
     setIsProjectModalOpen(false);
-  };
-
-  // Handle input changes for project form
-  const handleProjectFormChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target;
-    setProjectForm((prev) => ({
-      ...prev,
-      [name]:
-        name === "students" || name === "emissions" || name === "reduction"
-          ? Number(value)
-          : value,
-    }));
   };
 
   // Handle the school goal update
@@ -245,7 +245,7 @@ const TeacherDashboard: React.FC = () => {
               </div>
               <div className="mt-5 flex w-full justify-between">
                 <Link
-                  href={`/dashboard/projects/tsrayfe`}
+                  href={`/dashboard/projects/${project.id}`}
                   className="btn-outline btn btn-primary"
                 >
                   {t("viewDetails")}
@@ -258,65 +258,12 @@ const TeacherDashboard: React.FC = () => {
 
       {/* Project Creation Modal */}
       {isProjectModalOpen && (
-        <div className="modal modal-open">
-          <div className="modal-box">
-            <h3 className="text-lg font-bold">{t("createNewProject")}</h3>
-            <div className="space-y-4 py-4">
-              <div>
-                <label htmlFor="name" className="label">
-                  <span className="label-text">{t("projectNameLabel")}</span>
-                </label>
-                <input
-                  type="text"
-                  id="name"
-                  name="name"
-                  placeholder={t("projectNamePlaceholder")}
-                  className="input input-bordered w-full"
-                  value={projectForm.name}
-                  onChange={handleProjectFormChange}
-                />
-              </div>
-              <div>
-                <label htmlFor="startDate" className="label">
-                  <span className="label-text">{t("startDateLabel")}</span>
-                </label>
-                <input
-                  type="date"
-                  id="startDate"
-                  name="startDate"
-                  className="input input-bordered w-full"
-                  value={projectForm.startDate}
-                  onChange={handleProjectFormChange}
-                />
-              </div>
-              <div>
-                <label htmlFor="emissions" className="label">
-                  <span className="label-text">{t("emissionsLabel")}</span>
-                </label>
-                <input
-                  type="number"
-                  id="emissions"
-                  name="emissions"
-                  placeholder={t("emissionsPlaceholder")}
-                  className="input input-bordered w-full"
-                  value={projectForm.emissions}
-                  onChange={handleProjectFormChange}
-                />
-              </div>
-            </div>
-            <div className="modal-action">
-              <button
-                className="btn"
-                onClick={() => setIsProjectModalOpen(false)}
-              >
-                {t("cancel")}
-              </button>
-              <button className="btn btn-primary" onClick={handleProjectSubmit}>
-                {t("submit")}
-              </button>
-            </div>
-          </div>
-        </div>
+        <ProjectFormModal
+          form={projectForm}
+          setForm={setProjectForm}
+          onClose={() => setIsProjectModalOpen(false)}
+          onSubmit={handleProjectSubmit}
+        />
       )}
 
       {/* School Goal Editing Modal */}

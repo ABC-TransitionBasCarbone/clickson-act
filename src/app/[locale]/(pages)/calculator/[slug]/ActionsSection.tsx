@@ -14,7 +14,6 @@ type ActionsSectionProps = {
 
 export const ActionsSection: React.FC<ActionsSectionProps> = ({
   filteredActions,
-  schoolGoal,
   selectedActions,
   onActionSelect,
   onAddActionClick,
@@ -35,7 +34,6 @@ export const ActionsSection: React.FC<ActionsSectionProps> = ({
       <div className="mb-8 grid gap-4">
         <ActionList
           actions={filteredActions}
-          schoolGoal={schoolGoal}
           selectedActions={selectedActions}
           onActionSelect={onActionSelect}
         />

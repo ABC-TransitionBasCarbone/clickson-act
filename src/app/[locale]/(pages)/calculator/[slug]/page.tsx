@@ -39,10 +39,9 @@ const StudentCalculator: React.FC = () => {
     "",
   ]);
   const [selectedActions, setSelectedActions] = useState<string[]>([]);
-
-  const totalReduction = selectedActions.reduce((sum, id) => {
-    const a = actions.find((x) => x.id === id);
-    return sum + (a?.reduction || 0);
+  const totalSelectedReduction = selectedActions.reduce((sum, id) => {
+    const action = actions.find((a) => a.id === id);
+    return sum + (action?.reduction || 0);
   }, 0);
 
   useEffect(() => {
@@ -167,9 +166,7 @@ const StudentCalculator: React.FC = () => {
           {selectedActions.length > 0 && (
             <SelectedActionsSummary
               selectedActionsCount={selectedActions.length}
-              totalReductionPercent={Math.ceil(
-                (totalReduction / schoolGoal) * 100,
-              )}
+              totalReductionPercent={totalSelectedReduction}
               t={t}
             />
           )}
@@ -181,9 +178,7 @@ const StudentCalculator: React.FC = () => {
             finalGoalYear="2030"
             baseReductionPerYear={3}
             startYear={"2025"}
-            selectedActionReductionPerYear={Math.ceil(
-              (totalReduction / schoolGoal) * 100,
-            )}
+            selectedActionReductionPerYear={totalSelectedReduction}
           />
         </div>
       </motion.div>

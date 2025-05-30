@@ -33,7 +33,8 @@ const generateChartData = (
   let currentAlt = 0;
   for (let year = start; year <= end; year++) {
     current += baseRate;
-    currentAlt += selectedRate ?? 0;
+    currentAlt += selectedRate ? selectedRate + baseRate : 0;
+    console.log("selectedRate: ", selectedRate);
     data.push({
       date: `${year}`,
       baseReduction: Math.min(current, 100),
@@ -89,12 +90,9 @@ const SchoolGoalCard: React.FC<SchoolGoalCardProps> = ({
               tickFormatter={(val) => `${val}%`}
             />
             <Tooltip
-              formatter={(val: number, name: string) => [
-                `${val}%`,
-                name === "baseReduction"
-                  ? t("schoolGoalLegendProgress")
-                  : t("schoolGoalLegendSelectedAction"),
-              ]}
+              formatter={(val: number, name: string) => {
+                return [`${val}%`, `${name}`];
+              }}
             />
 
             {/* Base reduction line */}

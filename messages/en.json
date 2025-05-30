@@ -167,6 +167,12 @@
     "numberOfStudentsLabel": "Number of Students",
     "numberOfStudentsPlaceholder": "Enter number of students",
     "startDateLabel": "Start Date",
+    "finalGoalLabel": "Final Goal Date",
+    "finalDateLabel": "Deadline Date",
+    "goalReductionAmountLabel": "Goal Reduction Amount",
+    "goalReductionAmountPlaceholder": "Enter goal reduction amount",
+    "subGoalReductionLabel": "Sub Goal Reduction Amount",
+    "subGoalReductionPlaceholder": "Enter sub goal reduction amount",
     "emissionsLabel": "Emissions (kg CO2e)",
     "emissionsPlaceholder": "Enter emissions",
     "reductionPercentageLabel": "Reduction (%)",
@@ -183,7 +189,9 @@
     "students": "Students",
     "startDate": "Start Date",
     "currentEmissions": "Current Emissions",
-    "reduction": "Reduction"
+    "reduction": "Reduction",
+    "addSubGoal": "Add Sub Goal",
+    "subGoalLabel": "Sub Goal"
   },
 
   "MonitoringPage": {

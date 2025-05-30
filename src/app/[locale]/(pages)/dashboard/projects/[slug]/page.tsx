@@ -184,21 +184,31 @@ const ProjectDetails: React.FC = () => {
             </span>
             <div>
               <p>{project.description}</p>
-              <div className="mt-6 flex items-center gap-5 border-t border-gray-100 pt-4">
-                <h3 className="font-medium">Current Status:</h3>
-                <div className="flex items-center">
-                  <span
-                    className={`rounded-full px-3 py-1 text-sm font-medium ${
-                      project.status === "active"
-                        ? "bg-green-100 text-green-800"
-                        : project.status === "completed"
-                          ? "bg-blue-100 text-blue-800"
-                          : "bg-amber-100 text-amber-800"
-                    }`}
-                  >
-                    {project.status.charAt(0).toUpperCase() +
-                      project.status.slice(1)}
-                  </span>
+              <div className="mt-6 flex flex-col items-start gap-5 border-t border-gray-100 pt-4">
+                <div className="flex gap-2.5">
+                  <h3 className="font-medium">Current Status:</h3>
+                  <div className="flex items-center">
+                    <span
+                      className={`rounded-full px-3 py-1 text-sm font-medium ${
+                        project.status === "active"
+                          ? "bg-green-100 text-green-800"
+                          : project.status === "completed"
+                            ? "bg-blue-100 text-blue-800"
+                            : "bg-amber-100 text-amber-800"
+                      }`}
+                    >
+                      {project.status.charAt(0).toUpperCase() +
+                        project.status.slice(1)}
+                    </span>
+                  </div>
+                </div>
+                <div className="flex gap-2.5">
+                  <h3 className="font-medium">Current Goal:</h3>
+                  <span>25% (2028)</span>
+                </div>
+                <div className="flex gap-2.5">
+                  <h3 className="font-medium">Final Goal:</h3>
+                  <span>60% (2030)</span>
                 </div>
               </div>
             </div>
@@ -219,7 +229,7 @@ const ProjectDetails: React.FC = () => {
 
           <div className="card flex-1">
             <span>
-              <h3 className="text-2xl font-bold">Carbon Reduction Actions</h3>
+              <h3 className="text-2xl font-bold">Completed Actions</h3>
               <div className="text-muted-foreground mb-2.5 text-xs">
                 Recent actions taken to reduce emissions
               </div>
@@ -247,23 +257,6 @@ const ProjectDetails: React.FC = () => {
             </div>
             <div>
               <button className="btn btn-sm w-full">View All Actions</button>
-            </div>
-          </div>
-        </div>
-
-        <div className="card">
-          <div>
-            <h3 className="text-2xl font-bold">Student Participation</h3>
-            <div>Overview of student activity and engagement</div>
-          </div>
-          <div>
-            <div className="py-6 text-center">
-              <p className="text-muted-foreground">
-                Detailed student participation data would appear here.
-              </p>
-              <p className="text-muted-foreground mt-1 text-sm">
-                This is a placeholder for future functionality.
-              </p>
             </div>
           </div>
         </div>
