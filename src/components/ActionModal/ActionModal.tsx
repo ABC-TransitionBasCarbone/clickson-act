@@ -6,6 +6,8 @@ import { useEffect, useState } from "react";
 
 interface CustomAction extends Action {
   selected: boolean;
+  status?: "Completed" | "Selected" | "Available";
+  assignedTo?: string;
 }
 
 interface ActionModalProps {
@@ -25,7 +27,7 @@ const ActionModal: React.FC<ActionModalProps> = ({
 }) => {
   const t = useTranslations("StudentCalculator");
 
-  const [newAction, setNewAction] = useState<Action>({
+  const [newAction, setNewAction] = useState<CustomAction>({
     id: "",
     date: "",
     category: "",
@@ -42,6 +44,9 @@ const ActionModal: React.FC<ActionModalProps> = ({
     indicators: "",
     monitoring: "",
     performance: "",
+    status: "Available",
+    assignedTo: "",
+    selected: false,
   });
 
   const [isEditing, setIsEditing] = useState(mode === "create");
@@ -101,6 +106,44 @@ const ActionModal: React.FC<ActionModalProps> = ({
         </p>
 
         <div className="grid gap-4 py-4">
+          {/* Status */}
+          <div className="grid gap-2">
+            <label htmlFor="status">Status</label>
+            <select
+              id="status"
+              value={newAction.status}
+              onChange={(e) =>
+                setNewAction({
+                  ...newAction,
+                  status: e.target.value as
+                    | "Completed"
+                    | "Selected"
+                    | "Available",
+                })
+              }
+              className="input w-full"
+              disabled={fieldDisabled}
+            >
+              <option value="Available">Available</option>
+              <option value="Selected">Selected</option>
+              <option value="Completed">Completed</option>
+            </select>
+          </div>
+
+          {/* Assigned To */}
+          <div className="grid gap-2">
+            <label htmlFor="assignedTo">Assigned To</label>
+            <input
+              id="assignedTo"
+              value={newAction.assignedTo}
+              onChange={(e) =>
+                setNewAction({ ...newAction, assignedTo: e.target.value })
+              }
+              className="input w-full"
+              disabled={fieldDisabled}
+            />
+          </div>
+
           {/* Category */}
           <div className="grid gap-2">
             <label htmlFor="category">Category</label>

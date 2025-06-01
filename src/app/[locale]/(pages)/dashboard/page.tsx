@@ -17,7 +17,6 @@ type Project = {
   subGoal: string;
   finalGoal: string;
   status: "active" | "completed" | "pending";
-  emissions: number;
   reduction: number;
 };
 
@@ -34,8 +33,7 @@ const TeacherDashboard: React.FC = () => {
       finalGoal: "2023-09-01",
       subGoal: "2023-09-01",
       status: "active",
-      emissions: 450,
-      reduction: 32,
+      reduction: 3,
     },
     {
       id: "2",
@@ -46,7 +44,6 @@ const TeacherDashboard: React.FC = () => {
       finalGoal: "2023-09-01",
       subGoal: "2023-09-01",
       status: "active",
-      emissions: 320,
       reduction: 15,
     },
     {
@@ -58,8 +55,7 @@ const TeacherDashboard: React.FC = () => {
       finalGoal: "2023-09-01",
       subGoal: "2023-09-01",
       status: "completed",
-      emissions: 580,
-      reduction: 45,
+      reduction: 12,
     },
   ]);
 
@@ -73,11 +69,12 @@ const TeacherDashboard: React.FC = () => {
     reductionSubGoal: new Date().toISOString().split("T")[0],
   });
 
-  // State for controlling the School Goal Modal
   const [isSchoolGoalModalOpen, setIsSchoolGoalModalOpen] = useState(false);
-  const [schoolGoal, setSchoolGoal] = useState(90);
+  const [schoolGoal, setSchoolGoal] = useState({
+    reduction: 90,
+    deadlineYear: "2030",
+  });
 
-  // Open the Project Modal and reset form
   const openProjectModal = () => {
     const today = new Date().toISOString().split("T")[0];
     setProjectForm({
@@ -91,7 +88,6 @@ const TeacherDashboard: React.FC = () => {
     setIsProjectModalOpen(true);
   };
 
-  // Handle the project form submission
   const handleProjectSubmit = () => {
     const newProject: Project = {
       id: Date.now().toString(),
@@ -100,7 +96,6 @@ const TeacherDashboard: React.FC = () => {
       students: 0,
       startDate: projectForm.startDate,
       status: "pending",
-      emissions: 0,
       reduction: Number(projectForm.goalReductionAmount) || 0, // use this for reduction
       subGoal: projectForm.subGoal,
       finalGoal: projectForm.finalGoal,
@@ -110,7 +105,6 @@ const TeacherDashboard: React.FC = () => {
     setIsProjectModalOpen(false);
   };
 
-  // Handle the school goal update
   const handleSchoolGoalSubmit = () => {
     setIsSchoolGoalModalOpen(false);
   };
@@ -147,9 +141,12 @@ const TeacherDashboard: React.FC = () => {
               <BarChart3 className="text-muted-foreground h-4 w-4" />
             </div>
             <div>
-              <div className="text-2xl font-bold">{schoolGoal}%</div>
+              <div className="text-2xl font-bold">
+                {schoolGoal.reduction}% – {schoolGoal.deadlineYear}
+              </div>
               <p className="text-muted-foreground text-xs">
-                {t("emissionReductionGoal")}
+                {t("emissionReductionGoal")} ({t("by")}{" "}
+                {schoolGoal.deadlineYear})
               </p>
             </div>
             <Pencil
@@ -224,16 +221,10 @@ const TeacherDashboard: React.FC = () => {
                     <p className="font-medium">{project.students}</p>
                   </div>
                   <div>
-                    <p className="text-muted-foreground">{t("startDate")}</p>
+                    <p className="text-muted-foreground">{t("subGoalDate")}</p>
                     <p className="font-medium">
                       {new Date(project.startDate).toLocaleDateString()}
                     </p>
-                  </div>
-                  <div>
-                    <p className="text-muted-foreground">
-                      {t("currentEmissions")}
-                    </p>
-                    <p className="font-medium">{project.emissions} kg CO2e</p>
                   </div>
                   <div>
                     <p className="text-muted-foreground">{t("reduction")}</p>
@@ -266,34 +257,73 @@ const TeacherDashboard: React.FC = () => {
         />
       )}
 
-      {/* School Goal Editing Modal */}
       {isSchoolGoalModalOpen && (
         <div className="modal modal-open">
           <div className="modal-box">
             <h3 className="text-lg font-bold">{t("editSchoolGoal")}</h3>
-            <div className="py-4">
-              <input
-                type="number"
-                placeholder={t("schoolGoal")}
-                className="input input-bordered w-full"
-                value={schoolGoal}
-                onChange={(e) => setSchoolGoal(Number(e.target.value))}
-              />
-            </div>
-            <div className="modal-action">
-              <button
-                className="btn"
-                onClick={() => setIsSchoolGoalModalOpen(false)}
-              >
-                {t("cancel")}
-              </button>
-              <button
-                className="btn btn-primary"
-                onClick={handleSchoolGoalSubmit}
-              >
-                {t("save")}
-              </button>
-            </div>
+            <form className="space-y-6 py-4" onSubmit={handleSchoolGoalSubmit}>
+              <div>
+                <label htmlFor="reduction" className="mb-1 block font-medium">
+                  {t("reductionGoal")} (%)
+                </label>
+                <input
+                  id="reduction"
+                  name="reduction"
+                  type="number"
+                  placeholder={t("reductionGoal")}
+                  className="input input-bordered w-full"
+                  value={schoolGoal.reduction}
+                  onChange={(e) =>
+                    setSchoolGoal((prev) => ({
+                      ...prev,
+                      reduction: Number(e.target.value),
+                    }))
+                  }
+                  min={0}
+                  max={100}
+                  required
+                />
+              </div>
+
+              <div>
+                <label
+                  htmlFor="deadlineYear"
+                  className="mb-1 block font-medium"
+                >
+                  {t("deadlineYear")}
+                </label>
+                <input
+                  id="deadlineYear"
+                  name="deadlineYear"
+                  type="number"
+                  placeholder={t("deadlineYear")}
+                  className="input input-bordered w-full"
+                  value={schoolGoal.deadlineYear}
+                  onChange={(e) =>
+                    setSchoolGoal((prev) => ({
+                      ...prev,
+                      reduction: Number(e.target.value),
+                    }))
+                  }
+                  min={new Date().getFullYear()}
+                  max={new Date().getFullYear() + 10}
+                  required
+                />
+              </div>
+
+              <div className="modal-action">
+                <button
+                  type="button"
+                  className="btn"
+                  onClick={() => setIsSchoolGoalModalOpen(false)}
+                >
+                  {t("cancel")}
+                </button>
+                <button type="submit" className="btn btn-primary">
+                  {t("save")}
+                </button>
+              </div>
+            </form>
           </div>
         </div>
       )}

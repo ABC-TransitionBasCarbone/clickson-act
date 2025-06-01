@@ -87,8 +87,8 @@ const Monitoring: React.FC = () => {
         <SchoolGoalCard
           schoolGoal={40}
           subGoal={25}
-          subGoalYear="2028-12-31"
-          finalGoalYear="2030-12-31"
+          subGoalYear="2028"
+          finalGoalYear="2030"
           baseReductionPerYear={3}
           startYear={"2025"}
         />

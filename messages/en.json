@@ -153,6 +153,9 @@
     "addNewProject": "Add New Project",
     "schoolGoal": "School Goal",
     "emissionReductionGoal": "Emission Reduction Goal",
+    "by": "by",
+    "reductionGoal": "Reduction Goal",
+    "deadlineYear": "Deadline Year",
     "totalStudents": "Total Students",
     "acrossAllProjects": "Across all projects",
     "emissionReduction": "Emission Reduction",
@@ -187,8 +190,7 @@
       "pending": "Pending"
     },
     "students": "Students",
-    "startDate": "Start Date",
-    "currentEmissions": "Current Emissions",
+    "subGoalDate": "Sub Goal Date",
     "reduction": "Reduction",
     "addSubGoal": "Add Sub Goal",
     "subGoalLabel": "Sub Goal"
@@ -209,5 +211,39 @@
     "effortLow": "Low effort",
     "effortMedium": "Medium effort",
     "effortHigh": "High effort"
+  },
+
+  "ProjectDetails": {
+    "back": "Back",
+    "loading": "Loading project details...",
+    "projectId": "Project ID",
+    "projectIdHint": "Use this code to join the project",
+    "students": "Students",
+    "studentsHint": "Participants in this project",
+    "reduction": "Total Reduction",
+    "reductionHint": "Overall emissions reduction",
+    "notFound": {
+      "title": "Project not found",
+      "description": "No project found with ID: {id}",
+      "returnButton": "Return to dashboard"
+    },
+    "overview": {
+      "title": "Project Overview",
+      "startDate": "Start Date",
+      "status": "Status",
+      "shareButtonText": "Share",
+      "shareButtonTextCopied": "Link Copied",
+      "editProject": "Edit Project"
+    },
+    "status": {
+      "active": "Active",
+      "completed": "Completed",
+      "pending": "Pending"
+    },
+    "actions": {
+      "completedActions": "Completed Actions",
+      "recentActionsDescription": "Recent actions taken to reduce emissions",
+      "viewAllActions": "View All Actions"
+    }
   }
 }

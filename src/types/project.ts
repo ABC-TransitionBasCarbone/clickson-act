@@ -10,6 +10,10 @@ type Project = {
   school: string;
   students: number;
   startDate: string;
+  subGoalDate: string;
+  finalGoalDate: string;
+  subgoal: number;
+  finalGoal: number;
   status: "active" | "completed" | "pending";
   emissions: number;
   reduction: number;
