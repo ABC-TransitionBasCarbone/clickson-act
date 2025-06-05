@@ -1,7 +1,7 @@
 import { Copy, CopyCheckIcon, Leaf, Users } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useState } from "react";
-import Project from "@/types/Project";
+import Project from "@/types/ProjectType";
 
 const StatCards = ({ project }: { project: Project }) => {
   const t = useTranslations("ProjectDetails");

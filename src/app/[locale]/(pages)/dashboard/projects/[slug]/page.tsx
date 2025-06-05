@@ -9,7 +9,7 @@ import StatCards from "@/components/(dashboard)/ProjectDetails/StatCards";
 import OverviewCard from "@/components/(dashboard)/ProjectDetails/OverviewCard";
 import ActionsCard from "@/components/(dashboard)/ProjectDetails/ActionsCard";
 
-import Project from "@/types/Project";
+import Project from "@/types/ProjectType";
 import { motion } from "framer-motion";
 
 const ProjectDetails = () => {

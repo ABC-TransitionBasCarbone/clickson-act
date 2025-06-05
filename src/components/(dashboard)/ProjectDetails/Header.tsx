@@ -1,7 +1,7 @@
 import { ArrowLeft, School } from "lucide-react";
 import { useRouter } from "@/i18n/navigation";
 import { useTranslations } from "next-intl";
-import Project from "@/types/Project";
+import Project from "@/types/ProjectType";
 
 const Header = ({ project }: { project: Project }) => {
   const router = useRouter();
