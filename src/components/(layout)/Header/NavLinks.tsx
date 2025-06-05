@@ -7,7 +7,7 @@ const NavLinks = ({ className }: { className?: string }) => {
 
   const navLinks = [
     { key: "Header.home", path: "/" },
-    { key: "Header.calculator", path: "/calculator" },
+    { key: "Header.dataReporting", path: "/data-reporting" },
     { key: "Header.monitoring", path: "/monitoring" },
   ];
 

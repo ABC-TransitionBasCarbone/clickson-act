@@ -52,7 +52,7 @@ const ActionButtons = () => {
       className="mt-10 flex w-full justify-center gap-5"
     >
       <Link
-        href={"/calculator"}
+        href={"/data-reporting"}
         className="btn btn-lg btn-primary w-fit rounded-full font-normal"
       >
         {t("HomePage.button1")}

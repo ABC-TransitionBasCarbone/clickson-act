@@ -54,7 +54,7 @@ const AvailableActions: React.FC<AvailableActionsProps> = ({ actions }) => {
               </span>
               <ChevronRight
                 className="h-4 w-4 cursor-pointer"
-                onClick={() => router.push("/calculator/student/styfrstn")}
+                onClick={() => router.push("/data-reporting/student/styfrstn")}
               />
             </div>
           </div>

@@ -20,7 +20,7 @@ const PassCodeForm = () => {
     e.preventDefault();
     setUser(formData);
 
-    router.push(`/calculator/${formData.passcode}`);
+    router.push(`/data-reporting/${formData.passcode}`);
   };
 
   return (

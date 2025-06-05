@@ -69,8 +69,8 @@ const SchoolGoalCard: React.FC<SchoolGoalCardProps> = ({
   return (
     <div className="card border-primary-200! bg-primary-50! mb-8">
       <div className="pb-4">
-        <div className="mb-2.5 flex items-center justify-between">
-          <h3 className="flex items-center gap-2 text-lg font-bold lg:text-2xl">
+        <div className="mb-2.5 flex justify-between max-lg:flex-col lg:items-center">
+          <h3 className="flex items-center gap-2 text-xl font-bold lg:text-2xl">
             <Target className="text-primary-600 h-5 w-5" />
             {t("schoolGoalTitle")}
           </h3>
@@ -83,7 +83,10 @@ const SchoolGoalCard: React.FC<SchoolGoalCardProps> = ({
 
       <div className="mx-auto h-64 w-full">
         <ResponsiveContainer width="100%" height="100%">
-          <LineChart data={chartData}>
+          <LineChart
+            data={chartData}
+            margin={{ top: 30, right: 20, bottom: 0, left: -10 }}
+          >
             <XAxis dataKey="date" />
             <YAxis
               domain={[0, Math.max(100, schoolGoal)]}

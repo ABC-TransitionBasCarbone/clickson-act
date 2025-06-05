@@ -1,4 +1,5 @@
 "use client";
+
 import Modal from "@/components/Modal";
 import { Action } from "@/types/Action";
 import { useTranslations } from "next-intl";
@@ -8,6 +9,7 @@ interface CustomAction extends Action {
   selected: boolean;
   status?: "Completed" | "Selected" | "Available";
   assignedTo?: string;
+  timeline?: string;
 }
 
 interface ActionModalProps {
@@ -25,7 +27,7 @@ const ActionModal: React.FC<ActionModalProps> = ({
   effortCategories,
   initialAction,
 }) => {
-  const t = useTranslations("StudentCalculator");
+  const t = useTranslations("Action");
 
   const [newAction, setNewAction] = useState<CustomAction>({
     id: "",
@@ -46,6 +48,7 @@ const ActionModal: React.FC<ActionModalProps> = ({
     performance: "",
     status: "Available",
     assignedTo: "",
+    timeline: "",
     selected: false,
   });
 
@@ -96,19 +99,13 @@ const ActionModal: React.FC<ActionModalProps> = ({
   return (
     <Modal
       id="custom_action"
-      title={mode === "edit" ? "Edit Action" : "Add Custom Action"}
+      title={mode === "edit" ? t("editAction") : t("addCustomAction")}
     >
       <div className="sm:max-w-md">
-        <p className="mb-4">
-          {mode === "edit"
-            ? "View your custom action details"
-            : "Create your own action to help reduce emissions"}
-        </p>
-
-        <div className="grid gap-4 py-4">
+        <div className="grid grid-cols-2 gap-4">
           {/* Status */}
           <div className="grid gap-2">
-            <label htmlFor="status">Status</label>
+            <label htmlFor="status">{t("status")}</label>
             <select
               id="status"
               value={newAction.status}
@@ -124,15 +121,15 @@ const ActionModal: React.FC<ActionModalProps> = ({
               className="input w-full"
               disabled={fieldDisabled}
             >
-              <option value="Available">Available</option>
-              <option value="Selected">Selected</option>
-              <option value="Completed">Completed</option>
+              <option value="Available">{t("available")}</option>
+              <option value="Selected">{t("selected")}</option>
+              <option value="Completed">{t("completed")}</option>
             </select>
           </div>
 
           {/* Assigned To */}
           <div className="grid gap-2">
-            <label htmlFor="assignedTo">Assigned To</label>
+            <label htmlFor="assignedTo">{t("assignedTo")}</label>
             <input
               id="assignedTo"
               value={newAction.assignedTo}
@@ -146,7 +143,7 @@ const ActionModal: React.FC<ActionModalProps> = ({
 
           {/* Category */}
           <div className="grid gap-2">
-            <label htmlFor="category">Category</label>
+            <label htmlFor="category">{t("category")}</label>
             <select
               id="category"
               value={newAction.category}
@@ -156,7 +153,7 @@ const ActionModal: React.FC<ActionModalProps> = ({
               className="input w-full"
               disabled={fieldDisabled}
             >
-              <option value="">Select a category</option>
+              <option value="">{t("selectCategory")}</option>
               {categories.map((cat) => (
                 <option key={cat.label} value={cat.value}>
                   {t(cat.label)}
@@ -165,9 +162,31 @@ const ActionModal: React.FC<ActionModalProps> = ({
             </select>
           </div>
 
+          {/* Timeline */}
+          <div className="grid gap-2">
+            <label htmlFor="timeline">{t("timeline")}</label>
+            <select
+              id="timeline"
+              value={newAction.timeline}
+              onChange={(e) =>
+                setNewAction({ ...newAction, timeline: e.target.value })
+              }
+              className="input w-full"
+              disabled={fieldDisabled}
+            >
+              <option value="">{t("selectTimeline")}</option>
+              <option value="≤1">{t("timeline1")}</option>
+              <option value="1-2">{t("timeline1-2")}</option>
+              <option value="2-5">{t("timeline2-5")}</option>
+              <option value="5-10">{t("timeline5-10")}</option>
+              <option value="10-15">{t("timeline10-15")}</option>
+              <option value=">15">{t("timeline15")}</option>
+            </select>
+          </div>
+
           {/* Title */}
           <div className="grid gap-2">
-            <label htmlFor="title">Action Title</label>
+            <label htmlFor="title">{t("actionTitle")}</label>
             <input
               id="title"
               value={newAction.title}
@@ -181,7 +200,7 @@ const ActionModal: React.FC<ActionModalProps> = ({
 
           {/* Description */}
           <div className="grid gap-2">
-            <label htmlFor="description">Description</label>
+            <label htmlFor="description">{t("description")}</label>
             <input
               id="description"
               value={newAction.description}
@@ -195,7 +214,7 @@ const ActionModal: React.FC<ActionModalProps> = ({
 
           {/* Effort */}
           <div className="grid gap-2">
-            <label htmlFor="effort">Effort</label>
+            <label htmlFor="effort">{t("effort")}</label>
             <select
               id="effort"
               value={newAction.effort}
@@ -205,10 +224,10 @@ const ActionModal: React.FC<ActionModalProps> = ({
               className="input w-full"
               disabled={fieldDisabled}
             >
-              <option value="">Select effort</option>
+              <option value="">{t("selectEffort")}</option>
               {effortCategories.map((effort) => (
                 <option key={effort.value} value={effort.value}>
-                  {effort.label}
+                  {t(effort.label)}
                 </option>
               ))}
             </select>
@@ -216,7 +235,7 @@ const ActionModal: React.FC<ActionModalProps> = ({
 
           {/* Reduction */}
           <div className="grid gap-2">
-            <label htmlFor="reduction">Estimated Reduction (%)</label>
+            <label htmlFor="reduction">{t("estimatedReduction")}</label>
             <input
               id="reduction"
               type="number"
@@ -234,9 +253,9 @@ const ActionModal: React.FC<ActionModalProps> = ({
             />
           </div>
 
-          {/* Additional Fields */}
+          {/* Manager */}
           <div className="grid gap-2">
-            <label htmlFor="manager">Manager</label>
+            <label htmlFor="manager">{t("manager")}</label>
             <input
               id="manager"
               value={newAction.manager}
@@ -248,8 +267,9 @@ const ActionModal: React.FC<ActionModalProps> = ({
             />
           </div>
 
+          {/* Nature */}
           <div className="grid gap-2">
-            <label htmlFor="nature">Nature</label>
+            <label htmlFor="nature">{t("nature")}</label>
             <input
               id="nature"
               value={newAction.nature}
@@ -261,8 +281,9 @@ const ActionModal: React.FC<ActionModalProps> = ({
             />
           </div>
 
+          {/* Objectives */}
           <div className="grid gap-2">
-            <label htmlFor="objectives">Objectives</label>
+            <label htmlFor="objectives">{t("objectives")}</label>
             <textarea
               rows={3}
               id="objectives"
@@ -275,8 +296,9 @@ const ActionModal: React.FC<ActionModalProps> = ({
             />
           </div>
 
+          {/* Key Contacts */}
           <div className="grid gap-2">
-            <label htmlFor="keyContacts">Key Contacts</label>
+            <label htmlFor="keyContacts">{t("keyContacts")}</label>
             <textarea
               rows={3}
               id="keyContacts"
@@ -289,8 +311,9 @@ const ActionModal: React.FC<ActionModalProps> = ({
             />
           </div>
 
+          {/* Steps */}
           <div className="grid gap-2">
-            <label htmlFor="steps">Steps</label>
+            <label htmlFor="steps">{t("steps")}</label>
             <textarea
               rows={3}
               id="steps"
@@ -303,12 +326,12 @@ const ActionModal: React.FC<ActionModalProps> = ({
             />
           </div>
 
+          {/* Calendar */}
           <div className="grid gap-2">
-            <label htmlFor="calendar">Calendar</label>
+            <label htmlFor="calendar">{t("calendar")}</label>
             <textarea
               rows={3}
               id="calendar"
-              placeholder="e.g., 25/05"
               value={newAction.calendar}
               onChange={(e) =>
                 setNewAction({ ...newAction, calendar: e.target.value })
@@ -318,8 +341,9 @@ const ActionModal: React.FC<ActionModalProps> = ({
             />
           </div>
 
+          {/* Monitoring */}
           <div className="grid gap-2">
-            <label htmlFor="monitoring">Monitoring</label>
+            <label htmlFor="monitoring">{t("monitoring")}</label>
             <textarea
               rows={3}
               id="monitoring"
@@ -332,11 +356,12 @@ const ActionModal: React.FC<ActionModalProps> = ({
             />
           </div>
 
+          {/* Performance */}
           <div className="grid gap-2">
-            <label htmlFor="performance">Performance</label>
+            <label htmlFor="performance">{t("performance")}</label>
             <textarea
-              id="performance"
               rows={3}
+              id="performance"
               value={newAction.performance}
               onChange={(e) =>
                 setNewAction({ ...newAction, performance: e.target.value })
@@ -347,38 +372,29 @@ const ActionModal: React.FC<ActionModalProps> = ({
           </div>
         </div>
 
-        {/* Footer buttons */}
-        <div className="flex items-center justify-end gap-4">
-          {isInvalid && isEditing && (
-            <p className="mr-auto text-red-500">{t("customActionWarning")}</p>
+        <div className="mt-6 flex justify-end gap-3">
+          {mode === "edit" && !isEditing && (
+            <button
+              className="btn btn-outline"
+              onClick={() => setIsEditing(true)}
+            >
+              {t("edit")}
+            </button>
           )}
 
-          {mode === "edit" && !isEditing ? (
-            <>
-              <button className="btn px-4 py-2" onClick={handleCancel}>
-                Close
-              </button>
-              <button
-                className="btn btn-primary rounded px-4 py-2 text-white"
-                onClick={() => setIsEditing(true)}
-              >
-                Edit
-              </button>
-            </>
-          ) : (
-            <>
-              <button className="btn px-4 py-2" onClick={handleCancel}>
-                Cancel
-              </button>
-              <button
-                className="btn btn-primary rounded px-4 py-2 text-white"
-                onClick={handleSubmit}
-                disabled={isInvalid}
-              >
-                {mode === "edit" ? "Update Action" : "Add Action"}
-              </button>
-            </>
+          {!fieldDisabled && (
+            <button
+              className="btn btn-primary"
+              onClick={handleSubmit}
+              disabled={isInvalid}
+            >
+              {mode === "edit" ? t("saveChanges") : t("addAction")}
+            </button>
           )}
+
+          <button className="btn" onClick={handleCancel}>
+            {t("cancel")}
+          </button>
         </div>
       </div>
     </Modal>

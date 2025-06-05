@@ -1,7 +1,7 @@
 {
   "Header": {
     "home": "Home",
-    "calculator": "Calculator",
+    "dataReporting": "Data Reporting",
     "monitoring": "Monitoring"
   },
 
@@ -22,15 +22,15 @@
   },
 
   "HomePage": {
-    "subtitle": "Eco-friendly Calculator",
+    "subtitle": "Eco-friendly Data Reporting Tool",
     "titleText1": "Measure",
     "titleText2": "the greenhouse gas emissions of your school",
     "heroText1": "Simple, intuitive, and accurate calculations to help your school track and reduce its environmental impact.",
     "button1": "Get Started",
     "button2": "Learn More"
   },
-  "Calculator": {
-    "titleText1": "CALCULATOR",
+  "DataReporting": {
+    "titleText1": "DATA REPORTING",
     "titleText2": "Let's measure the greenhouse gas emissions of your institution!",
     "heroText1": "Use the login form to access your dashboard, or ask your teacher to invite you.",
     "howItWorksTitle": "How It Works",
@@ -245,5 +245,46 @@
       "recentActionsDescription": "Recent actions taken to reduce emissions",
       "viewAllActions": "View All Actions"
     }
+  },
+
+  "Action": {
+    "addCustomAction": "Add Custom Action",
+    "status": "Status",
+    "available": "Available",
+    "selected": "Selected",
+    "completed": "Completed",
+    "assignedTo": "Assigned To",
+    "category": "Category",
+    "selectCategory": "Select a category",
+    "timeline": "Timeline",
+    "selectTimeline": "Select timeline",
+    "timeline1": "Less than or equal to 1 year",
+    "timeline1-2": "Between 1 and 2 years",
+    "timeline2-5": "Between 2 and 5 years",
+    "timeline5-10": "Between 5 and 10 years",
+    "timeline10-15": "Between 10 and 15 years",
+    "timeline15": "Greater than 15 years",
+    "actionTitle": "Action Title",
+    "description": "Description",
+    "effort": "Effort",
+    "Easy": "Easy",
+    "Medium": "Medium",
+    "Hard": "Hard",
+    "selectEffort": "Select effort",
+    "estimatedReduction": "Estimated Reduction (%)",
+    "manager": "Manager",
+    "nature": "Nature",
+    "objectives": "Objectives",
+    "keyContacts": "Key Contacts",
+    "steps": "Steps",
+    "calendar": "Calendar",
+    "monitoring": "Monitoring",
+    "performance": "Performance",
+    "addAction": "Add Action",
+    "cancel": "Cancel",
+    "Energy": "Energy",
+    "Waste": "Waste",
+    "Transport": "Transport",
+    "Nature": "Nature"
   }
 }

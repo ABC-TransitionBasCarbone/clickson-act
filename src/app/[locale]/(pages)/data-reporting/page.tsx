@@ -12,7 +12,7 @@ import { useUser } from "@/context/UserContext";
 import { useRouter } from "@/i18n/navigation";
 
 const HeroSection = () => {
-  const t = useTranslations();
+  const t = useTranslations("DataReporting");
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
@@ -22,20 +22,20 @@ const HeroSection = () => {
       className="flex w-full flex-col items-center justify-center"
     >
       <h2 className="my-2.5 max-w-6xl text-center text-4xl font-bold lg:text-7xl">
-        {t("Calculator.titleText1")}
+        {t("titleText1")}
       </h2>
       <p className="max-w-2xl text-center text-lg text-gray-600">
-        {t("Calculator.titleText2")}
+        {t("titleText2")}
       </p>
       <p className="mb-10 max-w-2xl text-center text-lg text-gray-600">
-        {t("Calculator.heroText1")}
+        {t("heroText1")}
       </p>
     </motion.div>
   );
 };
 
 const ActionButtons = () => {
-  const t = useTranslations();
+  const t = useTranslations("DataReporting");
   const router = useRouter();
   const { user } = useUser();
 
@@ -44,7 +44,7 @@ const ActionButtons = () => {
 
     if (user) openModal("passcode");
 
-    router.push(`/calculator/${user?.passcode}`);
+    router.push(`/data-reporting/${user?.passcode}`);
   };
 
   return (
@@ -53,20 +53,20 @@ const ActionButtons = () => {
         className="btn btn-primary rounded-full font-normal"
         onClick={handleSubmit}
       >
-        {t("Calculator.button1")}
+        {t("button1")}
       </button>
       <button
         className="btn btn-soft rounded-full bg-white font-normal"
         onClick={() => openModal("login")}
       >
-        {t("Calculator.button2")}
+        {t("button2")}
       </button>
     </div>
   );
 };
 
 const HowItWorks = () => {
-  const t = useTranslations();
+  const t = useTranslations("DataReporting");
 
   return (
     <motion.div
@@ -76,9 +76,7 @@ const HowItWorks = () => {
       transition={{ duration: 0.5, delay: 0.2 }}
       className="flex w-full max-w-2xl flex-col items-center justify-center self-center"
     >
-      <h3 className="mb-5 text-xl font-bold">
-        {t("Calculator.howItWorksTitle")}
-      </h3>
+      <h3 className="mb-5 text-xl font-bold">{t("howItWorksTitle")}</h3>
       <div className="grid gap-5 md:grid-cols-3">
         {[1, 2, 3].map((number) => (
           <div
@@ -88,9 +86,9 @@ const HowItWorks = () => {
             <span className="bg-primary/10 text-primary flex h-12 w-12 items-center justify-center rounded-full p-2.5 text-xl font-bold">
               {number}
             </span>
-            <span>{t(`Calculator.howItWorksBox${number}Title`)}</span>
+            <span>{t(`howItWorksBox${number}Title`)}</span>
             <p className="text-sm text-gray-600">
-              {t(`Calculator.howItWorksBox${number}Text`)}
+              {t(`howItWorksBox${number}Text`)}
             </p>
           </div>
         ))}
@@ -116,7 +114,7 @@ const Calculator = () => {
       </div>
 
       {/* Modals */}
-      <Modal id="passcode" title={t("Calculator.joinClassroom")}>
+      <Modal id="passcode" title={t("joinClassroom")}>
         <PassCodeForm />
       </Modal>
       <Modal id="login" title={t("User.login")}>

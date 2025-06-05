@@ -61,7 +61,7 @@ export const SubcategoryForm: React.FC<SubcategoryFormProps> = ({
           <button
             className="btn btn-primary mt-4"
             onClick={onCalculate}
-            disabled={subcategoryValues.some((v) => v.trim() === "")}
+            disabled={!subcategoryValues.some((v) => v.trim() != "")}
           >
             {t("calculateButton")}
           </button>
