@@ -286,5 +286,22 @@
     "Waste": "Waste",
     "Transport": "Transport",
     "Nature": "Nature"
+  },
+
+  "AdminDashboard": {
+    "title": "Admin Dashboard",
+    "description": "Manage schools and teacher assignments",
+    "editTitle": "Edit School",
+    "name": "Name",
+    "address": "Address",
+    "teacher": "Teacher",
+    "studentCount": "Student Count",
+    "cancel": "Cancel",
+    "update": "Update",
+    "actions": "Actions",
+    "students": "Students",
+    "edit": "Edit",
+    "delete": "Delete",
+    "none": "None"
   }
 }

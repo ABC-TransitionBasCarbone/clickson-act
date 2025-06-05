@@ -1,7 +1,7 @@
 import { useTranslations } from "next-intl";
 import { Edit, Share2 } from "lucide-react";
 import { useState } from "react";
-import Project from "@/types/project";
+import Project from "@/types/Project";
 
 type Props = {
   project: Project;
