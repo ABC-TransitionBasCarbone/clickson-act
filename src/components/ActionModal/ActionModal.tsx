@@ -10,6 +10,7 @@ interface CustomAction extends Action {
   status?: "Completed" | "Selected" | "Available";
   assignedTo?: string;
   timeline?: string;
+  subcategory?: string;
 }
 
 interface ActionModalProps {
@@ -17,7 +18,10 @@ interface ActionModalProps {
   onSubmit: (action: CustomAction) => void;
   categories: { value: string; label: string }[];
   effortCategories: { value: string; label: string }[];
+  subcategoryOptions?: { value: string; label: string }[];
   initialAction?: CustomAction;
+  onApprove?: (action: CustomAction) => void;
+  onDelete?: (action: CustomAction) => void;
 }
 
 const ActionModal: React.FC<ActionModalProps> = ({
@@ -25,7 +29,10 @@ const ActionModal: React.FC<ActionModalProps> = ({
   onSubmit,
   categories,
   effortCategories,
+  subcategoryOptions = [],
   initialAction,
+  onApprove,
+  onDelete,
 }) => {
   const t = useTranslations("Action");
 
@@ -33,6 +40,7 @@ const ActionModal: React.FC<ActionModalProps> = ({
     id: "",
     date: "",
     category: "",
+    subcategory: "",
     title: "",
     description: "",
     reduction: 0,
@@ -91,6 +99,7 @@ const ActionModal: React.FC<ActionModalProps> = ({
 
   const isInvalid =
     newAction.category === "" ||
+    newAction.subcategory === "" ||
     newAction.title === "" ||
     newAction.description === "" ||
     newAction.reduction === 0 ||
@@ -148,7 +157,11 @@ const ActionModal: React.FC<ActionModalProps> = ({
               id="category"
               value={newAction.category}
               onChange={(e) =>
-                setNewAction({ ...newAction, category: e.target.value })
+                setNewAction({
+                  ...newAction,
+                  category: e.target.value,
+                  subcategory: "",
+                })
               }
               className="input w-full"
               disabled={fieldDisabled}
@@ -159,6 +172,33 @@ const ActionModal: React.FC<ActionModalProps> = ({
                   {t(cat.label)}
                 </option>
               ))}
+            </select>
+          </div>
+
+          {/* Subcategory */}
+          <div className="grid gap-2">
+            <label htmlFor="subcategory">{t("subcategory")}</label>
+            <select
+              id="subcategory"
+              value={newAction.subcategory}
+              onChange={(e) =>
+                setNewAction({ ...newAction, subcategory: e.target.value })
+              }
+              className="input w-full"
+              disabled={fieldDisabled || !newAction.category}
+            >
+              <option value="">{t("selectCategory")}</option>
+              {subcategoryOptions
+                .filter(
+                  (sub) =>
+                    !newAction.category ||
+                    sub.value.startsWith(newAction.category),
+                )
+                .map((sub) => (
+                  <option key={sub.value} value={sub.value}>
+                    {t(sub.label)}
+                  </option>
+                ))}
             </select>
           </div>
 
@@ -373,9 +413,26 @@ const ActionModal: React.FC<ActionModalProps> = ({
         </div>
 
         <div className="mt-6 flex justify-end gap-3">
+          {/* Approve/Delete in edit mode */}
+          {mode === "edit" && !isEditing && (
+            <>
+              <button
+                className="btn btn-success"
+                onClick={() => onApprove && onApprove(newAction)}
+              >
+                {t("approve")}
+              </button>
+              <button
+                className="btn btn-error"
+                onClick={() => onDelete && onDelete(newAction)}
+              >
+                {t("delete")}
+              </button>
+            </>
+          )}
           {mode === "edit" && !isEditing && (
             <button
-              className="btn btn-outline"
+              className="btn-outline btn"
               onClick={() => setIsEditing(true)}
             >
               {t("edit")}

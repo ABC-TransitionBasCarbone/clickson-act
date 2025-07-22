@@ -20,7 +20,7 @@ const EmissionsInput: React.FC<EmissionsInputProps> = ({
   const t = useTranslations("StudentCalculator");
   const [showWarning, setShowWarning] = useState(false);
 
-  const onCalculate = () => {
+  const onSelect = () => {
     const anyFilled = emissions.some((e) => e.value.trim() !== "");
     if (!anyFilled) {
       setShowWarning(true);
@@ -50,9 +50,9 @@ const EmissionsInput: React.FC<EmissionsInputProps> = ({
         ))}
         <button
           className="btn-outline btn btn-primary self-end"
-          onClick={onCalculate}
+          onClick={onSelect}
         >
-          {t("calculateButton")}
+          {t("selectButton")}
         </button>
       </div>
 

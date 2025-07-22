@@ -24,6 +24,7 @@ const Monitoring: React.FC = () => {
   const [editingType, setEditingType] = useState<
     "completed" | "available" | null
   >(null);
+  const [showCreateModal, setShowCreateModal] = useState(false);
 
   useEffect(() => {
     fetch("/data/actions.json")
@@ -48,6 +49,23 @@ const Monitoring: React.FC = () => {
     setEditingType(type);
     const modal = document.getElementById("custom_action") as HTMLDialogElement;
     if (modal) modal.showModal();
+  };
+
+  const handleAddAction = () => {
+    setShowCreateModal(true);
+    setEditingAction(null);
+    setEditingType(null);
+    setTimeout(() => {
+      const modal = document.getElementById(
+        "custom_action",
+      ) as HTMLDialogElement;
+      if (modal) modal.showModal();
+    }, 0);
+  };
+
+  const handleSubmitCreate = (newAction: CustomAction) => {
+    setAvailableActions((prev) => [...prev, newAction]);
+    setShowCreateModal(false);
   };
 
   const handleSubmitEdit = (updatedAction: CustomAction) => {
@@ -98,6 +116,7 @@ const Monitoring: React.FC = () => {
             currentActions={availableActions}
             onEdit={(action) => handleEditClick(action, "available")}
             onViewAll={() => router.push("/monitoring/available-actions")}
+            onAddAction={handleAddAction}
           />
 
           <CompletedActions
@@ -124,6 +143,24 @@ const Monitoring: React.FC = () => {
             { value: "hard", label: "Hard" },
           ]}
           initialAction={editingAction}
+        />
+      )}
+      {showCreateModal && (
+        <CustomActionFormModal
+          mode="create"
+          onSubmit={handleSubmitCreate}
+          categories={[
+            { value: "energy", label: "Energy" },
+            { value: "waste", label: "Waste" },
+            { value: "transport", label: "Transport" },
+            { value: "nature", label: "Nature" },
+          ]}
+          effortCategories={[
+            { value: "easy", label: "Easy" },
+            { value: "medium", label: "Medium" },
+            { value: "hard", label: "Hard" },
+          ]}
+          initialAction={undefined}
         />
       )}
     </div>

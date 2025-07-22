@@ -8,6 +8,7 @@ import Header from "@/components/(dashboard)/ProjectDetails/Header";
 import StatCards from "@/components/(dashboard)/ProjectDetails/StatCards";
 import OverviewCard from "@/components/(dashboard)/ProjectDetails/OverviewCard";
 import ActionsCard from "@/components/(dashboard)/ProjectDetails/ActionsCard";
+import SchoolGoalCard from "@/components/SchoolGoalCard";
 
 import Project from "@/types/ProjectType";
 import { motion } from "framer-motion";
@@ -68,6 +69,15 @@ const ProjectDetails = () => {
           <OverviewCard project={project} />
           <ActionsCard actions={project.actions} />
         </div>
+        {/* Goal Graph after overview and completed actions */}
+        <SchoolGoalCard
+          schoolGoal={project.finalGoal}
+          subGoal={project.subgoal}
+          subGoalYear={project.subGoalDate}
+          finalGoalYear={project.finalGoalDate}
+          baseReductionPerYear={5} // Placeholder, adjust as needed
+          startYear={project.startDate}
+        />
       </motion.div>
     </div>
   );

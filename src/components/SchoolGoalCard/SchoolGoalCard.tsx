@@ -34,7 +34,6 @@ const generateChartData = (
   for (let year = start; year <= end; year++) {
     current += baseRate;
     currentAlt += selectedRate ? selectedRate + baseRate : 0;
-    console.log("selectedRate: ", selectedRate);
     data.push({
       date: `${year}`,
       baseReduction: Math.min(current, 100),
@@ -67,21 +66,21 @@ const SchoolGoalCard: React.FC<SchoolGoalCardProps> = ({
   );
 
   return (
-    <div className="card border-primary-200! bg-primary-50! mb-8">
+    <div className="bg-primary-50! mb-8 border-primary-200! card">
       <div className="pb-4">
-        <div className="mb-2.5 flex justify-between max-lg:flex-col lg:items-center">
-          <h3 className="flex items-center gap-2 text-xl font-bold lg:text-2xl">
-            <Target className="text-primary-600 h-5 w-5" />
+        <div className="flex max-lg:flex-col justify-between lg:items-center mb-2.5">
+          <h3 className="flex items-center gap-2 font-bold text-xl lg:text-2xl">
+            <Target className="w-5 h-5 text-primary-600" />
             {t("schoolGoalTitle")}
           </h3>
-          <span className="text-primary text-md font-bold lg:text-xl">
+          <span className="font-bold text-md text-primary lg:text-xl">
             {subGoal}% {t("schoolGoalReduction")} ({subGoalYear})
           </span>
         </div>
         <p>{t("schoolGoalDescription")}</p>
       </div>
 
-      <div className="mx-auto h-64 w-full">
+      <div className="mx-auto w-full h-64">
         <ResponsiveContainer width="100%" height="100%">
           <LineChart
             data={chartData}
@@ -156,14 +155,14 @@ const SchoolGoalCard: React.FC<SchoolGoalCardProps> = ({
       </div>
 
       {/* Legend */}
-      <div className="text-muted-foreground mt-3 flex flex-wrap justify-between gap-4 text-sm">
+      <div className="flex flex-wrap justify-between gap-4 mt-3 text-muted-foreground text-sm">
         <div className="flex items-center gap-2">
-          <span className="inline-block h-3 w-3 rounded-full bg-blue-500" />
+          <span className="inline-block bg-blue-500 rounded-full w-3 h-3" />
           <span>{t("schoolGoalLegendProgress")}</span>
         </div>
         {selectedActionReductionPerYear && (
           <div className="flex items-center gap-2">
-            <span className="inline-block h-3 w-3 rounded-full bg-purple-500" />
+            <span className="inline-block bg-purple-500 rounded-full w-3 h-3" />
             <span>
               {t("schoolGoalLegendSelectedAction")}:{" "}
               {selectedActionReductionPerYear}%
@@ -171,13 +170,13 @@ const SchoolGoalCard: React.FC<SchoolGoalCardProps> = ({
           </div>
         )}
         <div className="flex items-center gap-2">
-          <span className="inline-block h-3 w-3 rounded-full bg-orange-400" />
+          <span className="inline-block bg-orange-400 rounded-full w-3 h-3" />
           <span>
             {t("schoolGoalLegendSubgoal")}: {subGoal}% ({subGoalYearNum})
           </span>
         </div>
         <div className="flex items-center gap-2">
-          <span className="inline-block h-3 w-3 rounded-full bg-emerald-500" />
+          <span className="inline-block bg-emerald-500 rounded-full w-3 h-3" />
           <span>
             {t("schoolGoalLegendGoal")}: {schoolGoal}% ({finalYearNum})
           </span>

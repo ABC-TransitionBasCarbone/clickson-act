@@ -103,7 +103,7 @@ const openModal = (id: string) => {
 };
 
 const Calculator = () => {
-  const t = useTranslations();
+  const t = useTranslations("DataReporting");
 
   return (
     <div className="relative flex h-[calc(100vh-6rem)] w-full flex-col justify-between pt-15">

@@ -1,5 +1,6 @@
 import React from "react";
 import { Star, ChevronRight } from "lucide-react";
+import { PlusCircle } from "lucide-react";
 
 import { Action } from "@/types/Action";
 import { useTranslations } from "next-intl";
@@ -12,12 +13,14 @@ interface CurrentActionsProps {
   currentActions: CustomAction[];
   onEdit: (action: CustomAction) => void;
   onViewAll: () => void;
+  onAddAction: () => void;
 }
 
 const CurrentActions: React.FC<CurrentActionsProps> = ({
   currentActions,
   onEdit,
   onViewAll,
+  onAddAction,
 }) => {
   const t = useTranslations();
 
@@ -43,13 +46,18 @@ const CurrentActions: React.FC<CurrentActionsProps> = ({
             <div>
               <p className="font-medium">{action.title}</p>
               <span
-                className={`rounded-full px-2 py-0.5 text-xs ${
-                  action.effort === "Low"
-                    ? "bg-green-100 text-green-800"
-                    : action.effort === "Medium"
-                      ? "bg-yellow-100 text-yellow-800"
-                      : "bg-red-100 text-red-800"
-                }`}
+                className={`rounded-full px-2 py-0.5 text-xs ${(() => {
+                  switch (action.effort.toLowerCase()) {
+                    case "low":
+                      return "bg-green-100 text-green-800";
+                    case "medium":
+                      return "bg-yellow-100 text-yellow-800";
+                    case "hard":
+                      return "bg-red-100 text-red-800";
+                    default:
+                      return "bg-gray-100 text-gray-800";
+                  }
+                })()}`}
               >
                 {t(`effort.${action.effort.toLowerCase()}`)}{" "}
                 {t("currentActions.effort")}
@@ -76,6 +84,13 @@ const CurrentActions: React.FC<CurrentActionsProps> = ({
           onClick={onViewAll}
         >
           {t("currentActions.viewAllAvailable")}
+        </button>
+        <button
+          className="btn btn-soft mt-auto flex w-fit items-center gap-2 self-center bg-white"
+          onClick={onAddAction}
+        >
+          <PlusCircle className="h-4 w-4" />
+          {t("StudentCalculator.addActionButton")}
         </button>
       </div>
     </div>

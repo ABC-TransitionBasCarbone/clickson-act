@@ -1,5 +1,4 @@
 import { useState } from "react";
-import { ChevronDown } from "lucide-react";
 import { useTranslations } from "next-intl";
 import ProjectForm from "@/types/ProjectForm";
 
@@ -17,11 +16,49 @@ export const ProjectFormModal: React.FC<ProjectFormModalProps> = ({
   onSubmit,
 }) => {
   const t = useTranslations("TeacherDashboard");
-  const [showSubGoals, setShowSubGoals] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setForm((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const handleSubmit = async () => {
+    if (
+      !form.name ||
+      !form.startDate ||
+      !form.finalGoal ||
+      !form.goalReductionAmount
+    ) {
+      alert("Please fill in all required fields");
+      return;
+    }
+
+    setIsSubmitting(true);
+    try {
+      const response = await fetch("http://localhost:3000/project", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(form),
+      });
+
+      if (response.ok) {
+        onSubmit();
+        onClose();
+      } else {
+        const errorData = await response.json();
+        alert(
+          `Error creating project: ${errorData.message || "Unknown error"}`,
+        );
+      }
+    } catch (error) {
+      console.error("Error submitting project:", error);
+      alert("Error creating project. Please try again.");
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -40,7 +77,7 @@ export const ProjectFormModal: React.FC<ProjectFormModalProps> = ({
               type="text"
               value={form.name}
               onChange={handleChange}
-              className="input input-bordered w-full"
+              className="input-bordered input w-full"
               placeholder={t("projectNamePlaceholder")}
             />
           </div>
@@ -56,14 +93,14 @@ export const ProjectFormModal: React.FC<ProjectFormModalProps> = ({
               type="date"
               value={form.startDate}
               onChange={handleChange}
-              className="input input-bordered w-full"
+              className="input-bordered input w-full"
             />
           </div>
 
           {/* Final Goal */}
           <div>
             <label htmlFor="finalGoal" className="label">
-              <span className="label-text">{t("finalGoalLabel")}</span>
+              <span className="label-text">{t("subGoalDateLabel")}</span>
             </label>
             <input
               id="finalGoal"
@@ -71,7 +108,7 @@ export const ProjectFormModal: React.FC<ProjectFormModalProps> = ({
               type="date"
               value={form.finalGoal}
               onChange={handleChange}
-              className="input input-bordered w-full"
+              className="input-bordered input w-full"
             />
           </div>
 
@@ -85,70 +122,25 @@ export const ProjectFormModal: React.FC<ProjectFormModalProps> = ({
             <input
               id="goalReductionAmount"
               name="goalReductionAmount"
-              type="text"
+              type="number"
               value={form.goalReductionAmount}
               onChange={handleChange}
-              className="input input-bordered w-full"
+              className="input-bordered input w-full"
               placeholder={t("goalReductionAmountPlaceholder")}
             />
           </div>
-
-          {/* Toggle Sub Goals Button */}
-          <button
-            type="button"
-            className="text-primary-600 flex items-center hover:underline"
-            onClick={() => setShowSubGoals(!showSubGoals)}
-            aria-expanded={showSubGoals}
-          >
-            <ChevronDown
-              className={`mr-1 transition-transform ${showSubGoals ? "rotate-180" : ""}`}
-            />
-            {t("addSubGoal")}
-          </button>
-
-          {/* Sub Goal Fields - both together */}
-          {showSubGoals && (
-            <div className="mt-2 space-y-4">
-              <div>
-                <label htmlFor="subGoal" className="label">
-                  <span className="label-text">{t("subGoalLabel")}</span>
-                </label>
-                <input
-                  id="subGoal"
-                  name="subGoal"
-                  type="date"
-                  value={form.subGoal}
-                  onChange={handleChange}
-                  className="input input-bordered w-full"
-                />
-              </div>
-
-              <div>
-                <label htmlFor="reductionSubGoal" className="label">
-                  <span className="label-text">
-                    {t("subGoalReductionLabel")}
-                  </span>
-                </label>
-                <input
-                  id="reductionSubGoal"
-                  name="reductionSubGoal"
-                  type="text"
-                  value={form.reductionSubGoal}
-                  onChange={handleChange}
-                  className="input input-bordered w-full"
-                  placeholder={t("subGoalReductionPlaceholder")}
-                />
-              </div>
-            </div>
-          )}
         </div>
 
         <div className="modal-action">
-          <button onClick={onClose} className="btn">
+          <button onClick={onClose} className="btn" disabled={isSubmitting}>
             {t("cancel")}
           </button>
-          <button onClick={onSubmit} className="btn btn-primary">
-            {t("submit")}
+          <button
+            onClick={handleSubmit}
+            className="btn btn-primary"
+            disabled={isSubmitting}
+          >
+            {isSubmitting ? "Creating..." : t("submit")}
           </button>
         </div>
       </div>
