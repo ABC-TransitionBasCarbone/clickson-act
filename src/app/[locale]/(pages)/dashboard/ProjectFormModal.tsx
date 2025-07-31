@@ -20,7 +20,13 @@ export const ProjectFormModal: React.FC<ProjectFormModalProps> = ({
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
-    setForm((prev) => ({ ...prev, [name]: value }));
+    setForm((prev) => ({
+      ...prev,
+      [name]:
+        name === "students" || name === "goalReductionAmount"
+          ? Number(value)
+          : value,
+    }));
   };
 
   const handleSubmit = async () => {
@@ -36,23 +42,8 @@ export const ProjectFormModal: React.FC<ProjectFormModalProps> = ({
 
     setIsSubmitting(true);
     try {
-      const response = await fetch("http://localhost:3000/project", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(form),
-      });
-
-      if (response.ok) {
-        onSubmit();
-        onClose();
-      } else {
-        const errorData = await response.json();
-        alert(
-          `Error creating project: ${errorData.message || "Unknown error"}`,
-        );
-      }
+      onSubmit();
+      onClose();
     } catch (error) {
       console.error("Error submitting project:", error);
       alert("Error creating project. Please try again.");
@@ -64,9 +55,9 @@ export const ProjectFormModal: React.FC<ProjectFormModalProps> = ({
   return (
     <div className="modal modal-open">
       <div className="modal-box">
-        <h3 className="text-lg font-bold">{t("createNewProject")}</h3>
+        <h3 className="font-bold text-lg">{t("createNewProject")}</h3>
         <div className="space-y-4 py-4">
-          {/* Name */}
+          {/* Project Name */}
           <div>
             <label htmlFor="name" className="label">
               <span className="label-text">{t("projectNameLabel")}</span>
@@ -77,8 +68,43 @@ export const ProjectFormModal: React.FC<ProjectFormModalProps> = ({
               type="text"
               value={form.name}
               onChange={handleChange}
-              className="input-bordered input w-full"
+              className="input-bordered w-full input"
               placeholder={t("projectNamePlaceholder")}
+              required
+            />
+          </div>
+
+          {/* School Name */}
+          <div>
+            <label htmlFor="school" className="label">
+              <span className="label-text">{t("schoolNameLabel")}</span>
+            </label>
+            <input
+              id="school"
+              name="school"
+              type="text"
+              value={form.school}
+              onChange={handleChange}
+              className="input-bordered w-full input"
+              placeholder={t("schoolNamePlaceholder")}
+              required
+            />
+          </div>
+
+          {/* Number of Students */}
+          <div>
+            <label htmlFor="students" className="label">
+              <span className="label-text">{t("numberOfStudentsLabel")}</span>
+            </label>
+            <input
+              id="students"
+              name="students"
+              type="number"
+              value={form.students}
+              onChange={handleChange}
+              className="input-bordered w-full input"
+              placeholder={t("numberOfStudentsPlaceholder")}
+              min="0"
             />
           </div>
 
@@ -93,7 +119,7 @@ export const ProjectFormModal: React.FC<ProjectFormModalProps> = ({
               type="date"
               value={form.startDate}
               onChange={handleChange}
-              className="input-bordered input w-full"
+              className="input-bordered w-full input"
             />
           </div>
 
@@ -108,7 +134,7 @@ export const ProjectFormModal: React.FC<ProjectFormModalProps> = ({
               type="date"
               value={form.finalGoal}
               onChange={handleChange}
-              className="input-bordered input w-full"
+              className="input-bordered w-full input"
             />
           </div>
 
@@ -125,7 +151,7 @@ export const ProjectFormModal: React.FC<ProjectFormModalProps> = ({
               type="number"
               value={form.goalReductionAmount}
               onChange={handleChange}
-              className="input-bordered input w-full"
+              className="input-bordered w-full input"
               placeholder={t("goalReductionAmountPlaceholder")}
             />
           </div>

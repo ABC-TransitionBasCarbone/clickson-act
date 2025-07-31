@@ -4,7 +4,6 @@ import { motion } from "framer-motion";
 import { useTranslations } from "next-intl";
 import EmissionsInput from "./EmissionsInput";
 import { useUser } from "@/context/UserContext";
-import SchoolGoalCard from "@/components/SchoolGoalCard";
 import { Action } from "@/types/Action";
 
 import { SubcategoryForm } from "./SubcategoryForm";
@@ -113,11 +112,11 @@ const StudentCalculator: React.FC = () => {
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
         transition={{ duration: 0.5 }}
-        className="container mx-auto px-6 py-8"
+        className="mx-auto px-6 py-8 container"
       >
         <div className="mx-auto max-w-3xl">
           <div className="mb-8 text-center">
-            <h1 className="mb-2 text-3xl font-bold">{t("title")}</h1>
+            <h1 className="mb-2 font-bold text-3xl">{t("title")}</h1>
             <p className="text-gray-400">
               {t("hello")} {user?.username}, {t("subtitle")}
             </p>
@@ -170,16 +169,6 @@ const StudentCalculator: React.FC = () => {
               t={t}
             />
           )}
-
-          <SchoolGoalCard
-            schoolGoal={40}
-            subGoal={25}
-            subGoalYear="2028"
-            finalGoalYear="2030"
-            baseReductionPerYear={3}
-            startYear={"2025"}
-            selectedActionReductionPerYear={totalSelectedReduction}
-          />
         </div>
       </motion.div>
 

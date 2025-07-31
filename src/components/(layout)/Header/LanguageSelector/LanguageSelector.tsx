@@ -1,16 +1,14 @@
 "use client";
 import { useState, useRef, useEffect } from "react";
-import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { useLocale } from "next-intl";
+import { Link, usePathname } from "@/i18n/navigation";
 import { locales } from "@/i18n/config";
 
 const LanguageSelector = () => {
   const pathname = usePathname();
+  const currentLang = useLocale();
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
-
-  const pathSegment = pathname.split("/")[1];
-  const currentLang = locales.includes(pathSegment) ? pathSegment : locales[0];
 
   const toggleDropdown = () => setIsOpen((prev) => !prev);
 
@@ -31,7 +29,7 @@ const LanguageSelector = () => {
   return (
     <div className="relative" ref={dropdownRef}>
       <button
-        className="btn-primary btn border-secondary bg-secondary rounded-3xl font-normal text-white"
+        className="bg-secondary border-secondary rounded-3xl font-normal text-white btn-primary btn"
         onClick={toggleDropdown}
         aria-haspopup="true"
         aria-expanded={isOpen}
@@ -40,16 +38,16 @@ const LanguageSelector = () => {
       </button>
 
       {isOpen && (
-        <ul className="bg-secondary absolute right-0 mt-1.5 w-full rounded-2xl text-white shadow-md">
+        <ul className="right-0 absolute bg-secondary shadow-md mt-1.5 rounded-2xl w-full text-white">
           {locales.map((lang, index) => {
-            const newPath = `/${lang.toLowerCase()}${pathname.replace(/^\/\w+/, "")}`;
             const isFirst = index === 0;
             const isLast = index === locales.length - 1;
 
             return (
               <li key={lang}>
                 <Link
-                  href={newPath}
+                  href={pathname}
+                  locale={lang}
                   className={`block px-4 py-2 transition hover:bg-white/20 ${
                     currentLang === lang ? "font-bold" : ""
                   } ${isFirst ? "rounded-t-2xl" : ""} ${isLast ? "rounded-b-2xl" : ""}`}

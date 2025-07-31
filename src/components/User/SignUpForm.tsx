@@ -1,13 +1,15 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useTranslations } from "next-intl";
 import { useRouter } from "@/i18n/navigation";
 import { User, KeyRound, Mail, MapPin, Globe, Building2 } from "lucide-react";
+import { useUser } from "@/context/UserContext";
 
 const SignUpForm = () => {
   const t = useTranslations();
   const router = useRouter();
+  const { user } = useUser();
   const [formData, setFormData] = useState({
     firstName: "",
     lastName: "",
@@ -19,6 +21,32 @@ const SignUpForm = () => {
     school: "",
     customSchool: "",
   });
+  const [error, setError] = useState<string | null>(null);
+
+  // Check if user is already logged in when component mounts
+  useEffect(() => {
+    if (user) {
+      // Check if the signup modal is currently open
+      const modal = document.getElementById(
+        "signup",
+      ) as HTMLDialogElement | null;
+      const isModalOpen = modal?.open;
+
+      if (isModalOpen) {
+        // Close the modal if it's open
+        if (modal) modal.close();
+
+        // Redirect based on user type
+        if (user.passcode) {
+          // Student - redirect to their calculator
+          router.push(`/data-reporting/${user.passcode}`);
+        } else {
+          // Teacher - redirect to dashboard
+          router.push("/dashboard");
+        }
+      }
+    }
+  }, [user, router]);
 
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>,
@@ -26,17 +54,77 @@ const SignUpForm = () => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    console.log("Signup data:", formData);
-    router.push("/dashboard");
+    setError(null);
+    try {
+      const res = await fetch("/api/auth/register", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          email: formData.email,
+          password: formData.password,
+          firstName: formData.firstName,
+          lastName: formData.lastName,
+          name: formData.firstName + " " + formData.lastName,
+          country: formData.country,
+          city: formData.city,
+          postalCode: formData.postalCode,
+          school:
+            formData.school === "Other"
+              ? formData.customSchool
+              : formData.school,
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Registration failed");
+      // Redirect teacher to dashboard after successful registration (using i18n navigation)
+      router.push("/dashboard");
+    } catch (err: unknown) {
+      let message = "Unknown error";
+      if (err instanceof Error) {
+        message = err.message;
+      }
+      setError(message);
+    }
   };
 
   const schools = ["School A", "School B", "School C", "Other"];
 
+  // Show a message if user is already logged in
+  if (user) {
+    return (
+      <div className="p-4 text-center">
+        <p className="mb-4 text-gray-600">
+          You are already logged in as <strong>{user.username}</strong>
+          {user.passcode && (
+            <span className="block mt-1 text-gray-500 text-sm">
+              Passcode: {user.passcode}
+            </span>
+          )}
+        </p>
+        {user.passcode ? (
+          <button
+            onClick={() => router.push(`/data-reporting/${user.passcode}`)}
+            className="capitalize btn btn-primary"
+          >
+            Go to Calculator
+          </button>
+        ) : (
+          <button
+            onClick={() => router.push("/dashboard")}
+            className="capitalize btn btn-primary"
+          >
+            Go to Dashboard
+          </button>
+        )}
+      </div>
+    );
+  }
+
   return (
-    <form onSubmit={handleSubmit} className="flex w-full flex-col gap-4">
-      <label className="input validator w-full">
+    <form onSubmit={handleSubmit} className="flex flex-col gap-4 w-full">
+      <label className="w-full input validator">
         <User strokeWidth={1.5} size={20} />
         <input
           type="text"
@@ -48,7 +136,7 @@ const SignUpForm = () => {
         />
       </label>
 
-      <label className="input validator w-full">
+      <label className="w-full input validator">
         <User strokeWidth={1.5} size={20} />
         <input
           type="text"
@@ -60,7 +148,7 @@ const SignUpForm = () => {
         />
       </label>
 
-      <label className="input validator w-full">
+      <label className="w-full input validator">
         <Mail strokeWidth={1.5} size={20} />
         <input
           type="email"
@@ -72,7 +160,7 @@ const SignUpForm = () => {
         />
       </label>
 
-      <label className="input validator w-full">
+      <label className="w-full input validator">
         <KeyRound strokeWidth={1.5} size={20} />
         <input
           type="password"
@@ -85,7 +173,7 @@ const SignUpForm = () => {
         />
       </label>
 
-      <label className="input validator w-full">
+      <label className="w-full input validator">
         <Globe strokeWidth={1.5} size={20} />
         <input
           type="text"
@@ -97,7 +185,7 @@ const SignUpForm = () => {
         />
       </label>
 
-      <label className="input validator w-full">
+      <label className="w-full input validator">
         <MapPin strokeWidth={1.5} size={20} />
         <input
           type="text"
@@ -109,7 +197,7 @@ const SignUpForm = () => {
         />
       </label>
 
-      <label className="input validator w-full">
+      <label className="w-full input validator">
         <input
           type="text"
           name="postalCode"
@@ -120,14 +208,14 @@ const SignUpForm = () => {
         />
       </label>
 
-      <label className="input validator w-full">
+      <label className="w-full input validator">
         <Building2 strokeWidth={1.5} size={20} />
         <select
           name="school"
           value={formData.school}
           onChange={handleChange}
           required
-          className="h-full w-full outline-none"
+          className="outline-none w-full h-full"
         >
           <option value="">{t("User.selectSchool")}</option>
           {schools.map((school) => (
@@ -139,7 +227,7 @@ const SignUpForm = () => {
       </label>
 
       {formData.school === "Other" && (
-        <label className="input validator w-full">
+        <label className="w-full input validator">
           <Building2 strokeWidth={1.5} size={20} />
           <input
             type="text"
@@ -152,7 +240,9 @@ const SignUpForm = () => {
         </label>
       )}
 
-      <button type="submit" className="btn btn-primary capitalize">
+      {error && <div className="text-red-500">{error}</div>}
+
+      <button type="submit" className="capitalize btn btn-primary">
         {t("User.signup")}
       </button>
     </form>

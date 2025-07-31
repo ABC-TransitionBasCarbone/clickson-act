@@ -1,0 +1,178 @@
+import { NextRequest, NextResponse } from "next/server";
+import { adminDb } from "../../../firebaseAdmin";
+
+interface ProjectData {
+  id: string;
+  createdAt?: string;
+  [key: string]: unknown;
+}
+
+// Generate a random 8-character passcode
+function generatePasscode(): string {
+  const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+  let result = "";
+  for (let i = 0; i < 8; i++) {
+    result += chars.charAt(Math.floor(Math.random() * chars.length));
+  }
+  return result;
+}
+
+// Create a new project
+export async function POST(req: NextRequest) {
+  try {
+    const body = await req.json();
+    const {
+      name,
+      school,
+      students,
+      startDate,
+      finalGoal,
+      subGoal,
+      goalReductionAmount,
+      teacherId,
+      teacherName,
+    } = body;
+
+    // Enhanced validation
+    if (!name || !startDate || !finalGoal || !goalReductionAmount) {
+      return NextResponse.json(
+        { error: "Missing required fields" },
+        { status: 400 },
+      );
+    }
+
+    // Sanitize and validate inputs
+    const sanitizedName = name.trim();
+    const sanitizedSchool = school?.trim() || "";
+    const sanitizedTeacherName = teacherName?.trim() || "";
+
+    if (sanitizedName.length < 1 || sanitizedName.length > 200) {
+      return NextResponse.json(
+        { error: "Project name must be between 1 and 200 characters" },
+        { status: 400 },
+      );
+    }
+
+    if (sanitizedSchool.length > 200) {
+      return NextResponse.json(
+        { error: "School name must be less than 200 characters" },
+        { status: 400 },
+      );
+    }
+
+    const studentsCount = parseInt(students) || 0;
+    if (studentsCount < 0 || studentsCount > 10000) {
+      return NextResponse.json(
+        { error: "Students count must be between 0 and 10000" },
+        { status: 400 },
+      );
+    }
+
+    const goalAmount = parseFloat(goalReductionAmount) || 0;
+    if (goalAmount < 0 || goalAmount > 100) {
+      return NextResponse.json(
+        { error: "Goal reduction amount must be between 0 and 100" },
+        { status: 400 },
+      );
+    }
+
+    // Generate unique passcode
+    let passcode = generatePasscode();
+    let isUnique = false;
+    let attempts = 0;
+
+    // Ensure passcode is unique (max 10 attempts)
+    while (!isUnique && attempts < 10) {
+      const existingProject = await adminDb
+        .collection("projects")
+        .doc(passcode)
+        .get();
+      if (!existingProject.exists) {
+        isUnique = true;
+      } else {
+        passcode = generatePasscode();
+        attempts++;
+      }
+    }
+
+    if (!isUnique) {
+      return NextResponse.json(
+        { error: "Unable to generate unique passcode" },
+        { status: 500 },
+      );
+    }
+
+    // Create project document with passcode as ID
+    const projectData = {
+      id: passcode,
+      name: sanitizedName,
+      school: sanitizedSchool,
+      students: studentsCount,
+      startDate,
+      finalGoal,
+      subGoal,
+      goalReductionAmount: goalAmount,
+      teacherId: teacherId || "",
+      teacherName: sanitizedTeacherName,
+      status: "active",
+      createdAt: new Date().toISOString(),
+      passcode,
+    };
+
+    await adminDb.collection("projects").doc(passcode).set(projectData);
+
+    return NextResponse.json({
+      success: true,
+      project: projectData,
+    });
+  } catch (error: unknown) {
+    console.error("Project creation error:", error);
+    // Don't expose internal error details to client
+    return NextResponse.json(
+      { error: "Failed to create project. Please try again." },
+      { status: 500 },
+    );
+  }
+}
+
+// Get projects for a teacher
+export async function GET(req: NextRequest) {
+  try {
+    const { searchParams } = new URL(req.url);
+    const teacherId = searchParams.get("teacherId");
+
+    if (!teacherId) {
+      return NextResponse.json(
+        { error: "Teacher ID is required" },
+        { status: 400 },
+      );
+    }
+
+    // Get all projects for this teacher (removed orderBy to avoid index requirement)
+    const projectsSnapshot = await adminDb
+      .collection("projects")
+      .where("teacherId", "==", teacherId)
+      .get();
+
+    const projects: ProjectData[] = projectsSnapshot.docs.map((doc) => ({
+      id: doc.id,
+      ...doc.data(),
+    }));
+
+    // Sort by createdAt on the client side instead
+    projects.sort((a, b) => {
+      const dateA = new Date(a.createdAt || 0).getTime();
+      const dateB = new Date(b.createdAt || 0).getTime();
+      return dateB - dateA; // Newest first
+    });
+
+    return NextResponse.json({ projects });
+  } catch (error: unknown) {
+    console.error("Project fetch error:", error);
+    // Don't expose internal error details to client
+    return NextResponse.json(
+      { error: "Failed to fetch projects. Please try again." },
+      { status: 500 },
+    );
+  }
+}

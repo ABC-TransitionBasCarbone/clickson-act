@@ -1,6 +1,7 @@
-import { useTranslations } from "next-intl";
+import { useTranslations, useLocale } from "next-intl";
 import { Edit, Share2 } from "lucide-react";
 import { useState } from "react";
+import { usePathname } from "@/i18n/navigation";
 import Project from "@/types/ProjectType";
 import ProjectForm from "@/types/ProjectForm";
 import { ProjectFormModal } from "@/app/[locale]/(pages)/dashboard/ProjectFormModal";
@@ -11,21 +12,30 @@ type Props = {
 
 export default function OverviewCard({ project }: Props) {
   const t = useTranslations("ProjectDetails.overview");
+  const locale = useLocale();
+  const pathname = usePathname();
   const [shareButtonText, setShareButtonText] = useState("shareButtonText");
 
   // Edit modal state
   const [isEditOpen, setIsEditOpen] = useState(false);
   const [editableProject, setEditableProject] = useState<ProjectForm>({
     name: project.name,
+    school: project.school,
+    students: project.students,
     startDate: project.startDate,
-    finalGoal: project.finalGoalDate, // ProjectForm expects finalGoal as date
-    goalReductionAmount: project.finalGoal, // ProjectForm expects number
+    finalGoal: project.finalGoalDate || new Date().toISOString().split("T")[0], // ProjectForm expects finalGoal as date
+    goalReductionAmount: Number(project.finalGoal) || 0, // ProjectForm expects number
+    subGoal: new Date().toISOString().split("T")[0],
+    reductionSubGoal: new Date().toISOString().split("T")[0],
   });
   const [localProject, setLocalProject] = useState(project);
 
   const handleShareClick = () => {
+    // Create the full URL with locale
+    const fullUrl = `${window.location.origin}/${locale}${pathname}`;
+
     navigator.clipboard
-      .writeText(window.location.href)
+      .writeText(fullUrl)
       .then(() => {
         setShareButtonText("shareButtonTextCopied");
         setTimeout(() => {
@@ -40,9 +50,14 @@ export default function OverviewCard({ project }: Props) {
   const handleEditClick = () => {
     setEditableProject({
       name: localProject.name,
+      school: localProject.school,
+      students: localProject.students,
       startDate: localProject.startDate,
-      finalGoal: localProject.finalGoalDate,
-      goalReductionAmount: localProject.finalGoal,
+      finalGoal:
+        localProject.finalGoalDate || new Date().toISOString().split("T")[0],
+      goalReductionAmount: Number(localProject.finalGoal) || 0,
+      subGoal: new Date().toISOString().split("T")[0],
+      reductionSubGoal: new Date().toISOString().split("T")[0],
     });
     setIsEditOpen(true);
   };
@@ -53,22 +68,22 @@ export default function OverviewCard({ project }: Props) {
       name: editableProject.name,
       startDate: editableProject.startDate,
       finalGoalDate: editableProject.finalGoal,
-      finalGoal: Number(editableProject.goalReductionAmount),
+      finalGoal: String(editableProject.goalReductionAmount),
     }));
     setIsEditOpen(false);
   };
 
   return (
-    <div className="card flex-1">
+    <div className="flex-1 card">
       <span>
-        <h3 className="text-2xl font-bold">Project Overview</h3>
+        <h3 className="font-bold text-2xl">Project Overview</h3>
         <span className="text-muted-foreground text-xs">
           Started on {new Date(localProject.startDate).toLocaleDateString()}
         </span>
       </span>
       <div>
         <p>{localProject.description}</p>
-        <div className="mt-6 flex flex-col items-start gap-5 border-t border-gray-100 pt-4">
+        <div className="flex flex-col items-start gap-5 mt-6 pt-4 border-gray-100 border-t">
           <div className="flex gap-2.5">
             <h3 className="font-medium">Current Status:</h3>
             <div className="flex items-center">
@@ -100,19 +115,19 @@ export default function OverviewCard({ project }: Props) {
           </div>
         </div>
       </div>
-      <div className="mt-auto flex justify-between">
+      <div className="flex justify-between mt-auto">
         <button
-          className="btn btn-soft mt-auto w-fit bg-white"
+          className="bg-white mt-auto w-fit btn btn-soft"
           onClick={handleEditClick}
         >
-          <Edit className="mr-2 h-4 w-4" />
+          <Edit className="mr-2 w-4 h-4" />
           {t("editProject")}
         </button>
         <button
-          className="btn btn-soft mt-auto w-fit bg-white"
+          className="bg-white mt-auto w-fit btn btn-soft"
           onClick={handleShareClick}
         >
-          <Share2 className="mr-2 h-4 w-4" />
+          <Share2 className="mr-2 w-4 h-4" />
           {t(shareButtonText)}
         </button>
       </div>

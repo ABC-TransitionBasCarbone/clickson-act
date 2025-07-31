@@ -22,7 +22,7 @@ const ProjectDetails = () => {
     setLoading(true);
     setTimeout(() => {
       setProject({
-        id: projectId.toUpperCase(),
+        id: String(projectId).toUpperCase(),
         name: "Green School Initiative",
         school: "Lincoln High School",
         students: 28,
@@ -30,6 +30,7 @@ const ProjectDetails = () => {
         status: "active",
         emissions: 450,
         reduction: 32,
+        goalReductionAmount: 40,
         description:
           "A project aimed at reducing the school's carbon footprint through various sustainability initiatives.",
         actions: [
@@ -45,14 +46,14 @@ const ProjectDetails = () => {
         subGoalDate: "2028",
         finalGoalDate: "2030",
         subgoal: 25,
-        finalGoal: 40,
+        finalGoal: "40",
       });
       setLoading(false);
     }, 1000);
   }, [projectId]);
 
   if (loading) return <Loading />;
-  if (!project) return <NotFound projectId={projectId} />;
+  if (!project) return <NotFound projectId={String(projectId)} />;
 
   return (
     <div className="bg-gray-50">
@@ -61,22 +62,22 @@ const ProjectDetails = () => {
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
         transition={{ duration: 0.5 }}
-        className="container mx-auto px-6 py-8"
+        className="mx-auto px-6 py-8 container"
       >
         <Header project={project} />
         <StatCards project={project} />
-        <div className="mb-8 flex flex-col gap-6 md:flex-row">
+        <div className="flex md:flex-row flex-col gap-6 mb-8">
           <OverviewCard project={project} />
-          <ActionsCard actions={project.actions} />
+          <ActionsCard actions={project.actions || []} />
         </div>
         {/* Goal Graph after overview and completed actions */}
         <SchoolGoalCard
-          schoolGoal={project.finalGoal}
-          subGoal={project.subgoal}
-          subGoalYear={project.subGoalDate}
-          finalGoalYear={project.finalGoalDate}
+          schoolGoal={Number(project.finalGoal) || 40}
+          subGoal={Number(project.subgoal) || 25}
+          subGoalYear={String(project.subGoalDate) || "2028"}
+          finalGoalYear={String(project.finalGoalDate) || "2030"}
           baseReductionPerYear={5} // Placeholder, adjust as needed
-          startYear={project.startDate}
+          startYear={String(project.startDate) || "2023"}
         />
       </motion.div>
     </div>

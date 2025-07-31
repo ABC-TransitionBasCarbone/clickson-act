@@ -1,0 +1,149 @@
+import { NextRequest, NextResponse } from "next/server";
+import { adminAuth, adminDb } from "../../../../firebaseAdmin";
+import { withRateLimit } from "../../../../lib/auth-middleware";
+
+async function registerHandler(req: NextRequest) {
+  try {
+    console.log("Register endpoint called");
+
+    if (!adminAuth || !adminDb) {
+      console.error("Firebase Admin SDK not initialized");
+      return NextResponse.json(
+        {
+          error:
+            "Firebase Admin SDK not initialized. Check your service account credentials.",
+        },
+        { status: 500 },
+      );
+    }
+
+    const body = await req.json();
+    console.log("Request body received:", { ...body, password: "[REDACTED]" });
+
+    const {
+      email,
+      password,
+      name,
+      firstName,
+      lastName,
+      country,
+      city,
+      postalCode,
+      school,
+    } = body;
+
+    // Enhanced input validation
+    if (!email || !password || !name) {
+      console.error("Missing required fields:", {
+        email: !!email,
+        password: !!password,
+        name: !!name,
+      });
+      return NextResponse.json(
+        { error: "Missing required fields" },
+        { status: 400 },
+      );
+    }
+
+    // Email validation
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      return NextResponse.json(
+        { error: "Invalid email format" },
+        { status: 400 },
+      );
+    }
+
+    // Password validation
+    if (password.length < 6) {
+      return NextResponse.json(
+        { error: "Password must be at least 6 characters" },
+        { status: 400 },
+      );
+    }
+
+    // Sanitize inputs
+    const sanitizedData = {
+      email: email.trim().toLowerCase(),
+      name: name.trim(),
+      firstName: firstName?.trim() || "",
+      lastName: lastName?.trim() || "",
+      country: country?.trim() || "",
+      city: city?.trim() || "",
+      postalCode: postalCode?.trim() || "",
+      school: school?.trim() || "",
+    };
+
+    // Length validations
+    if (sanitizedData.name.length > 100) {
+      return NextResponse.json({ error: "Name too long" }, { status: 400 });
+    }
+
+    console.log("Creating user in Firebase Auth...");
+    // Create user in Firebase Auth (Admin SDK)
+    const userRecord = await adminAuth.createUser({
+      email: sanitizedData.email,
+      password,
+      displayName: sanitizedData.name,
+    });
+    console.log("User created successfully:", userRecord.uid);
+
+    console.log("Storing user data in Firestore...");
+    // Store complete teacher info in Firestore
+    await adminDb.collection("teachers").doc(userRecord.uid).set({
+      uid: userRecord.uid,
+      email: sanitizedData.email,
+      name: sanitizedData.name,
+      firstName: sanitizedData.firstName,
+      lastName: sanitizedData.lastName,
+      country: sanitizedData.country,
+      city: sanitizedData.city,
+      postalCode: sanitizedData.postalCode,
+      school: sanitizedData.school,
+      createdAt: new Date().toISOString(),
+      role: "teacher",
+    });
+    console.log("User data stored successfully");
+
+    return NextResponse.json({
+      uid: userRecord.uid,
+      email: sanitizedData.email,
+      name: sanitizedData.name,
+      success: true,
+    });
+  } catch (error: unknown) {
+    console.error("Registration error:", error);
+
+    // Log detailed error information server-side only
+    if (error instanceof Error) {
+      console.error("Error details:", {
+        name: error.name,
+        message: error.message,
+        stack: error.stack,
+      });
+
+      // Handle specific Firebase errors with safe messages
+      if (error.message.includes("email-already-in-use")) {
+        return NextResponse.json(
+          { error: "Email already registered" },
+          { status: 409 },
+        );
+      }
+      if (error.message.includes("weak-password")) {
+        return NextResponse.json(
+          { error: "Password is too weak" },
+          { status: 400 },
+        );
+      }
+    }
+
+    // Don't expose internal error details to client
+    return NextResponse.json(
+      { error: "Registration failed. Please try again." },
+      { status: 500 },
+    );
+  }
+}
+
+// Export with rate limiting (3 attempts per minute)
+export const POST = withRateLimit(registerHandler, 3, 60000);

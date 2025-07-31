@@ -1,67 +1,29 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { PlusCircle, Users, BarChart3, Building, Pencil } from "lucide-react";
 import { useTranslations } from "next-intl";
-import { Link } from "@/i18n/navigation";
-import { ProjectFormModal } from "./ProjectFormModal";
+import { PlusCircle, Users, BarChart3, Building, Pencil } from "lucide-react";
+import Project from "@/types/ProjectType";
 import ProjectForm from "@/types/ProjectForm";
-
-type Project = {
-  id: string;
-  name: string;
-  school: string;
-  students: number;
-  startDate: string;
-  subGoal: string;
-  finalGoal: string;
-  status: "active" | "completed" | "pending";
-  reduction: number;
-};
+import { ProjectFormModal } from "./ProjectFormModal";
+import { useUser } from "@/context/UserContext";
+import { Link, useRouter } from "@/i18n/navigation";
 
 const TeacherDashboard: React.FC = () => {
   const t = useTranslations("TeacherDashboard");
+  const { user } = useUser();
+  const router = useRouter();
 
-  const [projects, setProjects] = useState<Project[]>([
-    {
-      id: "1",
-      name: "Green School Initiative",
-      school: "Lincoln High School",
-      students: 28,
-      startDate: "2023-09-01",
-      finalGoal: "2023-09-01",
-      subGoal: "2023-09-01",
-      status: "active",
-      reduction: 3,
-    },
-    {
-      id: "2",
-      name: "Energy Conservation Project",
-      school: "Washington Elementary",
-      students: 19,
-      startDate: "2023-10-15",
-      finalGoal: "2023-09-01",
-      subGoal: "2023-09-01",
-      status: "active",
-      reduction: 15,
-    },
-    {
-      id: "3",
-      name: "Sustainable Transport Week",
-      school: "Jefferson Middle School",
-      students: 35,
-      startDate: "2023-11-05",
-      finalGoal: "2023-09-01",
-      subGoal: "2023-09-01",
-      status: "completed",
-      reduction: 12,
-    },
-  ]);
+  const [projects, setProjects] = useState<Project[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   const [isProjectModalOpen, setIsProjectModalOpen] = useState(false);
   const [projectForm, setProjectForm] = useState<ProjectForm>({
     name: "",
+    school: "",
+    students: 0,
     startDate: new Date().toISOString().split("T")[0],
     finalGoal: new Date().toISOString().split("T")[0],
     subGoal: new Date().toISOString().split("T")[0],
@@ -75,10 +37,43 @@ const TeacherDashboard: React.FC = () => {
     deadlineYear: "2030",
   });
 
+  // Fetch projects when component mounts
+  useEffect(() => {
+    if (user && !user.passcode) {
+      // Only for teachers (no passcode)
+      fetchProjects();
+    } else {
+      setLoading(false);
+    }
+  }, [user]);
+
+  const fetchProjects = async () => {
+    if (!user) return;
+
+    try {
+      setLoading(true);
+      const response = await fetch(`/api/project?teacherId=${user.username}`);
+      const data = await response.json();
+
+      if (response.ok) {
+        setProjects(data.projects || []);
+      } else {
+        setError(data.error || "Failed to fetch projects");
+      }
+    } catch (error) {
+      console.error("Error fetching projects:", error);
+      setError("Failed to fetch projects");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const openProjectModal = () => {
     const today = new Date().toISOString().split("T")[0];
     setProjectForm({
       name: "",
+      school: "",
+      students: 0,
       startDate: today,
       finalGoal: today,
       subGoal: today,
@@ -88,26 +83,122 @@ const TeacherDashboard: React.FC = () => {
     setIsProjectModalOpen(true);
   };
 
-  const handleProjectSubmit = () => {
-    const newProject: Project = {
-      id: Date.now().toString(),
-      name: projectForm.name || "New Project",
-      school: "Your School",
-      students: 0,
-      startDate: projectForm.startDate,
-      status: "pending",
-      reduction: Number(projectForm.goalReductionAmount) || 0, // use this for reduction
-      subGoal: projectForm.subGoal,
-      finalGoal: projectForm.finalGoal,
-    };
+  const handleProjectSubmit = async () => {
+    if (!user) return;
 
-    setProjects([...projects, newProject]);
-    setIsProjectModalOpen(false);
+    try {
+      const response = await fetch("/api/project", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          ...projectForm,
+          teacherId: user.username,
+          teacherName: user.username,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        // Add the new project to the list
+        setProjects((prev) => [data.project, ...prev]);
+        setIsProjectModalOpen(false);
+
+        // Show success message with passcode
+        alert(
+          `Project created successfully! Student passcode: ${data.project.passcode}`,
+        );
+      } else {
+        alert(`Error creating project: ${data.error}`);
+      }
+    } catch (error) {
+      console.error("Error creating project:", error);
+      alert("Error creating project. Please try again.");
+    }
   };
 
   const handleSchoolGoalSubmit = () => {
     setIsSchoolGoalModalOpen(false);
   };
+
+  // If user is a student, redirect them
+  if (user && user.passcode) {
+    return (
+      <div className="mx-auto px-6 py-8 container">
+        <div className="text-center">
+          <h1 className="mb-4 font-bold text-2xl">Access Denied</h1>
+          <p className="mb-4 text-gray-600">
+            You are logged in as a student. This dashboard is for teachers only.
+          </p>
+          <button
+            onClick={() => router.push(`/data-reporting/${user.passcode}`)}
+            className="btn btn-primary"
+          >
+            Go to Student Calculator
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  // If not logged in
+  if (!user) {
+    return (
+      <div className="mx-auto px-6 py-8 container">
+        <div className="text-center">
+          <h1 className="mb-4 font-bold text-2xl">Please Log In</h1>
+          <p className="mb-4 text-gray-600">
+            You need to be logged in as a teacher to access this dashboard.
+          </p>
+          <button
+            onClick={() => router.push("/data-reporting")}
+            className="btn btn-primary"
+          >
+            Go to Login
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  if (loading) {
+    return (
+      <div className="mx-auto px-6 py-8 container">
+        <div className="text-center">
+          <div className="mx-auto border-gray-900 border-b-2 rounded-full w-32 h-32 animate-spin"></div>
+          <p className="mt-4 text-gray-600">Loading projects...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="mx-auto px-6 py-8 container">
+        <div className="text-center">
+          <h1 className="mb-4 font-bold text-red-600 text-2xl">Error</h1>
+          <p className="mb-4 text-gray-600">{error}</p>
+          <button onClick={fetchProjects} className="btn btn-primary">
+            Try Again
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  const totalStudents = projects.reduce(
+    (sum, project) => sum + (project.students || 0),
+    0,
+  );
+  const avgReduction =
+    projects.length > 0
+      ? projects.reduce(
+          (sum, project) => sum + (project.goalReductionAmount || 0),
+          0,
+        ) / projects.length
+      : 0;
 
   return (
     <div className="bg-gray-50">
@@ -116,32 +207,32 @@ const TeacherDashboard: React.FC = () => {
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
         transition={{ duration: 0.5 }}
-        className="container mx-auto px-6 py-8"
+        className="mx-auto px-6 py-8 container"
       >
-        <div className="mb-8 flex flex-col md:flex-row md:items-center md:justify-between">
+        <div className="flex md:flex-row flex-col md:justify-between md:items-center mb-8">
           <div>
-            <h1 className="text-3xl font-bold tracking-tight">
+            <h1 className="font-bold text-3xl tracking-tight">
               {t("teacherDashboard")}
             </h1>
-            <p className="text-muted-foreground mt-1">{t("manageProjects")}</p>
+            <p className="mt-1 text-muted-foreground">{t("manageProjects")}</p>
           </div>
           <button
-            className="bg-primary-600 hover:bg-primary-700 btn btn-primary mt-4 md:mt-0"
+            className="bg-primary-600 hover:bg-primary-700 mt-4 md:mt-0 btn btn-primary"
             onClick={openProjectModal}
           >
-            <PlusCircle className="mr-2 h-4 w-4" />
+            <PlusCircle className="mr-2 w-4 h-4" />
             {t("addNewProject")}
           </button>
         </div>
 
-        <div className="mb-8 grid gap-4 md:grid-cols-3">
-          <div className="card relative">
-            <div className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <h3 className="text-sm font-medium">{t("schoolGoal")}</h3>
-              <BarChart3 className="text-muted-foreground h-4 w-4" />
+        <div className="gap-4 grid md:grid-cols-3 mb-8">
+          <div className="relative card">
+            <div className="flex flex-row justify-between items-center space-y-0 pb-2">
+              <h3 className="font-medium text-sm">{t("schoolGoal")}</h3>
+              <BarChart3 className="w-4 h-4 text-muted-foreground" />
             </div>
             <div>
-              <div className="text-2xl font-bold">
+              <div className="font-bold text-2xl">
                 {schoolGoal.reduction}% – {schoolGoal.deadlineYear}
               </div>
               <p className="text-muted-foreground text-xs">
@@ -151,19 +242,17 @@ const TeacherDashboard: React.FC = () => {
             </div>
             <Pencil
               onClick={() => setIsSchoolGoalModalOpen(true)}
-              className="text-muted-foreground absolute right-5 bottom-5 h-4 w-4 cursor-pointer"
+              className="right-5 bottom-5 absolute w-4 h-4 text-muted-foreground cursor-pointer"
             />
           </div>
 
           <div className="card">
-            <h3 className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <div className="text-sm font-medium">{t("totalStudents")}</div>
-              <Users className="text-muted-foreground h-4 w-4" />
+            <h3 className="flex flex-row justify-between items-center space-y-0 pb-2">
+              <div className="font-medium text-sm">{t("totalStudents")}</div>
+              <Users className="w-4 h-4 text-muted-foreground" />
             </h3>
             <div>
-              <div className="text-2xl font-bold">
-                {projects.reduce((acc, project) => acc + project.students, 0)}
-              </div>
+              <div className="font-bold text-2xl">{totalStudents}</div>
               <p className="text-muted-foreground text-xs">
                 {t("acrossAllProjects")}
               </p>
@@ -171,16 +260,14 @@ const TeacherDashboard: React.FC = () => {
           </div>
 
           <div className="card">
-            <div className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <div className="text-sm font-medium">
+            <div className="flex flex-row justify-between items-center space-y-0 pb-2">
+              <div className="font-medium text-sm">
                 {t("emissionReduction")}
               </div>
-              <Building className="text-muted-foreground h-4 w-4" />
+              <Building className="w-4 h-4 text-muted-foreground" />
             </div>
             <div>
-              <div className="text-2xl font-bold">
-                {projects.reduce((acc, project) => acc + project.reduction, 0)}%
-              </div>
+              <div className="font-bold text-2xl">{avgReduction}%</div>
               <p className="text-muted-foreground text-xs">
                 {t("averageReduction")}
               </p>
@@ -188,18 +275,18 @@ const TeacherDashboard: React.FC = () => {
           </div>
         </div>
 
-        <h2 className="mb-4 text-xl font-semibold">
+        <h2 className="mb-4 font-semibold text-xl">
           {t("activeProjectsTitle")}
         </h2>
 
-        <div className="mb-6 grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+        <div className="gap-6 grid md:grid-cols-2 lg:grid-cols-3 mb-6">
           {projects.map((project) => (
             <div
               key={project.id}
-              className="card transition-shadow hover:shadow-md"
+              className="hover:shadow-md transition-shadow card"
             >
               <div>
-                <div className="mb-5 flex items-start justify-between text-xl font-bold">
+                <div className="flex justify-between items-start mb-5 font-bold text-xl">
                   <h3>{project.name}</h3>
                   <span
                     className={`rounded-full px-2 py-1 text-xs font-medium ${
@@ -215,7 +302,7 @@ const TeacherDashboard: React.FC = () => {
                 </div>
               </div>
               <div>
-                <div className="grid grid-cols-2 gap-4 text-sm">
+                <div className="gap-4 grid grid-cols-2 text-sm">
                   <div>
                     <p className="text-muted-foreground">{t("students")}</p>
                     <p className="font-medium">{project.students}</p>
@@ -229,18 +316,21 @@ const TeacherDashboard: React.FC = () => {
                   <div>
                     <p className="text-muted-foreground">{t("reduction")}</p>
                     <p className="font-medium text-green-600">
-                      {project.reduction}%
+                      {project.goalReductionAmount}%
                     </p>
                   </div>
                 </div>
               </div>
-              <div className="mt-5 flex w-full justify-between">
-                <Link
-                  href={`/dashboard/projects/${project.id}`}
-                  className="btn-outline btn btn-primary"
-                >
-                  {t("viewDetails")}
-                </Link>
+              <div className="flex justify-between mt-5 w-full">
+                {/* Assuming project.id is available and can be used for the link */}
+                {project.id && (
+                  <Link
+                    href={`/dashboard/projects/${project.id}`}
+                    className="btn-outline btn btn-primary"
+                  >
+                    {t("viewDetails")}
+                  </Link>
+                )}
               </div>
             </div>
           ))}
@@ -260,10 +350,10 @@ const TeacherDashboard: React.FC = () => {
       {isSchoolGoalModalOpen && (
         <div className="modal modal-open">
           <div className="modal-box">
-            <h3 className="text-lg font-bold">{t("editSchoolGoal")}</h3>
+            <h3 className="font-bold text-lg">{t("editSchoolGoal")}</h3>
             <form className="space-y-6 py-4" onSubmit={handleSchoolGoalSubmit}>
               <div>
-                <label htmlFor="reduction" className="mb-1 block font-medium">
+                <label htmlFor="reduction" className="block mb-1 font-medium">
                   {t("reductionGoal")} (%)
                 </label>
                 <input
@@ -271,7 +361,7 @@ const TeacherDashboard: React.FC = () => {
                   name="reduction"
                   type="number"
                   placeholder={t("reductionGoal")}
-                  className="input input-bordered w-full"
+                  className="input-bordered w-full input"
                   value={schoolGoal.reduction}
                   onChange={(e) =>
                     setSchoolGoal((prev) => ({
@@ -288,7 +378,7 @@ const TeacherDashboard: React.FC = () => {
               <div>
                 <label
                   htmlFor="deadlineYear"
-                  className="mb-1 block font-medium"
+                  className="block mb-1 font-medium"
                 >
                   {t("deadlineYear")}
                 </label>
@@ -297,7 +387,7 @@ const TeacherDashboard: React.FC = () => {
                   name="deadlineYear"
                   type="number"
                   placeholder={t("deadlineYear")}
-                  className="input input-bordered w-full"
+                  className="input-bordered w-full input"
                   value={schoolGoal.deadlineYear}
                   onChange={(e) =>
                     setSchoolGoal((prev) => ({
