@@ -23,7 +23,6 @@ export async function POST(req: NextRequest) {
     const body = await req.json();
     const {
       name,
-      school,
       students,
       startDate,
       finalGoal,
@@ -34,28 +33,53 @@ export async function POST(req: NextRequest) {
     } = body;
 
     // Enhanced validation
-    if (!name || !startDate || !finalGoal || !goalReductionAmount) {
+    if (
+      !name ||
+      !startDate ||
+      !finalGoal ||
+      !goalReductionAmount ||
+      !teacherId
+    ) {
       return NextResponse.json(
         { error: "Missing required fields" },
         { status: 400 },
       );
     }
 
+    // Get teacher's school information
+    const teacherDoc = await adminDb
+      .collection("teachers")
+      .where("name", "==", teacherId)
+      .limit(1)
+      .get();
+
+    if (teacherDoc.empty) {
+      return NextResponse.json({ error: "Teacher not found" }, { status: 404 });
+    }
+
+    const teacherData = teacherDoc.docs[0].data();
+    let schoolName = teacherData.school || "Unknown School";
+
+    // If teacher has a schoolId, get the school name from the schools collection
+    if (teacherData.schoolId) {
+      const schoolDoc = await adminDb
+        .collection("schools")
+        .doc(teacherData.schoolId)
+        .get();
+
+      if (schoolDoc.exists) {
+        const schoolData = schoolDoc.data();
+        schoolName = schoolData?.name || schoolName;
+      }
+    }
+
     // Sanitize and validate inputs
     const sanitizedName = name.trim();
-    const sanitizedSchool = school?.trim() || "";
     const sanitizedTeacherName = teacherName?.trim() || "";
 
     if (sanitizedName.length < 1 || sanitizedName.length > 200) {
       return NextResponse.json(
         { error: "Project name must be between 1 and 200 characters" },
-        { status: 400 },
-      );
-    }
-
-    if (sanitizedSchool.length > 200) {
-      return NextResponse.json(
-        { error: "School name must be less than 200 characters" },
         { status: 400 },
       );
     }
@@ -106,7 +130,7 @@ export async function POST(req: NextRequest) {
     const projectData = {
       id: passcode,
       name: sanitizedName,
-      school: sanitizedSchool,
+      school: schoolName,
       students: studentsCount,
       startDate,
       finalGoal,

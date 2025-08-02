@@ -62,10 +62,13 @@ const LoginForm = () => {
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Login failed");
 
-      // Set user in context (no passcode for teachers)
+      // Set user in context with authentication token
       setUser({
         username: data.user.username,
         passcode: "", // Teachers don't have passcodes
+        uid: data.user.uid,
+        token: data.token,
+        role: data.user.role,
       });
 
       // Redirect to dashboard after teacher login (using i18n navigation)

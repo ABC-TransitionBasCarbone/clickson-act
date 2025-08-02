@@ -3,9 +3,10 @@
 import React, { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { useTranslations } from "next-intl";
-import { PlusCircle, Users, BarChart3, Building, Pencil } from "lucide-react";
+import { PlusCircle, Users, BarChart3, Building } from "lucide-react";
 import Project from "@/types/ProjectType";
 import ProjectForm from "@/types/ProjectForm";
+import { School } from "@/types/School";
 import { ProjectFormModal } from "./ProjectFormModal";
 import { useUser } from "@/context/UserContext";
 import { Link, useRouter } from "@/i18n/navigation";
@@ -16,13 +17,22 @@ const TeacherDashboard: React.FC = () => {
   const router = useRouter();
 
   const [projects, setProjects] = useState<Project[]>([]);
+  const [teacherSchool, setTeacherSchool] = useState<School | null>(null);
+  const [teacherInfo, setTeacherInfo] = useState<{ school?: string } | null>(
+    null,
+  );
+  const [isSchoolEditModalOpen, setIsSchoolEditModalOpen] = useState(false);
+  const [schoolEditForm, setSchoolEditForm] = useState({
+    goal: 50,
+    deadlineYear: "2030",
+  });
+
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   const [isProjectModalOpen, setIsProjectModalOpen] = useState(false);
   const [projectForm, setProjectForm] = useState<ProjectForm>({
     name: "",
-    school: "",
     students: 0,
     startDate: new Date().toISOString().split("T")[0],
     finalGoal: new Date().toISOString().split("T")[0],
@@ -31,17 +41,12 @@ const TeacherDashboard: React.FC = () => {
     reductionSubGoal: new Date().toISOString().split("T")[0],
   });
 
-  const [isSchoolGoalModalOpen, setIsSchoolGoalModalOpen] = useState(false);
-  const [schoolGoal, setSchoolGoal] = useState({
-    reduction: 90,
-    deadlineYear: "2030",
-  });
-
-  // Fetch projects when component mounts
+  // Fetch projects and teacher school data when component mounts
   useEffect(() => {
     if (user && !user.passcode) {
       // Only for teachers (no passcode)
       fetchProjects();
+      fetchTeacherSchool();
     } else {
       setLoading(false);
     }
@@ -68,11 +73,105 @@ const TeacherDashboard: React.FC = () => {
     }
   };
 
+  const fetchTeacherSchool = async () => {
+    if (!user) return;
+
+    try {
+      const response = await fetch(
+        `/api/teacher-school?teacherId=${user.username}`,
+      );
+      const data = await response.json();
+
+      console.log("Teacher school response:", data); // Debug log
+
+      if (response.ok) {
+        // Set teacher info regardless
+        setTeacherInfo(data.teacher);
+
+        // Set school if exists
+        if (data.school) {
+          setTeacherSchool(data.school);
+          setSchoolEditForm({
+            goal: data.school.goal,
+            deadlineYear: data.school.deadlineYear,
+          });
+        }
+      }
+    } catch (error) {
+      console.error("Error fetching teacher school:", error);
+    }
+  };
+
+  const handleSchoolEdit = async () => {
+    if (!teacherInfo?.school) return;
+
+    try {
+      if (teacherSchool?.id) {
+        // Update existing school
+        const response = await fetch(`/api/school/${teacherSchool.id}`, {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(schoolEditForm),
+        });
+
+        const data = await response.json();
+
+        if (response.ok) {
+          setTeacherSchool({ ...teacherSchool, ...schoolEditForm });
+          setIsSchoolEditModalOpen(false);
+          alert("School updated successfully!");
+        } else {
+          alert(`Error updating school: ${data.error}`);
+        }
+      } else {
+        // Create new school entry for existing teacher
+        const response = await fetch("/api/school", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            name: teacherInfo.school,
+            goal: schoolEditForm.goal,
+            deadlineYear: schoolEditForm.deadlineYear,
+            teacherId: user?.username,
+          }),
+        });
+
+        const data = await response.json();
+
+        if (response.ok) {
+          setTeacherSchool(data.school);
+          setIsSchoolEditModalOpen(false);
+          alert("School goals set successfully!");
+
+          // Update teacher's schoolId link
+          await fetch("/api/teacher/link-school", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              teacherId: user?.username,
+              schoolId: data.school.id,
+            }),
+          });
+        } else {
+          alert(`Error setting school goals: ${data.error}`);
+        }
+      }
+    } catch (error) {
+      console.error("Error with school operation:", error);
+      alert("Error processing request. Please try again.");
+    }
+  };
+
   const openProjectModal = () => {
     const today = new Date().toISOString().split("T")[0];
     setProjectForm({
       name: "",
-      school: "",
       students: 0,
       startDate: today,
       finalGoal: today,
@@ -117,10 +216,6 @@ const TeacherDashboard: React.FC = () => {
       console.error("Error creating project:", error);
       alert("Error creating project. Please try again.");
     }
-  };
-
-  const handleSchoolGoalSubmit = () => {
-    setIsSchoolGoalModalOpen(false);
   };
 
   // If user is a student, redirect them
@@ -228,22 +323,41 @@ const TeacherDashboard: React.FC = () => {
         <div className="gap-4 grid md:grid-cols-3 mb-8">
           <div className="relative card">
             <div className="flex flex-row justify-between items-center space-y-0 pb-2">
-              <h3 className="font-medium text-sm">{t("schoolGoal")}</h3>
-              <BarChart3 className="w-4 h-4 text-muted-foreground" />
+              <h3 className="font-medium text-sm">
+                {teacherInfo?.school ? t("mySchool") : t("projects")}
+              </h3>
+              <Building className="w-4 h-4 text-muted-foreground" />
             </div>
             <div>
-              <div className="font-bold text-2xl">
-                {schoolGoal.reduction}% – {schoolGoal.deadlineYear}
-              </div>
-              <p className="text-muted-foreground text-xs">
-                {t("emissionReductionGoal")} ({t("by")}{" "}
-                {schoolGoal.deadlineYear})
-              </p>
+              {teacherInfo?.school ? (
+                <>
+                  <div className="font-bold text-2xl">{teacherInfo.school}</div>
+                  <p className="text-muted-foreground text-xs">
+                    {teacherSchool
+                      ? `${teacherSchool.goal}% by ${teacherSchool.deadlineYear}`
+                      : t("clickToSetGoals")}
+                  </p>
+                </>
+              ) : (
+                <>
+                  <div className="font-bold text-2xl">{projects.length}</div>
+                  <p className="text-muted-foreground text-xs">
+                    {t("projectsCreated")}
+                  </p>
+                </>
+              )}
             </div>
-            <Pencil
-              onClick={() => setIsSchoolGoalModalOpen(true)}
-              className="right-5 bottom-5 absolute w-4 h-4 text-muted-foreground cursor-pointer"
-            />
+            {teacherInfo?.school && (
+              <button
+                onClick={() => setIsSchoolEditModalOpen(true)}
+                className="right-5 bottom-5 absolute text-muted-foreground hover:text-primary cursor-pointer"
+                title={
+                  teacherSchool ? t("editSchoolGoals") : t("setSchoolGoals")
+                }
+              >
+                <Building className="w-4 h-4" />
+              </button>
+            )}
           </div>
 
           <div className="card">
@@ -264,10 +378,12 @@ const TeacherDashboard: React.FC = () => {
               <div className="font-medium text-sm">
                 {t("emissionReduction")}
               </div>
-              <Building className="w-4 h-4 text-muted-foreground" />
+              <BarChart3 className="w-4 h-4 text-muted-foreground" />
             </div>
             <div>
-              <div className="font-bold text-2xl">{avgReduction}%</div>
+              <div className="font-bold text-2xl">
+                {avgReduction.toFixed(1)}%
+              </div>
               <p className="text-muted-foreground text-xs">
                 {t("averageReduction")}
               </p>
@@ -347,26 +463,33 @@ const TeacherDashboard: React.FC = () => {
         />
       )}
 
-      {isSchoolGoalModalOpen && (
+      {/* School Edit Modal */}
+      {isSchoolEditModalOpen && (
         <div className="modal modal-open">
           <div className="modal-box">
-            <h3 className="font-bold text-lg">{t("editSchoolGoal")}</h3>
-            <form className="space-y-6 py-4" onSubmit={handleSchoolGoalSubmit}>
+            <h3 className="font-bold text-lg">{t("editSchool")}</h3>
+            <form
+              className="space-y-6 py-4"
+              onSubmit={(e) => {
+                e.preventDefault();
+                handleSchoolEdit();
+              }}
+            >
               <div>
-                <label htmlFor="reduction" className="block mb-1 font-medium">
+                <label htmlFor="goal" className="block mb-1 font-medium">
                   {t("reductionGoal")} (%)
                 </label>
                 <input
-                  id="reduction"
-                  name="reduction"
+                  id="goal"
+                  name="goal"
                   type="number"
                   placeholder={t("reductionGoal")}
                   className="input-bordered w-full input"
-                  value={schoolGoal.reduction}
+                  value={schoolEditForm.goal}
                   onChange={(e) =>
-                    setSchoolGoal((prev) => ({
+                    setSchoolEditForm((prev) => ({
                       ...prev,
-                      reduction: Number(e.target.value),
+                      goal: Number(e.target.value),
                     }))
                   }
                   min={0}
@@ -388,15 +511,15 @@ const TeacherDashboard: React.FC = () => {
                   type="number"
                   placeholder={t("deadlineYear")}
                   className="input-bordered w-full input"
-                  value={schoolGoal.deadlineYear}
+                  value={schoolEditForm.deadlineYear}
                   onChange={(e) =>
-                    setSchoolGoal((prev) => ({
+                    setSchoolEditForm((prev) => ({
                       ...prev,
-                      reduction: Number(e.target.value),
+                      deadlineYear: e.target.value,
                     }))
                   }
                   min={new Date().getFullYear()}
-                  max={new Date().getFullYear() + 10}
+                  max={new Date().getFullYear() + 50}
                   required
                 />
               </div>
@@ -405,7 +528,7 @@ const TeacherDashboard: React.FC = () => {
                 <button
                   type="button"
                   className="btn"
-                  onClick={() => setIsSchoolGoalModalOpen(false)}
+                  onClick={() => setIsSchoolEditModalOpen(false)}
                 >
                   {t("cancel")}
                 </button>

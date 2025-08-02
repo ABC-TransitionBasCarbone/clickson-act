@@ -1,7 +1,6 @@
 import { useState } from "react";
 import { useTranslations } from "next-intl";
 import ProjectForm from "@/types/ProjectForm";
-
 interface ProjectFormModalProps {
   form: ProjectForm;
   setForm: React.Dispatch<React.SetStateAction<ProjectForm>>;
@@ -70,23 +69,6 @@ export const ProjectFormModal: React.FC<ProjectFormModalProps> = ({
               onChange={handleChange}
               className="input-bordered w-full input"
               placeholder={t("projectNamePlaceholder")}
-              required
-            />
-          </div>
-
-          {/* School Name */}
-          <div>
-            <label htmlFor="school" className="label">
-              <span className="label-text">{t("schoolNameLabel")}</span>
-            </label>
-            <input
-              id="school"
-              name="school"
-              type="text"
-              value={form.school}
-              onChange={handleChange}
-              className="input-bordered w-full input"
-              placeholder={t("schoolNamePlaceholder")}
               required
             />
           </div>

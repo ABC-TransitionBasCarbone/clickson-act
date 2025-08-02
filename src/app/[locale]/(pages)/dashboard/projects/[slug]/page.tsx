@@ -11,48 +11,65 @@ import ActionsCard from "@/components/(dashboard)/ProjectDetails/ActionsCard";
 import SchoolGoalCard from "@/components/SchoolGoalCard";
 
 import Project from "@/types/ProjectType";
+import { School } from "@/types/School";
 import { motion } from "framer-motion";
 
 const ProjectDetails = () => {
   const { slug: projectId } = useParams<{ slug: string }>();
   const [project, setProject] = useState<Project | null>(null);
+  const [school, setSchool] = useState<School | null>(null);
+  const [schoolGoal, setSchoolGoal] = useState<{
+    goal: number;
+    deadlineYear: string;
+  } | null>(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    setLoading(true);
-    setTimeout(() => {
-      setProject({
-        id: String(projectId).toUpperCase(),
-        name: "Green School Initiative",
-        school: "Lincoln High School",
-        students: 28,
-        startDate: "2023-09-01",
-        status: "active",
-        emissions: 450,
-        reduction: 32,
-        goalReductionAmount: 40,
-        description:
-          "A project aimed at reducing the school's carbon footprint through various sustainability initiatives.",
-        actions: [
-          { name: "Installed LED lighting", date: "2023-09-15", reduction: 8 },
-          {
-            name: "Implemented recycling program",
-            date: "2023-10-01",
-            reduction: 12,
-          },
-          { name: "Reduced paper usage", date: "2023-10-20", reduction: 7 },
-          { name: "Bike to school week", date: "2023-11-05", reduction: 5 },
-        ],
-        subGoalDate: "2028",
-        finalGoalDate: "2030",
-        subgoal: 25,
-        finalGoal: "40",
-      });
-      setLoading(false);
-    }, 1000);
+    const fetchProject = async () => {
+      if (!projectId) return;
+
+      setLoading(true);
+      setError(null);
+
+      try {
+        const response = await fetch(`/api/project/${projectId}`);
+        const data = await response.json();
+
+        if (response.ok) {
+          console.log("Project data:", data.project); // Debug log
+          console.log("School data:", data.school); // Debug log
+          console.log("School goal data:", data.schoolGoal); // Debug log
+          setProject(data.project);
+          setSchool(data.school);
+          setSchoolGoal(data.schoolGoal);
+        } else {
+          setError(data.error || "Failed to fetch project");
+        }
+      } catch (err) {
+        console.error("Error fetching project:", err);
+        setError("Failed to fetch project details");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchProject();
   }, [projectId]);
 
   if (loading) return <Loading />;
+
+  if (error) {
+    return (
+      <div className="flex justify-center items-center min-h-screen">
+        <div className="text-center">
+          <h2 className="mb-2 font-bold text-red-600 text-2xl">Error</h2>
+          <p className="text-gray-600">{error}</p>
+        </div>
+      </div>
+    );
+  }
+
   if (!project) return <NotFound projectId={String(projectId)} />;
 
   return (
@@ -67,17 +84,25 @@ const ProjectDetails = () => {
         <Header project={project} />
         <StatCards project={project} />
         <div className="flex md:flex-row flex-col gap-6 mb-8">
-          <OverviewCard project={project} />
+          <OverviewCard school={school} />
           <ActionsCard actions={project.actions || []} />
         </div>
         {/* Goal Graph after overview and completed actions */}
         <SchoolGoalCard
-          schoolGoal={Number(project.finalGoal) || 40}
-          subGoal={Number(project.subgoal) || 25}
-          subGoalYear={String(project.subGoalDate) || "2028"}
-          finalGoalYear={String(project.finalGoalDate) || "2030"}
+          schoolGoal={schoolGoal?.goal || 40} // School's overall goal (e.g., 30%)
+          subGoal={Number(project.goalReductionAmount) || 25} // This project's contribution (e.g., 10%)
+          subGoalYear={
+            project.finalGoal
+              ? new Date(project.finalGoal).getFullYear().toString()
+              : "2028"
+          } // Project deadline year
+          finalGoalYear={schoolGoal?.deadlineYear || "2030"} // School deadline year
           baseReductionPerYear={5} // Placeholder, adjust as needed
-          startYear={String(project.startDate) || "2023"}
+          startYear={
+            project.startDate
+              ? new Date(project.startDate).getFullYear().toString()
+              : "2023"
+          }
         />
       </motion.div>
     </div>

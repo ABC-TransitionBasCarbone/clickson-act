@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { adminAuth, adminDb } from "../../../../firebaseAdmin";
+import { v4 as uuidv4 } from "uuid";
 import { withRateLimit } from "../../../../lib/auth-middleware";
 
 async function registerHandler(req: NextRequest) {
@@ -30,6 +31,8 @@ async function registerHandler(req: NextRequest) {
       city,
       postalCode,
       school,
+      goal,
+      deadlineYear,
     } = body;
 
     // Enhanced input validation
@@ -89,6 +92,55 @@ async function registerHandler(req: NextRequest) {
     console.log("User created successfully:", userRecord.uid);
 
     console.log("Storing user data in Firestore...");
+    let schoolId = null;
+
+    // Handle school linking
+    if (sanitizedData.school) {
+      if (goal && deadlineYear) {
+        // Creating a new school
+        console.log("Creating new school entry:", sanitizedData.school);
+        schoolId = uuidv4();
+
+        await adminDb
+          .collection("schools")
+          .doc(schoolId)
+          .set({
+            id: schoolId,
+            name: sanitizedData.school,
+            goal: Number(goal),
+            deadlineYear: String(deadlineYear),
+            createdAt: new Date().toISOString(),
+          });
+
+        console.log("New school entry created successfully");
+      } else {
+        // Linking to existing school
+        console.log("Looking for existing school:", sanitizedData.school);
+
+        const existingSchoolQuery = await adminDb
+          .collection("schools")
+          .where("name", "==", sanitizedData.school)
+          .limit(1)
+          .get();
+
+        if (!existingSchoolQuery.empty) {
+          schoolId = existingSchoolQuery.docs[0].id;
+          console.log("Found existing school with ID:", schoolId);
+        } else {
+          console.log("School not found, creating with defaults");
+          // Create school with default values if it doesn't exist
+          schoolId = uuidv4();
+          await adminDb.collection("schools").doc(schoolId).set({
+            id: schoolId,
+            name: sanitizedData.school,
+            goal: 40, // Default goal
+            deadlineYear: "2030", // Default deadline
+            createdAt: new Date().toISOString(),
+          });
+        }
+      }
+    }
+
     // Store complete teacher info in Firestore
     await adminDb.collection("teachers").doc(userRecord.uid).set({
       uid: userRecord.uid,
@@ -100,16 +152,25 @@ async function registerHandler(req: NextRequest) {
       city: sanitizedData.city,
       postalCode: sanitizedData.postalCode,
       school: sanitizedData.school,
+      schoolId: schoolId, // Link to school document
       createdAt: new Date().toISOString(),
       role: "teacher",
     });
     console.log("User data stored successfully");
 
+    // Create a custom token for the authenticated user
+    const customToken = await adminAuth.createCustomToken(userRecord.uid);
+
     return NextResponse.json({
-      uid: userRecord.uid,
-      email: sanitizedData.email,
-      name: sanitizedData.name,
       success: true,
+      token: customToken,
+      user: {
+        uid: userRecord.uid,
+        email: sanitizedData.email,
+        username: sanitizedData.name,
+        name: sanitizedData.name,
+        role: "teacher",
+      },
     });
   } catch (error: unknown) {
     console.error("Registration error:", error);

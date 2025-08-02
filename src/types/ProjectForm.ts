@@ -1,6 +1,5 @@
 type ProjectForm = {
   name: string;
-  school: string;
   students: number;
   startDate: string;
   finalGoal: string;

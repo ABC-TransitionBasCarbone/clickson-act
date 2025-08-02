@@ -9,7 +9,7 @@ import { useUser } from "@/context/UserContext";
 const SignUpForm = () => {
   const t = useTranslations();
   const router = useRouter();
-  const { user } = useUser();
+  const { user, setUser } = useUser();
   const [formData, setFormData] = useState({
     firstName: "",
     lastName: "",
@@ -20,6 +20,8 @@ const SignUpForm = () => {
     postalCode: "",
     school: "",
     customSchool: "",
+    goal: 50,
+    deadlineYear: "2030",
   });
   const [error, setError] = useState<string | null>(null);
 
@@ -74,10 +76,23 @@ const SignUpForm = () => {
             formData.school === "Other"
               ? formData.customSchool
               : formData.school,
+          goal: formData.school === "Other" ? formData.goal : null,
+          deadlineYear:
+            formData.school === "Other" ? formData.deadlineYear : null,
         }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Registration failed");
+
+      // Set user in context with authentication token
+      setUser({
+        username: data.user.username,
+        passcode: "", // Teachers don't have passcodes
+        uid: data.user.uid,
+        token: data.token,
+        role: data.user.role,
+      });
+
       // Redirect teacher to dashboard after successful registration (using i18n navigation)
       router.push("/dashboard");
     } catch (err: unknown) {
@@ -238,6 +253,41 @@ const SignUpForm = () => {
             onChange={handleChange}
           />
         </label>
+      )}
+
+      {/* Goal and Deadline Fields - Only show when creating new school */}
+      {formData.school === "Other" && (
+        <>
+          {/* Goal Field */}
+          <label className="w-full input validator">
+            <span className="text-gray-600">%</span>
+            <input
+              type="number"
+              name="goal"
+              required
+              placeholder={t("User.schoolGoal")}
+              value={formData.goal}
+              onChange={handleChange}
+              min="0"
+              max="100"
+            />
+          </label>
+
+          {/* Deadline Year Field */}
+          <label className="w-full input validator">
+            <span className="text-gray-600">{t("User.year")}</span>
+            <input
+              type="number"
+              name="deadlineYear"
+              required
+              placeholder={t("User.deadlineYear")}
+              value={formData.deadlineYear}
+              onChange={handleChange}
+              min={new Date().getFullYear()}
+              max={new Date().getFullYear() + 50}
+            />
+          </label>
+        </>
       )}
 
       {error && <div className="text-red-500">{error}</div>}
