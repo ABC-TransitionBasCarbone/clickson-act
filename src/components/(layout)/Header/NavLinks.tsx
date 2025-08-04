@@ -13,7 +13,7 @@ const NavLinks = ({ className }: { className?: string }) => {
 
   return (
     <nav className={className}>
-      <ul className="flex flex-col items-center gap-10 lg:flex-row">
+      <ul className="flex flex-col items-start gap-5 lg:flex-row">
         {navLinks.map(({ key, path }) => (
           <li
             key={path}

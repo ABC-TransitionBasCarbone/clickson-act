@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { useTranslations } from "next-intl";
-import { PlusCircle, Users, BarChart3, Building } from "lucide-react";
+import { PlusCircle, BarChart3, Building, Edit } from "lucide-react";
 import Project from "@/types/ProjectType";
 import ProjectForm from "@/types/ProjectForm";
 import { School } from "@/types/School";
@@ -221,9 +221,9 @@ const TeacherDashboard: React.FC = () => {
   // If user is a student, redirect them
   if (user && user.passcode) {
     return (
-      <div className="mx-auto px-6 py-8 container">
+      <div className="container mx-auto px-6 py-8">
         <div className="text-center">
-          <h1 className="mb-4 font-bold text-2xl">Access Denied</h1>
+          <h1 className="mb-4 text-2xl font-bold">Access Denied</h1>
           <p className="mb-4 text-gray-600">
             You are logged in as a student. This dashboard is for teachers only.
           </p>
@@ -241,9 +241,9 @@ const TeacherDashboard: React.FC = () => {
   // If not logged in
   if (!user) {
     return (
-      <div className="mx-auto px-6 py-8 container">
+      <div className="container mx-auto px-6 py-8">
         <div className="text-center">
-          <h1 className="mb-4 font-bold text-2xl">Please Log In</h1>
+          <h1 className="mb-4 text-2xl font-bold">Please Log In</h1>
           <p className="mb-4 text-gray-600">
             You need to be logged in as a teacher to access this dashboard.
           </p>
@@ -260,9 +260,9 @@ const TeacherDashboard: React.FC = () => {
 
   if (loading) {
     return (
-      <div className="mx-auto px-6 py-8 container">
+      <div className="container mx-auto px-6 py-8">
         <div className="text-center">
-          <div className="mx-auto border-gray-900 border-b-2 rounded-full w-32 h-32 animate-spin"></div>
+          <div className="mx-auto h-32 w-32 animate-spin rounded-full border-b-2 border-gray-900"></div>
           <p className="mt-4 text-gray-600">Loading projects...</p>
         </div>
       </div>
@@ -271,9 +271,9 @@ const TeacherDashboard: React.FC = () => {
 
   if (error) {
     return (
-      <div className="mx-auto px-6 py-8 container">
+      <div className="container mx-auto px-6 py-8">
         <div className="text-center">
-          <h1 className="mb-4 font-bold text-red-600 text-2xl">Error</h1>
+          <h1 className="mb-4 text-2xl font-bold text-red-600">Error</h1>
           <p className="mb-4 text-gray-600">{error}</p>
           <button onClick={fetchProjects} className="btn btn-primary">
             Try Again
@@ -283,10 +283,6 @@ const TeacherDashboard: React.FC = () => {
     );
   }
 
-  const totalStudents = projects.reduce(
-    (sum, project) => sum + (project.students || 0),
-    0,
-  );
   const avgReduction =
     projects.length > 0
       ? projects.reduce(
@@ -302,45 +298,47 @@ const TeacherDashboard: React.FC = () => {
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
         transition={{ duration: 0.5 }}
-        className="mx-auto px-6 py-8 container"
+        className="container mx-auto px-6 py-8"
       >
-        <div className="flex md:flex-row flex-col md:justify-between md:items-center mb-8">
+        <div className="mb-8 flex flex-col md:flex-row md:items-center md:justify-between">
           <div>
-            <h1 className="font-bold text-3xl tracking-tight">
+            <h1 className="text-3xl font-bold tracking-tight">
               {t("teacherDashboard")}
             </h1>
-            <p className="mt-1 text-muted-foreground">{t("manageProjects")}</p>
+            <p className="text-muted-foreground mt-1">{t("manageProjects")}</p>
           </div>
           <button
-            className="bg-primary-600 hover:bg-primary-700 mt-4 md:mt-0 btn btn-primary"
+            className="bg-primary-600 hover:bg-primary-700 btn btn-primary mt-4 md:mt-0"
             onClick={openProjectModal}
           >
-            <PlusCircle className="mr-2 w-4 h-4" />
+            <PlusCircle className="mr-2 h-4 w-4" />
             {t("addNewProject")}
           </button>
         </div>
 
-        <div className="gap-4 grid md:grid-cols-3 mb-8">
-          <div className="relative card">
-            <div className="flex flex-row justify-between items-center space-y-0 pb-2">
-              <h3 className="font-medium text-sm">
+        <div className="mb-8 grid gap-4 md:grid-cols-3">
+          <div className="card relative">
+            <div className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <h3 className="text-sm font-medium">
                 {teacherInfo?.school ? t("mySchool") : t("projects")}
               </h3>
-              <Building className="w-4 h-4 text-muted-foreground" />
+              <Building className="text-muted-foreground h-4 w-4" />
             </div>
             <div>
               {teacherInfo?.school ? (
                 <>
-                  <div className="font-bold text-2xl">{teacherInfo.school}</div>
-                  <p className="text-muted-foreground text-xs">
+                  <div className="text-2xl font-bold">
                     {teacherSchool
                       ? `${teacherSchool.goal}% by ${teacherSchool.deadlineYear}`
                       : t("clickToSetGoals")}
+                  </div>
+                  <p className="text-muted-foreground text-xs text-wrap">
+                    {teacherSchool?.name}
                   </p>
                 </>
               ) : (
                 <>
-                  <div className="font-bold text-2xl">{projects.length}</div>
+                  <div className="text-2xl font-bold">{projects.length}</div>
                   <p className="text-muted-foreground text-xs">
                     {t("projectsCreated")}
                   </p>
@@ -350,38 +348,38 @@ const TeacherDashboard: React.FC = () => {
             {teacherInfo?.school && (
               <button
                 onClick={() => setIsSchoolEditModalOpen(true)}
-                className="right-5 bottom-5 absolute text-muted-foreground hover:text-primary cursor-pointer"
+                className="text-muted-foreground hover:text-primary absolute right-5 bottom-5 cursor-pointer"
                 title={
                   teacherSchool ? t("editSchoolGoals") : t("setSchoolGoals")
                 }
               >
-                <Building className="w-4 h-4" />
+                <Edit className="h-4 w-4" />
               </button>
             )}
           </div>
 
           <div className="card">
-            <h3 className="flex flex-row justify-between items-center space-y-0 pb-2">
-              <div className="font-medium text-sm">{t("totalStudents")}</div>
-              <Users className="w-4 h-4 text-muted-foreground" />
+            <h3 className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <div className="text-sm font-medium">{t("totalProjects")}</div>
+              <PlusCircle className="text-muted-foreground h-4 w-4" />
             </h3>
             <div>
-              <div className="font-bold text-2xl">{totalStudents}</div>
+              <div className="text-2xl font-bold">{projects.length}</div>
               <p className="text-muted-foreground text-xs">
-                {t("acrossAllProjects")}
+                {t("projectsCreated")}
               </p>
             </div>
           </div>
 
           <div className="card">
-            <div className="flex flex-row justify-between items-center space-y-0 pb-2">
-              <div className="font-medium text-sm">
+            <div className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <div className="text-sm font-medium">
                 {t("emissionReduction")}
               </div>
-              <BarChart3 className="w-4 h-4 text-muted-foreground" />
+              <BarChart3 className="text-muted-foreground h-4 w-4" />
             </div>
             <div>
-              <div className="font-bold text-2xl">
+              <div className="text-2xl font-bold">
                 {avgReduction.toFixed(1)}%
               </div>
               <p className="text-muted-foreground text-xs">
@@ -391,18 +389,18 @@ const TeacherDashboard: React.FC = () => {
           </div>
         </div>
 
-        <h2 className="mb-4 font-semibold text-xl">
+        <h2 className="mb-4 text-xl font-semibold">
           {t("activeProjectsTitle")}
         </h2>
 
-        <div className="gap-6 grid md:grid-cols-2 lg:grid-cols-3 mb-6">
+        <div className="mb-6 grid gap-6 md:grid-cols-2 lg:grid-cols-3">
           {projects.map((project) => (
             <div
               key={project.id}
-              className="hover:shadow-md transition-shadow card"
+              className="card transition-shadow hover:shadow-md"
             >
               <div>
-                <div className="flex justify-between items-start mb-5 font-bold text-xl">
+                <div className="mb-5 flex items-start justify-between text-xl font-bold">
                   <h3>{project.name}</h3>
                   <span
                     className={`rounded-full px-2 py-1 text-xs font-medium ${
@@ -418,7 +416,7 @@ const TeacherDashboard: React.FC = () => {
                 </div>
               </div>
               <div>
-                <div className="gap-4 grid grid-cols-2 text-sm">
+                <div className="grid grid-cols-2 gap-4 text-sm">
                   <div>
                     <p className="text-muted-foreground">{t("students")}</p>
                     <p className="font-medium">{project.students}</p>
@@ -437,7 +435,7 @@ const TeacherDashboard: React.FC = () => {
                   </div>
                 </div>
               </div>
-              <div className="flex justify-between mt-5 w-full">
+              <div className="mt-5 flex w-full justify-between">
                 {/* Assuming project.id is available and can be used for the link */}
                 {project.id && (
                   <Link
@@ -467,7 +465,7 @@ const TeacherDashboard: React.FC = () => {
       {isSchoolEditModalOpen && (
         <div className="modal modal-open">
           <div className="modal-box">
-            <h3 className="font-bold text-lg">{t("editSchool")}</h3>
+            <h3 className="text-lg font-bold">{t("editSchool")}</h3>
             <form
               className="space-y-6 py-4"
               onSubmit={(e) => {
@@ -476,7 +474,7 @@ const TeacherDashboard: React.FC = () => {
               }}
             >
               <div>
-                <label htmlFor="goal" className="block mb-1 font-medium">
+                <label htmlFor="goal" className="mb-1 block font-medium">
                   {t("reductionGoal")} (%)
                 </label>
                 <input
@@ -484,7 +482,7 @@ const TeacherDashboard: React.FC = () => {
                   name="goal"
                   type="number"
                   placeholder={t("reductionGoal")}
-                  className="input-bordered w-full input"
+                  className="input-bordered input w-full"
                   value={schoolEditForm.goal}
                   onChange={(e) =>
                     setSchoolEditForm((prev) => ({
@@ -501,7 +499,7 @@ const TeacherDashboard: React.FC = () => {
               <div>
                 <label
                   htmlFor="deadlineYear"
-                  className="block mb-1 font-medium"
+                  className="mb-1 block font-medium"
                 >
                   {t("deadlineYear")}
                 </label>
@@ -510,7 +508,7 @@ const TeacherDashboard: React.FC = () => {
                   name="deadlineYear"
                   type="number"
                   placeholder={t("deadlineYear")}
-                  className="input-bordered w-full input"
+                  className="input-bordered input w-full"
                   value={schoolEditForm.deadlineYear}
                   onChange={(e) =>
                     setSchoolEditForm((prev) => ({

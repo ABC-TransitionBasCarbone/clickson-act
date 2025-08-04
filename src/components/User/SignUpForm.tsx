@@ -113,7 +113,7 @@ const SignUpForm = () => {
         <p className="mb-4 text-gray-600">
           You are already logged in as <strong>{user.username}</strong>
           {user.passcode && (
-            <span className="block mt-1 text-gray-500 text-sm">
+            <span className="mt-1 block text-sm text-gray-500">
               Passcode: {user.passcode}
             </span>
           )}
@@ -121,14 +121,14 @@ const SignUpForm = () => {
         {user.passcode ? (
           <button
             onClick={() => router.push(`/data-reporting/${user.passcode}`)}
-            className="capitalize btn btn-primary"
+            className="btn btn-primary capitalize"
           >
             Go to Calculator
           </button>
         ) : (
           <button
             onClick={() => router.push("/dashboard")}
-            className="capitalize btn btn-primary"
+            className="btn btn-primary capitalize"
           >
             Go to Dashboard
           </button>
@@ -138,8 +138,8 @@ const SignUpForm = () => {
   }
 
   return (
-    <form onSubmit={handleSubmit} className="flex flex-col gap-4 w-full">
-      <label className="w-full input validator">
+    <form onSubmit={handleSubmit} className="flex w-full flex-col gap-4">
+      <label className="input validator w-full">
         <User strokeWidth={1.5} size={20} />
         <input
           type="text"
@@ -151,7 +151,7 @@ const SignUpForm = () => {
         />
       </label>
 
-      <label className="w-full input validator">
+      <label className="input validator w-full">
         <User strokeWidth={1.5} size={20} />
         <input
           type="text"
@@ -163,7 +163,7 @@ const SignUpForm = () => {
         />
       </label>
 
-      <label className="w-full input validator">
+      <label className="input validator w-full">
         <Mail strokeWidth={1.5} size={20} />
         <input
           type="email"
@@ -175,7 +175,7 @@ const SignUpForm = () => {
         />
       </label>
 
-      <label className="w-full input validator">
+      <label className="input validator w-full">
         <KeyRound strokeWidth={1.5} size={20} />
         <input
           type="password"
@@ -188,7 +188,7 @@ const SignUpForm = () => {
         />
       </label>
 
-      <label className="w-full input validator">
+      <label className="input validator w-full">
         <Globe strokeWidth={1.5} size={20} />
         <input
           type="text"
@@ -200,7 +200,7 @@ const SignUpForm = () => {
         />
       </label>
 
-      <label className="w-full input validator">
+      <label className="input validator w-full">
         <MapPin strokeWidth={1.5} size={20} />
         <input
           type="text"
@@ -212,7 +212,7 @@ const SignUpForm = () => {
         />
       </label>
 
-      <label className="w-full input validator">
+      <label className="input validator w-full">
         <input
           type="text"
           name="postalCode"
@@ -223,14 +223,14 @@ const SignUpForm = () => {
         />
       </label>
 
-      <label className="w-full input validator">
+      <label className="input validator w-full">
         <Building2 strokeWidth={1.5} size={20} />
         <select
           name="school"
           value={formData.school}
           onChange={handleChange}
           required
-          className="outline-none w-full h-full"
+          className="h-full w-full outline-none"
         >
           <option value="">{t("User.selectSchool")}</option>
           {schools.map((school) => (
@@ -242,7 +242,7 @@ const SignUpForm = () => {
       </label>
 
       {formData.school === "Other" && (
-        <label className="w-full input validator">
+        <label className="input validator w-full">
           <Building2 strokeWidth={1.5} size={20} />
           <input
             type="text"
@@ -259,7 +259,7 @@ const SignUpForm = () => {
       {formData.school === "Other" && (
         <>
           {/* Goal Field */}
-          <label className="w-full input validator">
+          <label className="input validator w-full">
             <span className="text-gray-600">%</span>
             <input
               type="number"
@@ -274,8 +274,8 @@ const SignUpForm = () => {
           </label>
 
           {/* Deadline Year Field */}
-          <label className="w-full input validator">
-            <span className="text-gray-600">{t("User.year")}</span>
+          <label className="input validator w-full">
+            <span className="text-gray-600">{t("User.deadlineYear")}</span>
             <input
               type="number"
               name="deadlineYear"
@@ -292,7 +292,7 @@ const SignUpForm = () => {
 
       {error && <div className="text-red-500">{error}</div>}
 
-      <button type="submit" className="capitalize btn btn-primary">
+      <button type="submit" className="btn btn-primary capitalize">
         {t("User.signup")}
       </button>
     </form>

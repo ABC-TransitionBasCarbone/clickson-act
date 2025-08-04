@@ -74,7 +74,7 @@ const PassCodeForm = () => {
         </p>
         <button
           onClick={() => router.push(`/data-reporting/${user.passcode}`)}
-          className="capitalize btn btn-primary"
+          className="btn btn-primary capitalize"
         >
           Continue to Calculator
         </button>
@@ -83,8 +83,8 @@ const PassCodeForm = () => {
   }
 
   return (
-    <form onSubmit={handleSubmit} className="flex flex-col gap-4 w-full">
-      <label className="w-full input validator">
+    <form onSubmit={handleSubmit} className="flex w-full flex-col gap-4">
+      <label className="input validator w-full">
         <User strokeWidth={1.5} size={20} />
         <input
           type="text"
@@ -99,7 +99,7 @@ const PassCodeForm = () => {
         />
       </label>
 
-      <label className="w-full input validator">
+      <label className="input validator w-full">
         <RectangleEllipsis strokeWidth={1.5} size={20} />
         <input
           type="text"
@@ -114,8 +114,8 @@ const PassCodeForm = () => {
 
       {error && <div className="text-red-500">{error}</div>}
 
-      <button type="submit" className="capitalize btn btn-primary">
-        {t("Calculator.joinPasscode")}
+      <button type="submit" className="btn btn-primary capitalize">
+        {t("DataReporting.joinPasscode")}
       </button>
     </form>
   );
