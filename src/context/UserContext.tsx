@@ -9,6 +9,7 @@ type UserData = {
   uid?: string;
   token?: string;
   role?: string;
+  tokenExpiry?: number; // Add token expiry tracking
 };
 
 type UserContextType = {
@@ -25,11 +26,32 @@ const UserContext = createContext<UserContextType>({
 
 export const useUser = () => useContext(UserContext);
 
+// Helper function to check if token is expired
+const isTokenExpired = (expiry?: number): boolean => {
+  if (!expiry) return true;
+  return Date.now() >= expiry;
+};
+
+// Helper function to get secure storage (sessionStorage for sensitive data)
+const getSecureStorage = () => {
+  // Use sessionStorage for tokens (cleared when tab closes)
+  // Use localStorage for non-sensitive data
+  return {
+    getToken: () => sessionStorage.getItem("auth_token"),
+    setToken: (token: string) => sessionStorage.setItem("auth_token", token),
+    removeToken: () => sessionStorage.removeItem("auth_token"),
+    getExpiry: () => sessionStorage.getItem("token_expiry"),
+    setExpiry: (expiry: number) =>
+      sessionStorage.setItem("token_expiry", expiry.toString()),
+    removeExpiry: () => sessionStorage.removeItem("token_expiry"),
+  };
+};
+
 export const UserProvider = ({ children }: { children: React.ReactNode }) => {
   const [user, setUserState] = useState<UserData | null>(null);
   const [isLoaded, setIsLoaded] = useState(false);
 
-  // Validate token function
+  // Validate token function with better error handling
   const validateToken = async (token: string) => {
     try {
       const response = await fetch("/api/auth/validate", {
@@ -39,7 +61,13 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
           "Content-Type": "application/json",
         },
       });
-      return response.ok;
+
+      if (!response.ok) {
+        console.warn("Token validation failed:", response.status);
+        return false;
+      }
+
+      return true;
     } catch (error) {
       console.error("Token validation error:", error);
       return false;
@@ -49,25 +77,45 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
   useEffect(() => {
     // Only run on client side to avoid hydration issues
     if (typeof window !== "undefined") {
+      const secureStorage = getSecureStorage();
+
       const storedUsername = localStorage.getItem("username");
       const storedPasscode = localStorage.getItem("passcode");
       const storedStudentId = localStorage.getItem("studentId");
       const storedUid = localStorage.getItem("uid");
-      const storedToken = localStorage.getItem("token");
       const storedRole = localStorage.getItem("role");
 
-      if (storedUsername && storedPasscode) {
+      // Get token from secure storage
+      const storedToken = secureStorage.getToken();
+      const storedExpiry = secureStorage.getExpiry();
+      const tokenExpiry = storedExpiry ? parseInt(storedExpiry) : undefined;
+
+      // Check if we have stored user data
+      // For teachers/admins: we need username and valid token
+      // For students: we need username and passcode
+      const hasTeacherData =
+        storedUsername &&
+        storedToken &&
+        (storedRole === "teacher" || storedRole === "admin") &&
+        !isTokenExpired(tokenExpiry);
+      const hasStudentData = storedUsername && storedPasscode;
+
+      if (hasTeacherData || hasStudentData) {
         const userData = {
-          username: storedUsername,
-          passcode: storedPasscode,
+          username: storedUsername!,
+          passcode: storedPasscode || "", // Empty string for teachers
           studentId: storedStudentId || undefined,
           uid: storedUid || undefined,
           token: storedToken || undefined,
           role: storedRole || undefined,
+          tokenExpiry: tokenExpiry,
         };
 
-        // If user has a token (teacher), validate it
-        if (storedToken && storedRole === "teacher") {
+        // If user has a token (teacher or admin), validate it
+        if (
+          storedToken &&
+          (storedRole === "teacher" || storedRole === "admin")
+        ) {
           validateToken(storedToken)
             .then((isValid) => {
               if (isValid) {
@@ -76,23 +124,19 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
                 // Token is invalid, clear the session
                 console.log("Invalid token detected, clearing session");
                 setUserState(null);
-                // Clear localStorage
-                localStorage.removeItem("username");
-                localStorage.removeItem("passcode");
-                localStorage.removeItem("studentId");
-                localStorage.removeItem("uid");
-                localStorage.removeItem("token");
-                localStorage.removeItem("role");
+                clearAllStorage();
               }
               setIsLoaded(true);
             })
-            .catch(() => {
+            .catch((error) => {
+              console.error("Token validation failed:", error);
               // Validation failed, clear session
               setUserState(null);
+              clearAllStorage();
               setIsLoaded(true);
             });
         } else {
-          // No token or student user, set user data directly
+          // Student user or no token, set user data directly
           setUserState(userData);
           setIsLoaded(true);
         }
@@ -102,10 +146,31 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
     }
   }, []);
 
-  const setUser = (newUser: UserData | null) => {
-    // Only access localStorage on client side
+  // Helper function to clear all storage
+  const clearAllStorage = () => {
     if (typeof window !== "undefined") {
+      const secureStorage = getSecureStorage();
+
+      // Clear localStorage
+      localStorage.removeItem("username");
+      localStorage.removeItem("passcode");
+      localStorage.removeItem("studentId");
+      localStorage.removeItem("uid");
+      localStorage.removeItem("role");
+
+      // Clear secure storage
+      secureStorage.removeToken();
+      secureStorage.removeExpiry();
+    }
+  };
+
+  const setUser = (newUser: UserData | null) => {
+    // Only access storage on client side
+    if (typeof window !== "undefined") {
+      const secureStorage = getSecureStorage();
+
       if (newUser) {
+        // Store non-sensitive data in localStorage
         localStorage.setItem("username", newUser.username);
         localStorage.setItem("passcode", newUser.passcode);
         if (newUser.studentId) {
@@ -118,23 +183,24 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
         } else {
           localStorage.removeItem("uid");
         }
-        if (newUser.token) {
-          localStorage.setItem("token", newUser.token);
-        } else {
-          localStorage.removeItem("token");
-        }
         if (newUser.role) {
           localStorage.setItem("role", newUser.role);
         } else {
           localStorage.removeItem("role");
         }
+
+        // Store sensitive data (token) in sessionStorage
+        if (newUser.token) {
+          secureStorage.setToken(newUser.token);
+          // Set token expiry (1 hour from now for Firebase ID tokens)
+          const expiry = Date.now() + 60 * 60 * 1000; // 1 hour
+          secureStorage.setExpiry(expiry);
+        } else {
+          secureStorage.removeToken();
+          secureStorage.removeExpiry();
+        }
       } else {
-        localStorage.removeItem("username");
-        localStorage.removeItem("passcode");
-        localStorage.removeItem("studentId");
-        localStorage.removeItem("uid");
-        localStorage.removeItem("token");
-        localStorage.removeItem("role");
+        clearAllStorage();
       }
     }
 

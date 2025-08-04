@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { adminAuth, adminDb } from "../../../../firebaseAdmin";
+import { adminDb } from "../../../../firebaseAdmin";
 import { withRateLimit } from "../../../../lib/auth-middleware";
 
 async function loginHandler(req: NextRequest) {
@@ -91,46 +91,50 @@ async function loginHandler(req: NextRequest) {
       }
 
       const uid = authData.localId;
+      const idToken = authData.idToken; // Use the ID token from Firebase response
 
-      if (!uid) {
+      if (!uid || !idToken) {
         return NextResponse.json(
           { error: "Authentication failed" },
           { status: 401 },
         );
       }
 
-      // Get teacher data from Firestore
+      // Get user data from Firestore (check both teachers and admins collections)
+      let userData = null;
+
+      // First check teachers collection
       const teacherDoc = await adminDb.collection("teachers").doc(uid).get();
-
-      if (!teacherDoc.exists) {
-        return NextResponse.json(
-          {
-            error:
-              "Teacher account not found. If you are a student, please use the student login with your passcode instead.",
-            isStudent: true,
-          },
-          { status: 404 },
-        );
+      if (teacherDoc.exists) {
+        userData = teacherDoc.data();
+      } else {
+        // Check admins collection
+        const adminDoc = await adminDb.collection("admins").doc(uid).get();
+        if (adminDoc.exists) {
+          userData = adminDoc.data();
+        } else {
+          return NextResponse.json(
+            {
+              error:
+                "Account not found. If you are a student, please use the student login with your passcode instead.",
+              isStudent: true,
+            },
+            { status: 404 },
+          );
+        }
       }
-
-      const teacherData = teacherDoc.data();
-
-      // Create a custom token for the authenticated user
-      const customToken = await adminAuth.createCustomToken(uid);
 
       return NextResponse.json({
         success: true,
-        token: customToken,
+        token: idToken, // Use the ID token instead of creating a custom token
         user: {
           uid: uid,
           email: authData.email,
           username:
-            teacherData?.name ||
-            `${teacherData?.firstName} ${teacherData?.lastName}`,
+            userData?.name || `${userData?.firstName} ${userData?.lastName}`,
           name:
-            teacherData?.name ||
-            `${teacherData?.firstName} ${teacherData?.lastName}`,
-          role: "teacher",
+            userData?.name || `${userData?.firstName} ${userData?.lastName}`,
+          role: userData?.role || "teacher",
         },
         message: "Login successful",
       });

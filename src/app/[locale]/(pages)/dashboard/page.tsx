@@ -467,7 +467,7 @@ const TeacherDashboard: React.FC = () => {
           <div className="modal-box">
             <h3 className="text-lg font-bold">{t("editSchool")}</h3>
             <form
-              className="space-y-6 py-4"
+              className="space-y-2.5 py-5"
               onSubmit={(e) => {
                 e.preventDefault();
                 handleSchoolEdit();

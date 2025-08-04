@@ -111,7 +111,7 @@ const LoginForm = () => {
         <p className="mb-4 text-gray-600">
           You are already logged in as <strong>{user.username}</strong>
           {user.passcode && (
-            <span className="block mt-1 text-gray-500 text-sm">
+            <span className="mt-1 block text-sm text-gray-500">
               Passcode: {user.passcode}
             </span>
           )}
@@ -119,14 +119,14 @@ const LoginForm = () => {
         {user.passcode ? (
           <button
             onClick={() => router.push(`/data-reporting/${user.passcode}`)}
-            className="capitalize btn btn-primary"
+            className="btn btn-primary capitalize"
           >
             Go to Calculator
           </button>
         ) : (
           <button
             onClick={() => router.push("/dashboard")}
-            className="capitalize btn btn-primary"
+            className="btn btn-primary capitalize"
           >
             Go to Dashboard
           </button>
@@ -136,8 +136,8 @@ const LoginForm = () => {
   }
 
   return (
-    <form onSubmit={handleSubmit} className="flex flex-col gap-4 w-full">
-      <label className="w-full input validator">
+    <form onSubmit={handleSubmit} className="flex w-full flex-col gap-4">
+      <label className="input validator w-full">
         <User strokeWidth={1.5} size={20} />
         <input
           type="email"
@@ -149,7 +149,7 @@ const LoginForm = () => {
         />
       </label>
 
-      <label className="w-full input validator">
+      <label className="input validator w-full">
         <KeyRound strokeWidth={1.5} size={20} />
         <input
           type="password"
@@ -164,17 +164,19 @@ const LoginForm = () => {
 
       {error && <div className="text-red-500">{error}</div>}
 
-      <button type="submit" className="capitalize btn btn-primary">
-        {t("User.login")}
-      </button>
+      <div className="flex flex-col">
+        <button type="submit" className="btn btn-primary capitalize">
+          {t("User.login")}
+        </button>
 
-      <button
-        type="button"
-        className="capitalize btn btn-link"
-        onClick={handleSignupClick}
-      >
-        {t("User.signup")}
-      </button>
+        <button
+          type="button"
+          className="btn btn-link capitalize"
+          onClick={handleSignupClick}
+        >
+          {t("User.signup")}
+        </button>
+      </div>
     </form>
   );
 };

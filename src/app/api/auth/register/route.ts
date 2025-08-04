@@ -33,6 +33,7 @@ async function registerHandler(req: NextRequest) {
       school,
       goal,
       deadlineYear,
+      role = "teacher", // Default to teacher, can be overridden for admin
     } = body;
 
     // Enhanced input validation
@@ -141,8 +142,9 @@ async function registerHandler(req: NextRequest) {
       }
     }
 
-    // Store complete teacher info in Firestore
-    await adminDb.collection("teachers").doc(userRecord.uid).set({
+    // Store complete user info in Firestore
+    const collectionName = role === "admin" ? "admins" : "teachers";
+    await adminDb.collection(collectionName).doc(userRecord.uid).set({
       uid: userRecord.uid,
       email: sanitizedData.email,
       name: sanitizedData.name,
@@ -154,7 +156,7 @@ async function registerHandler(req: NextRequest) {
       school: sanitizedData.school,
       schoolId: schoolId, // Link to school document
       createdAt: new Date().toISOString(),
-      role: "teacher",
+      role: role,
     });
     console.log("User data stored successfully");
 
@@ -169,7 +171,7 @@ async function registerHandler(req: NextRequest) {
         email: sanitizedData.email,
         username: sanitizedData.name,
         name: sanitizedData.name,
-        role: "teacher",
+        role: role,
       },
     });
   } catch (error: unknown) {

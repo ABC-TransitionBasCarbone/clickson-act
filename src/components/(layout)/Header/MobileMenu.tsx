@@ -1,7 +1,7 @@
 import { motion } from "motion/react";
 import { Link } from "@/i18n/navigation";
 import { useUser } from "@/context/UserContext";
-import { User, LogOut, LayoutDashboard } from "lucide-react";
+import { User, LogOut, LayoutDashboard, Users } from "lucide-react";
 import NavLinks from "./NavLinks";
 
 const MobileMenu = ({
@@ -31,8 +31,8 @@ const MobileMenu = ({
         <div className="flex h-full flex-col">
           <NavLinks className="flex-col" />
 
-          {/* User section at bottom */}
-          {user && (
+          {/* User/Auth section at bottom */}
+          {user ? (
             <div className="mt-5 rounded-lg border border-gray-200 bg-white">
               {/* User info */}
               <div className="flex items-center gap-2 p-3 py-3">
@@ -50,6 +50,16 @@ const MobileMenu = ({
                   <LayoutDashboard size={16} />
                   Dashboard
                 </Link>
+                {user.role === "admin" && (
+                  <Link
+                    href="/admin"
+                    className="flex items-center gap-3 rounded-lg px-4 py-2 text-sm text-gray-700 transition-colors hover:bg-gray-100"
+                    onClick={() => onClose()}
+                  >
+                    <LayoutDashboard size={16} />
+                    Admin Dashboard
+                  </Link>
+                )}
                 <button
                   onClick={() => {
                     setShowLogoutModal(true);
@@ -60,6 +70,43 @@ const MobileMenu = ({
                   <LogOut size={16} />
                   Logout
                 </button>
+              </div>
+            </div>
+          ) : (
+            <div className="mt-5 rounded-lg border border-gray-200 bg-white">
+              {/* Auth options */}
+              <div className="p-3">
+                <h3 className="mb-3 text-sm font-medium text-gray-700">
+                  Login/Connect
+                </h3>
+                <div className="space-y-2">
+                  <button
+                    onClick={() => {
+                      const modal = document.getElementById(
+                        "login",
+                      ) as HTMLDialogElement;
+                      if (modal) modal.showModal();
+                      onClose();
+                    }}
+                    className="flex w-full items-center gap-3 rounded-lg px-4 py-2 text-sm text-gray-700 transition-colors hover:bg-gray-100"
+                  >
+                    <User size={16} />
+                    Teacher
+                  </button>
+                  <button
+                    onClick={() => {
+                      const modal = document.getElementById(
+                        "passcode",
+                      ) as HTMLDialogElement;
+                      if (modal) modal.showModal();
+                      onClose();
+                    }}
+                    className="flex w-full items-center gap-3 rounded-lg px-4 py-2 text-sm text-gray-700 transition-colors hover:bg-gray-100"
+                  >
+                    <Users size={16} />
+                    Student
+                  </button>
+                </div>
               </div>
             </div>
           )}
