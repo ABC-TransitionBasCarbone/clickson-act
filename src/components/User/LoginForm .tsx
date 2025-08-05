@@ -62,6 +62,26 @@ const LoginForm = () => {
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Login failed");
 
+      // Store tokens securely
+      const secureStorage = {
+        setToken: (token: string) =>
+          sessionStorage.setItem("auth_token", token),
+        setRefreshToken: (token: string) =>
+          sessionStorage.setItem("refresh_token", token),
+        setExpiry: (expiry: number) =>
+          sessionStorage.setItem("token_expiry", expiry.toString()),
+      };
+
+      // Store the tokens and expiry
+      secureStorage.setToken(data.token);
+      if (data.refreshToken) {
+        secureStorage.setRefreshToken(data.refreshToken);
+      }
+      if (data.expiresIn) {
+        const expiry = Date.now() + data.expiresIn * 1000;
+        secureStorage.setExpiry(expiry);
+      }
+
       // Set user in context with authentication token
       setUser({
         username: data.user.username,
@@ -69,6 +89,9 @@ const LoginForm = () => {
         uid: data.user.uid,
         token: data.token,
         role: data.user.role,
+        tokenExpiry: data.expiresIn
+          ? Date.now() + data.expiresIn * 1000
+          : undefined,
       });
 
       // Redirect to dashboard after teacher login (using i18n navigation)

@@ -92,6 +92,8 @@ async function loginHandler(req: NextRequest) {
 
       const uid = authData.localId;
       const idToken = authData.idToken; // Use the ID token from Firebase response
+      const refreshToken = authData.refreshToken; // Get the refresh token
+      const expiresIn = authData.expiresIn || 3600; // Default to 1 hour
 
       if (!uid || !idToken) {
         return NextResponse.json(
@@ -127,6 +129,8 @@ async function loginHandler(req: NextRequest) {
       return NextResponse.json({
         success: true,
         token: idToken, // Use the ID token instead of creating a custom token
+        refreshToken: refreshToken, // Include refresh token
+        expiresIn: expiresIn, // Include expiry time
         user: {
           uid: uid,
           email: authData.email,

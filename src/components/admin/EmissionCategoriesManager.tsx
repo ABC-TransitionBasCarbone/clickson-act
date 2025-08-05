@@ -7,6 +7,7 @@ import {
   EmissionSubcategory,
 } from "../../types/EmissionCategory";
 import AdminModal from "./AdminModal";
+import { authenticatedFetch } from "../../lib/auth-utils";
 
 const EmissionCategoriesManager: React.FC = () => {
   const [categories, setCategories] = useState<EmissionCategory[]>([]);
@@ -21,29 +22,27 @@ const EmissionCategoriesManager: React.FC = () => {
     subcategory: EmissionSubcategory;
   } | null>(null);
   const [selectedCategoryId, setSelectedCategoryId] = useState<string>("");
-  const [newCategory, setNewCategory] = useState({ name: "", description: "" });
+  const [newCategory, setNewCategory] = useState({
+    name: "",
+    description: "",
+    totalPercentage: 0,
+  });
   const [newSubcategory, setNewSubcategory] = useState({
     name: "",
     description: "",
+    SubcategoryTotalPercentage: 0,
   });
 
   // Fetch categories
   const fetchCategories = async () => {
     try {
-      const token = localStorage.getItem("token");
-      if (!token) {
-        console.error("No authentication token found");
-        return;
-      }
+      const response = await authenticatedFetch("/api/emission-categories");
 
-      const response = await fetch("/api/emission-categories", {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
       const data = await response.json();
       if (data.success) {
         setCategories(data.categories);
+      } else {
+        console.error("Error fetching categories:", data.error);
       }
     } catch (error) {
       console.error("Error fetching categories:", error);
@@ -58,17 +57,10 @@ const EmissionCategoriesManager: React.FC = () => {
 
   const handleCreateCategory = async () => {
     try {
-      const token = localStorage.getItem("token");
-      if (!token) {
-        console.error("No authentication token found");
-        return;
-      }
-
-      const response = await fetch("/api/emission-categories", {
+      const response = await authenticatedFetch("/api/emission-categories", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify(newCategory),
       });
@@ -80,7 +72,9 @@ const EmissionCategoriesManager: React.FC = () => {
           "create-category-modal",
         ) as HTMLDialogElement;
         if (modal) modal.close();
-        setNewCategory({ name: "", description: "" });
+        setNewCategory({ name: "", description: "", totalPercentage: 0 });
+      } else {
+        console.error("Error creating category:", data.error);
       }
     } catch (error) {
       console.error("Error creating category:", error);
@@ -91,7 +85,7 @@ const EmissionCategoriesManager: React.FC = () => {
     if (!editingCategory) return;
 
     try {
-      const response = await fetch(
+      const response = await authenticatedFetch(
         `/api/emission-categories/${editingCategory.id}`,
         {
           method: "PUT",
@@ -101,6 +95,7 @@ const EmissionCategoriesManager: React.FC = () => {
           body: JSON.stringify({
             name: editingCategory.name,
             description: editingCategory.description,
+            totalPercentage: editingCategory.totalPercentage,
           }),
         },
       );
@@ -115,6 +110,8 @@ const EmissionCategoriesManager: React.FC = () => {
         ) as HTMLDialogElement;
         if (modal) modal.close();
         setEditingCategory(null);
+      } else {
+        console.error("Error updating category:", data.error);
       }
     } catch (error) {
       console.error("Error updating category:", error);
@@ -125,13 +122,18 @@ const EmissionCategoriesManager: React.FC = () => {
     if (!confirm("Are you sure you want to delete this category?")) return;
 
     try {
-      const response = await fetch(`/api/emission-categories/${id}`, {
-        method: "DELETE",
-      });
+      const response = await authenticatedFetch(
+        `/api/emission-categories/${id}`,
+        {
+          method: "DELETE",
+        },
+      );
 
       const data = await response.json();
       if (data.success) {
         setCategories((prev) => prev.filter((c) => c.id !== id));
+      } else {
+        console.error("Error deleting category:", data.error);
       }
     } catch (error) {
       console.error("Error deleting category:", error);
@@ -140,7 +142,7 @@ const EmissionCategoriesManager: React.FC = () => {
 
   const handleCreateSubcategory = async () => {
     try {
-      const response = await fetch(
+      const response = await authenticatedFetch(
         `/api/emission-categories/${selectedCategoryId}/subcategories`,
         {
           method: "POST",
@@ -164,7 +166,13 @@ const EmissionCategoriesManager: React.FC = () => {
           "create-subcategory-modal",
         ) as HTMLDialogElement;
         if (modal) modal.close();
-        setNewSubcategory({ name: "", description: "" });
+        setNewSubcategory({
+          name: "",
+          description: "",
+          SubcategoryTotalPercentage: 0,
+        });
+      } else {
+        console.error("Error creating subcategory:", data.error);
       }
     } catch (error) {
       console.error("Error creating subcategory:", error);
@@ -175,7 +183,7 @@ const EmissionCategoriesManager: React.FC = () => {
     if (!editingSubcategory) return;
 
     try {
-      const response = await fetch(
+      const response = await authenticatedFetch(
         `/api/emission-categories/${editingSubcategory.categoryId}/subcategories/${editingSubcategory.subcategory.id}`,
         {
           method: "PUT",
@@ -185,6 +193,8 @@ const EmissionCategoriesManager: React.FC = () => {
           body: JSON.stringify({
             name: editingSubcategory.subcategory.name,
             description: editingSubcategory.subcategory.description,
+            SubcategoryTotalPercentage:
+              editingSubcategory.subcategory.SubcategoryTotalPercentage,
           }),
         },
       );
@@ -210,6 +220,8 @@ const EmissionCategoriesManager: React.FC = () => {
         ) as HTMLDialogElement;
         if (modal) modal.close();
         setEditingSubcategory(null);
+      } else {
+        console.error("Error updating subcategory:", data.error);
       }
     } catch (error) {
       console.error("Error updating subcategory:", error);
@@ -223,7 +235,7 @@ const EmissionCategoriesManager: React.FC = () => {
     if (!confirm("Are you sure you want to delete this subcategory?")) return;
 
     try {
-      const response = await fetch(
+      const response = await authenticatedFetch(
         `/api/emission-categories/${categoryId}/subcategories/${subcategoryId}`,
         {
           method: "DELETE",
@@ -244,6 +256,8 @@ const EmissionCategoriesManager: React.FC = () => {
               : c,
           ),
         );
+      } else {
+        console.error("Error deleting subcategory:", data.error);
       }
     } catch (error) {
       console.error("Error deleting subcategory:", error);
@@ -333,6 +347,11 @@ const EmissionCategoriesManager: React.FC = () => {
             {category.description && (
               <p className="mt-2 ml-6 text-gray-600">{category.description}</p>
             )}
+            {category.totalPercentage !== undefined && (
+              <p className="mt-1 ml-6 text-sm text-blue-600">
+                Total Percentage: {category.totalPercentage}%
+              </p>
+            )}
 
             {expandedCategories.has(category.id) && (
               <div className="mt-4 ml-6 space-y-2">
@@ -364,6 +383,13 @@ const EmissionCategoriesManager: React.FC = () => {
                         {subcategory.description && (
                           <p className="text-sm text-gray-600">
                             {subcategory.description}
+                          </p>
+                        )}
+                        {subcategory.SubcategoryTotalPercentage !==
+                          undefined && (
+                          <p className="text-sm text-green-600">
+                            Subcategory Total Percentage:{" "}
+                            {subcategory.SubcategoryTotalPercentage}%
                           </p>
                         )}
                       </div>
@@ -438,6 +464,25 @@ const EmissionCategoriesManager: React.FC = () => {
           />
         </div>
 
+        <div className="mb-4">
+          <label className="mb-1 block">Total Percentage</label>
+          <input
+            type="number"
+            step="0.01"
+            min="0"
+            max="100"
+            value={newCategory.totalPercentage}
+            onChange={(e) =>
+              setNewCategory({
+                ...newCategory,
+                totalPercentage: parseFloat(e.target.value) || 0,
+              })
+            }
+            className="input input-bordered w-full"
+            placeholder="Enter total percentage (0-100)"
+          />
+        </div>
+
         <div className="flex justify-end gap-3">
           <button
             type="button"
@@ -506,6 +551,29 @@ const EmissionCategoriesManager: React.FC = () => {
           />
         </div>
 
+        <div className="mb-4">
+          <label className="mb-1 block">Total Percentage</label>
+          <input
+            type="number"
+            step="0.01"
+            min="0"
+            max="100"
+            value={editingCategory?.totalPercentage || 0}
+            onChange={(e) =>
+              setEditingCategory(
+                editingCategory
+                  ? {
+                      ...editingCategory,
+                      totalPercentage: parseFloat(e.target.value) || 0,
+                    }
+                  : null,
+              )
+            }
+            className="input input-bordered w-full"
+            placeholder="Enter total percentage (0-100)"
+          />
+        </div>
+
         <div className="flex justify-end gap-3">
           <button
             type="button"
@@ -566,6 +634,25 @@ const EmissionCategoriesManager: React.FC = () => {
             className="textarea textarea-bordered w-full"
             placeholder="Enter description"
             rows={3}
+          />
+        </div>
+
+        <div className="mb-4">
+          <label className="mb-1 block">Subcategory Total Percentage</label>
+          <input
+            type="number"
+            step="0.01"
+            min="0"
+            max="100"
+            value={newSubcategory.SubcategoryTotalPercentage}
+            onChange={(e) =>
+              setNewSubcategory({
+                ...newSubcategory,
+                SubcategoryTotalPercentage: parseFloat(e.target.value) || 0,
+              })
+            }
+            className="input input-bordered w-full"
+            placeholder="Enter subcategory total percentage (0-100)"
           />
         </div>
 
@@ -646,6 +733,35 @@ const EmissionCategoriesManager: React.FC = () => {
             className="textarea textarea-bordered w-full"
             placeholder="Enter description"
             rows={3}
+          />
+        </div>
+
+        <div className="mb-4">
+          <label className="mb-1 block">Subcategory Total Percentage</label>
+          <input
+            type="number"
+            step="0.01"
+            min="0"
+            max="100"
+            value={
+              editingSubcategory?.subcategory.SubcategoryTotalPercentage || 0
+            }
+            onChange={(e) =>
+              setEditingSubcategory(
+                editingSubcategory
+                  ? {
+                      ...editingSubcategory,
+                      subcategory: {
+                        ...editingSubcategory.subcategory,
+                        SubcategoryTotalPercentage:
+                          parseFloat(e.target.value) || 0,
+                      },
+                    }
+                  : null,
+              )
+            }
+            className="input input-bordered w-full"
+            placeholder="Enter subcategory total percentage (0-100)"
           />
         </div>
 

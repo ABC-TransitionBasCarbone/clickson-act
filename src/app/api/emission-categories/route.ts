@@ -22,12 +22,32 @@ export async function GET(req: NextRequest) {
     const token = authHeader.substring(7);
     const decodedToken = await adminAuth.verifyIdToken(token);
 
-    // Check if user exists in admin collection
-    const adminDoc = await adminDb
-      .collection("admins")
+    // Check if user exists in teachers or admins collection with admin role
+    let userData = null;
+
+    // First check teachers collection
+    const teacherDoc = await adminDb
+      .collection("teachers")
       .doc(decodedToken.uid)
       .get();
-    if (!adminDoc.exists) {
+    if (teacherDoc.exists) {
+      userData = teacherDoc.data();
+    } else {
+      // Check admins collection
+      const adminDoc = await adminDb
+        .collection("admins")
+        .doc(decodedToken.uid)
+        .get();
+      if (adminDoc.exists) {
+        userData = adminDoc.data();
+      }
+    }
+
+    // Check if user exists and has admin role
+    if (
+      !userData ||
+      (userData.role !== "admin" && userData.role !== "teacher")
+    ) {
       return NextResponse.json(
         { error: "Forbidden - Admin access required" },
         { status: 403 },
@@ -71,12 +91,32 @@ export async function POST(req: NextRequest) {
     const token = authHeader.substring(7);
     const decodedToken = await adminAuth.verifyIdToken(token);
 
-    // Check if user exists in admin collection
-    const adminDoc = await adminDb
-      .collection("admins")
+    // Check if user exists in teachers or admins collection with admin role
+    let userData = null;
+
+    // First check teachers collection
+    const teacherDoc = await adminDb
+      .collection("teachers")
       .doc(decodedToken.uid)
       .get();
-    if (!adminDoc.exists) {
+    if (teacherDoc.exists) {
+      userData = teacherDoc.data();
+    } else {
+      // Check admins collection
+      const adminDoc = await adminDb
+        .collection("admins")
+        .doc(decodedToken.uid)
+        .get();
+      if (adminDoc.exists) {
+        userData = adminDoc.data();
+      }
+    }
+
+    // Check if user exists and has admin role
+    if (
+      !userData ||
+      (userData.role !== "admin" && userData.role !== "teacher")
+    ) {
       return NextResponse.json(
         { error: "Forbidden - Admin access required" },
         { status: 403 },
@@ -84,7 +124,7 @@ export async function POST(req: NextRequest) {
     }
 
     const body = await req.json();
-    const { name, description } = body;
+    const { name, description, totalPercentage } = body;
 
     // Validate input
     const nameValidation = validateName(name);
@@ -112,6 +152,9 @@ export async function POST(req: NextRequest) {
       id: categoryId,
       name: sanitizedName,
       description: sanitizedDescription,
+      totalPercentage: totalPercentage
+        ? parseFloat(totalPercentage)
+        : undefined,
       subcategories: [],
       createdAt: new Date().toISOString(),
     };
