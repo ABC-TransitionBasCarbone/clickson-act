@@ -6,6 +6,8 @@ import {
   validateDescription,
   sanitizeString,
 } from "../../../lib/validation";
+import { TranslatableCategory } from "../../../types/EmissionCategory";
+import { locales } from "../../../i18n/config";
 
 // Get all emission categories
 export async function GET(req: NextRequest) {
@@ -124,39 +126,70 @@ export async function POST(req: NextRequest) {
     }
 
     const body = await req.json();
-    const { name, description, totalPercentage } = body;
+    const { translations, totalPercentage } = body;
 
-    // Validate input
-    const nameValidation = validateName(name);
-    if (!nameValidation.isValid) {
+    // Validate required fields
+    const defaultLocale = locales[0]; // Use first locale as default
+    const hasRequiredTranslation =
+      translations &&
+      Object.keys(translations).length > 0 &&
+      translations[defaultLocale]?.name;
+
+    if (!hasRequiredTranslation) {
       return NextResponse.json(
-        { error: nameValidation.error },
+        {
+          error:
+            "Missing required translations (at least one translation with name is required)",
+        },
         { status: 400 },
       );
     }
 
-    const descriptionValidation = validateDescription(description || "");
-    if (!descriptionValidation.isValid) {
-      return NextResponse.json(
-        { error: descriptionValidation.error },
-        { status: 400 },
-      );
-    }
+    // Validate and sanitize all translations
+    const sanitizedTranslations: {
+      [locale: string]: { name: string; description: string };
+    } = {};
+    for (const [locale, translation] of Object.entries(translations)) {
+      const trans = translation as { name: string; description: string };
 
-    // Sanitize input
-    const sanitizedName = sanitizeString(name);
-    const sanitizedDescription = description ? sanitizeString(description) : "";
+      // Validate name
+      const nameValidation = validateName(trans.name);
+      if (!nameValidation.isValid) {
+        return NextResponse.json(
+          { error: `${locale.toUpperCase()} name: ${nameValidation.error}` },
+          { status: 400 },
+        );
+      }
+
+      // Validate description
+      const descriptionValidation = validateDescription(
+        trans.description || "",
+      );
+      if (!descriptionValidation.isValid) {
+        return NextResponse.json(
+          {
+            error: `${locale.toUpperCase()} description: ${descriptionValidation.error}`,
+          },
+          { status: 400 },
+        );
+      }
+
+      // Sanitize input
+      sanitizedTranslations[locale] = {
+        name: sanitizeString(trans.name),
+        description: trans.description ? sanitizeString(trans.description) : "",
+      };
+    }
 
     const categoryId = uuidv4();
-    const categoryData = {
+    const categoryData: TranslatableCategory = {
       id: categoryId,
-      name: sanitizedName,
-      description: sanitizedDescription,
       totalPercentage: totalPercentage
         ? parseFloat(totalPercentage)
         : undefined,
       subcategories: [],
       createdAt: new Date().toISOString(),
+      translations: sanitizedTranslations,
     };
 
     await adminDb

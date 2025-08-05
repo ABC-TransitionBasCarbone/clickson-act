@@ -16,7 +16,7 @@ export function validateName(name: string): {
     return { isValid: false, error: "Name must be less than 200 characters" };
   }
 
-  if (!/^[a-zA-Z0-9\s\-_]+$/.test(name.trim())) {
+  if (!/^[\p{L}\p{N}\s\-_.()]+$/u.test(name.trim())) {
     return { isValid: false, error: "Name contains invalid characters" };
   }
 

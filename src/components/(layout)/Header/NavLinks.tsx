@@ -34,7 +34,7 @@ const NavLinks = ({ className }: { className?: string }) => {
               {t(key)}
             </Link>
             <span
-              className={`bg-secondary transition-300 absolute bottom-0 left-0 h-0.5 w-full ${
+              className={`bg-secondary transition-300 absolute -bottom-0.5 left-0 h-0.5 w-full rounded-full ${
                 path === "/"
                   ? pathname === path
                     ? "visible"

@@ -253,6 +253,7 @@
     "category": "Category",
     "subcategory": "Subcategory",
     "selectCategory": "Select a category",
+    "selectSubcategory": "Select a subcategory",
     "timeline": "Timeline",
     "selectTimeline": "Select timeline",
     "timeline1": "Less than or equal to 1 year",
@@ -300,5 +301,48 @@
     "edit": "Edit",
     "delete": "Delete",
     "none": "None"
+  },
+
+  "ActionsManager": {
+    "title": "Actions Management",
+    "addAction": "Add Action",
+    "createAction": "Create Action",
+    "editAction": "Edit Action",
+    "confirmDelete": "Are you sure you want to delete this action? This action cannot be undone.",
+    "translations": "Translations",
+    "type": "Type",
+    "typeFixed": "Fixed",
+    "typeDynamic": "Dynamic"
+  },
+
+  "CategoriesManager": {
+    "title": "Emission Categories Management",
+    "addCategory": "Add Category",
+    "createCategory": "Create Category",
+    "editCategory": "Edit Category",
+    "deleteCategory": "Delete Category",
+    "confirmDeleteCategory": "Are you sure you want to delete this category? This will also delete all its subcategories. This action cannot be undone.",
+    "addSubcategory": "Add Subcategory",
+    "createSubcategory": "Create Subcategory",
+    "editSubcategory": "Edit Subcategory",
+    "deleteSubcategory": "Delete Subcategory",
+    "confirmDeleteSubcategory": "Are you sure you want to delete this subcategory? This action cannot be undone.",
+    "translations": "Translations",
+    "categoryName": "Category Name",
+    "categoryDescription": "Category Description",
+    "subcategoryName": "Subcategory Name",
+    "subcategoryDescription": "Subcategory Description",
+    "totalPercentage": "Total Percentage",
+    "subcategoryPercentage": "Subcategory Percentage",
+    "noCategories": "No categories available",
+    "noSubcategories": "No subcategories",
+    "subcategories": "subcategories",
+    "expand": "Expand",
+    "collapse": "Collapse"
+  },
+
+  "Common": {
+    "cancel": "Cancel",
+    "save": "Save"
   }
 }

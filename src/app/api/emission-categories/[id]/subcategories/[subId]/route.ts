@@ -1,6 +1,15 @@
 import { NextRequest, NextResponse } from "next/server";
 import { adminDb, adminAuth } from "../../../../../../firebaseAdmin";
-import { EmissionSubcategory } from "../../../../../../types/EmissionCategory";
+import {
+  EmissionSubcategory,
+  TranslatableSubcategory,
+} from "../../../../../../types/EmissionCategory";
+import { locales } from "../../../../../../i18n/config";
+import {
+  validateName,
+  validateDescription,
+  sanitizeString,
+} from "../../../../../../lib/validation";
 
 // Update subcategory
 export async function PUT(
@@ -54,11 +63,21 @@ export async function PUT(
 
     const { id, subId } = params;
     const body = await req.json();
-    const { name, description, SubcategoryTotalPercentage } = body;
+    const { translations, SubcategoryTotalPercentage } = body;
 
-    if (!name) {
+    // Validate required fields
+    const defaultLocale = locales[0]; // Use first locale as default
+    const hasRequiredTranslation =
+      translations &&
+      Object.keys(translations).length > 0 &&
+      translations[defaultLocale]?.name;
+
+    if (!hasRequiredTranslation) {
       return NextResponse.json(
-        { error: "Subcategory name is required" },
+        {
+          error:
+            "Missing required translations (at least one translation with name is required)",
+        },
         { status: 400 },
       );
     }
@@ -75,17 +94,52 @@ export async function PUT(
       );
     }
 
+    // Validate and sanitize all translations
+    const sanitizedTranslations: {
+      [locale: string]: { name: string; description: string };
+    } = {};
+    for (const [locale, translation] of Object.entries(translations)) {
+      const trans = translation as { name: string; description: string };
+
+      // Validate name
+      const nameValidation = validateName(trans.name);
+      if (!nameValidation.isValid) {
+        return NextResponse.json(
+          { error: `${locale.toUpperCase()} name: ${nameValidation.error}` },
+          { status: 400 },
+        );
+      }
+
+      // Validate description
+      const descriptionValidation = validateDescription(
+        trans.description || "",
+      );
+      if (!descriptionValidation.isValid) {
+        return NextResponse.json(
+          {
+            error: `${locale.toUpperCase()} description: ${descriptionValidation.error}`,
+          },
+          { status: 400 },
+        );
+      }
+
+      // Sanitize input
+      sanitizedTranslations[locale] = {
+        name: sanitizeString(trans.name),
+        description: trans.description ? sanitizeString(trans.description) : "",
+      };
+    }
+
     const categoryData = categoryDoc.data() || {};
     const subcategories = categoryData.subcategories || [];
 
     // Find and update the subcategory
     const updatedSubcategories = subcategories.map(
-      (sub: EmissionSubcategory) =>
+      (sub: EmissionSubcategory | TranslatableSubcategory) =>
         sub.id === subId
           ? {
               ...sub,
-              name: name.trim(),
-              description: description?.trim() || "",
+              translations: sanitizedTranslations,
               SubcategoryTotalPercentage: SubcategoryTotalPercentage
                 ? parseFloat(SubcategoryTotalPercentage)
                 : undefined,

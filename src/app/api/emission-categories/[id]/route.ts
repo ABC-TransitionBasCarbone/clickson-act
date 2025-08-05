@@ -1,5 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
 import { adminDb, adminAuth } from "../../../../firebaseAdmin";
+import { TranslatableCategory } from "../../../../types/EmissionCategory";
+import { locales } from "../../../../i18n/config";
+import {
+  validateName,
+  validateDescription,
+  sanitizeString,
+} from "../../../../lib/validation";
 
 // Update emission category
 export async function PUT(
@@ -53,21 +60,66 @@ export async function PUT(
 
     const { id } = params;
     const body = await req.json();
-    const { name, description, totalPercentage } = body;
+    const { translations, totalPercentage } = body;
 
-    if (!name) {
+    // Validate required fields
+    const defaultLocale = locales[0]; // Use first locale as default
+    const hasRequiredTranslation =
+      translations &&
+      Object.keys(translations).length > 0 &&
+      translations[defaultLocale]?.name;
+
+    if (!hasRequiredTranslation) {
       return NextResponse.json(
-        { error: "Category name is required" },
+        {
+          error:
+            "Missing required translations (at least one translation with name is required)",
+        },
         { status: 400 },
       );
+    }
+
+    // Validate and sanitize all translations
+    const sanitizedTranslations: {
+      [locale: string]: { name: string; description: string };
+    } = {};
+    for (const [locale, translation] of Object.entries(translations)) {
+      const trans = translation as { name: string; description: string };
+
+      // Validate name
+      const nameValidation = validateName(trans.name);
+      if (!nameValidation.isValid) {
+        return NextResponse.json(
+          { error: `${locale.toUpperCase()} name: ${nameValidation.error}` },
+          { status: 400 },
+        );
+      }
+
+      // Validate description
+      const descriptionValidation = validateDescription(
+        trans.description || "",
+      );
+      if (!descriptionValidation.isValid) {
+        return NextResponse.json(
+          {
+            error: `${locale.toUpperCase()} description: ${descriptionValidation.error}`,
+          },
+          { status: 400 },
+        );
+      }
+
+      // Sanitize input
+      sanitizedTranslations[locale] = {
+        name: sanitizeString(trans.name),
+        description: trans.description ? sanitizeString(trans.description) : "",
+      };
     }
 
     await adminDb
       .collection("emissionCategories")
       .doc(id)
       .update({
-        name: name.trim(),
-        description: description?.trim() || "",
+        translations: sanitizedTranslations,
         totalPercentage: totalPercentage
           ? parseFloat(totalPercentage)
           : undefined,

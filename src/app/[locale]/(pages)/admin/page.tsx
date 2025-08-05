@@ -8,6 +8,7 @@ import { useRouter } from "next/navigation";
 import { School as SchoolType } from "../../../../types/School";
 import AdminModal from "../../../../components/admin/AdminModal";
 import EmissionCategoriesManager from "../../../../components/admin/EmissionCategoriesManager";
+import ActionsManager from "../../../../components/admin/ActionsManager";
 
 interface SchoolData extends SchoolType {
   teacherCount?: number;
@@ -26,9 +27,9 @@ const AdminDashboard: React.FC = () => {
     goal: 40,
     deadlineYear: "2030",
   });
-  const [activeTab, setActiveTab] = useState<"schools" | "categories">(
-    "schools",
-  );
+  const [activeTab, setActiveTab] = useState<
+    "schools" | "categories" | "actions"
+  >("schools");
 
   // Check if user is admin
   useEffect(() => {
@@ -210,6 +211,16 @@ const AdminDashboard: React.FC = () => {
                 }`}
               >
                 Emission Categories
+              </button>
+              <button
+                onClick={() => setActiveTab("actions")}
+                className={`border-b-2 px-1 py-2 text-sm font-medium ${
+                  activeTab === "actions"
+                    ? "border-primary text-primary"
+                    : "border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700"
+                }`}
+              >
+                Actions
               </button>
             </nav>
           </div>
@@ -461,6 +472,12 @@ const AdminDashboard: React.FC = () => {
         {activeTab === "categories" && (
           <div className="py-8">
             <EmissionCategoriesManager />
+          </div>
+        )}
+
+        {activeTab === "actions" && (
+          <div className="py-8">
+            <ActionsManager />
           </div>
         )}
       </motion.div>
