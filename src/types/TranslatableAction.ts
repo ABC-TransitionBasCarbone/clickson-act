@@ -14,7 +14,7 @@ export interface TranslatableAction {
   date: string;
   // Optional fields for extended functionality
   subcategory?: string;
-  timeline?: string;
+  timeline?: number;
   status?: "Available" | "Selected" | "Completed";
   assignedTo?: string;
   selected?: boolean;

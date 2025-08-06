@@ -57,6 +57,7 @@ export async function GET(req: NextRequest) {
           (actionData as any).date || new Date().toISOString().split("T")[0],
         type: (actionData as any).type || "Fixed", // Include type from action template
         subcategory: (actionData as any).subcategory || undefined, // Optional subcategory field
+        timeline: Number((actionData as any).timeline) || 1, // Number of years the action will take place
       };
     });
 

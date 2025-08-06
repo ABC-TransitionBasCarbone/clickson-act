@@ -8,58 +8,10 @@ import { Action } from "@/types/Action";
 
 import { SubcategoryForm } from "./SubcategoryForm";
 
-// Helper function to match subcategory keywords
-const matchSubcategoryKeywords = (
-  subcategoryName: string,
-  actionSubcategory: string,
-): boolean => {
-  // Define keyword mappings for better matching
-  const keywordMappings: { [key: string]: string[] } = {
-    electricity: ["power", "energy", "electric", "lighting", "led"],
-    energy: ["electricity", "power", "electric", "lighting", "heating"],
-    waste: ["recycling", "trash", "garbage", "compost", "landfill"],
-    recycling: ["waste", "trash", "garbage", "reuse"],
-    transport: ["travel", "vehicle", "car", "bus", "bike", "walking"],
-    travel: ["transport", "vehicle", "car", "bus", "flight"],
-    nature: ["green", "tree", "plant", "environment", "eco"],
-    green: ["nature", "tree", "plant", "environment", "eco"],
-  };
-
-  // Check if any keywords from subcategory match action subcategory
-  const subcategoryWords = subcategoryName
-    .split(" ")
-    .filter((word) => word.length > 2);
-  const actionWords = actionSubcategory
-    .split(" ")
-    .filter((word) => word.length > 2);
-
-  for (const subWord of subcategoryWords) {
-    // Direct word match
-    if (
-      actionWords.some(
-        (actionWord) =>
-          actionWord.includes(subWord) || subWord.includes(actionWord),
-      )
-    ) {
-      return true;
-    }
-
-    // Keyword mapping match
-    const keywords = keywordMappings[subWord];
-    if (
-      keywords &&
-      actionWords.some((actionWord) => keywords.includes(actionWord))
-    ) {
-      return true;
-    }
-  }
-
-  return false;
-};
 import { ActionsSection } from "./ActionsSection";
 import { SelectedActionsSummary } from "./SelectedActionsSummary";
 import { AddActionModalWrapper } from "./AddActionModalWrapper";
-import { EmissionType } from "@/types/Emission";
+
 import {
   useEmissionCategories,
   ProcessedEmissionCategory,
@@ -131,7 +83,7 @@ const StudentCalculator: React.FC = () => {
 
         // Calculate total of user-entered subcategory values
         const filledSubcategoryValues = subcategoryValues
-          .map((val, index) => {
+          .map((val) => {
             if (val && val.trim() !== "") {
               return parseFloat(val) || 0;
             }
@@ -290,49 +242,30 @@ const StudentCalculator: React.FC = () => {
         );
 
         if (filledSubcategories.length > 0) {
-          // Filter actions to show only those relevant to the filled subcategories
-          const subcategoryActions = actions.filter((a) => {
-            // Check if action belongs to the main category (either by database ID or legacy category)
-            const matchesCategory =
+          // Show ALL actions for the category, but prioritize those matching subcategories
+          const categoryActions = actions.filter(
+            (a) =>
               a.category === selectedCategory || // Database category ID match
-              a.category === selectedEmission.legacyCategory; // Legacy category match
-
-            if (!matchesCategory) {
-              return false;
-            }
-
-            // If action has a subcategory field, check if it matches any filled subcategories
-            if ((a as any).subcategory) {
-              const actionSubcategory = (a as any).subcategory.toLowerCase();
-              const matches = filledSubcategories.some((sub) => {
-                const subName = sub.name.toLowerCase();
-                // More sophisticated matching
-                return (
-                  subName.includes(actionSubcategory) ||
-                  actionSubcategory.includes(subName) ||
-                  // Check for keyword matches
-                  matchSubcategoryKeywords(subName, actionSubcategory)
-                );
-              });
-
-              if (matches) {
-                console.log(`Action "${a.title}" matched subcategory filter`);
-              }
-
-              return matches;
-            }
-
-            // If action doesn't have subcategory field, include it as a general category action
-            console.log(
-              `Action "${a.title}" included as general category action`,
-            );
-            return true;
-          });
+              a.category === selectedEmission.legacyCategory, // Legacy category match
+          );
 
           console.log(
-            `Found ${subcategoryActions.length} actions for subcategories`,
+            `Found ${categoryActions.length} total actions for category "${selectedEmission.name}"`,
           );
-          setFilteredActions(subcategoryActions);
+
+          // Log details about each action for debugging
+          categoryActions.forEach((action) => {
+            const hasSubcategory = (action as Action & { subcategory?: string })
+              .subcategory;
+            console.log(`Action "${action.title}":`, {
+              category: action.category,
+              hasSubcategory,
+              subcategory: (action as Action & { subcategory?: string })
+                .subcategory,
+            });
+          });
+
+          setFilteredActions(categoryActions);
         } else {
           // No subcategories filled, show all category actions
           const categoryActions = actions.filter(
@@ -410,7 +343,7 @@ const StudentCalculator: React.FC = () => {
 
       // Calculate total of user-entered subcategory values
       const filledSubcategoryValues = subcategoryValues
-        .map((val, index) => {
+        .map((val) => {
           if (val && val.trim() !== "") {
             return parseFloat(val) || 0;
           }
@@ -477,7 +410,7 @@ const StudentCalculator: React.FC = () => {
                   subcategoryValues[index] &&
                   subcategoryValues[index].trim() !== "",
               )
-              .map((sub, index) => ({
+              .map((sub) => ({
                 id: sub.id,
                 name: sub.name,
                 value:

@@ -9,7 +9,7 @@ interface CustomAction extends Action {
   selected: boolean;
   status?: "Completed" | "Selected" | "Available";
   assignedTo?: string;
-  timeline?: string;
+  timeline?: number;
   subcategory?: string;
 }
 
@@ -56,7 +56,7 @@ const ActionModal: React.FC<ActionModalProps> = ({
     performance: "",
     status: "Available",
     assignedTo: "",
-    timeline: "",
+    timeline: 1,
     selected: false,
   });
 
@@ -205,23 +205,19 @@ const ActionModal: React.FC<ActionModalProps> = ({
           {/* Timeline */}
           <div className="grid gap-2">
             <label htmlFor="timeline">{t("timeline")}</label>
-            <select
+            <input
               id="timeline"
+              type="number"
               value={newAction.timeline}
               onChange={(e) =>
-                setNewAction({ ...newAction, timeline: e.target.value })
+                setNewAction({ ...newAction, timeline: Number(e.target.value) })
               }
+              min={1}
+              max={50}
+              placeholder="Number of years"
               className="input w-full"
               disabled={fieldDisabled}
-            >
-              <option value="">{t("selectTimeline")}</option>
-              <option value="≤1">{t("timeline1")}</option>
-              <option value="1-2">{t("timeline1-2")}</option>
-              <option value="2-5">{t("timeline2-5")}</option>
-              <option value="5-10">{t("timeline5-10")}</option>
-              <option value="10-15">{t("timeline10-15")}</option>
-              <option value=">15">{t("timeline15")}</option>
-            </select>
+            />
           </div>
 
           {/* Title */}

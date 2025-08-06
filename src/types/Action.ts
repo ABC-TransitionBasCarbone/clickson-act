@@ -16,4 +16,5 @@ export interface Action {
   performance: string;
   date: string;
   type?: "Fixed" | "Dynamic"; // Type from action template
+  timeline?: number; // Number of years the action will take place
 }

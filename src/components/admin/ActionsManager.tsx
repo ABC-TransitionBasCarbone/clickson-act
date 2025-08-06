@@ -41,7 +41,7 @@ const ActionsManager: React.FC = () => {
     effort: string;
     // Optional extended fields
     subcategory: string;
-    timeline: string;
+    timeline: number;
     translations: { [locale: string]: ActionTranslation };
   }>({
     category: "",
@@ -49,7 +49,7 @@ const ActionsManager: React.FC = () => {
     reduction: 0,
     effort: "Medium",
     subcategory: "",
-    timeline: "",
+    timeline: 1,
     translations: {},
   });
 
@@ -193,7 +193,7 @@ const ActionsManager: React.FC = () => {
       reduction: 0,
       effort: "Medium",
       subcategory: "",
-      timeline: "",
+      timeline: 1,
       translations: initialTranslations,
     });
   };
@@ -490,7 +490,7 @@ const ActionsManager: React.FC = () => {
             </div>
           </div>
 
-          <div className="grid grid-cols-1 gap-4">
+          <div className="grid grid-cols-2 gap-4">
             <div>
               <label className="mb-1 block">
                 {tAction("estimatedReduction")}
@@ -507,6 +507,23 @@ const ActionsManager: React.FC = () => {
                   })
                 }
                 className="input input-bordered w-full"
+              />
+            </div>
+            <div>
+              <label className="mb-1 block">{tAction("timeline")}</label>
+              <input
+                type="number"
+                min="1"
+                max="50"
+                value={newAction.timeline}
+                onChange={(e) =>
+                  setNewAction({
+                    ...newAction,
+                    timeline: parseInt(e.target.value) || 1,
+                  })
+                }
+                className="input input-bordered w-full"
+                placeholder="Number of years"
               />
             </div>
           </div>

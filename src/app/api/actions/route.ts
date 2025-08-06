@@ -147,7 +147,7 @@ export async function POST(req: NextRequest) {
       date: new Date().toISOString(),
       // Optional extended fields
       subcategory: actionData.subcategory || "",
-      timeline: actionData.timeline || "",
+      timeline: actionData.timeline || 1,
       // Note: status, assignedTo, selected are now part of SchoolAction, not admin actions
       translations: actionData.translations,
     };

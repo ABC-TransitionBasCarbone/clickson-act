@@ -28,6 +28,7 @@ interface ProjectAction {
   monitoring: string;
   performance: string;
   date: string;
+  timeline: number; // Number of years the action will take place
 
   // Project-specific fields
   type: "Fixed" | "Dynamic"; // Type from the action template
@@ -175,6 +176,7 @@ export async function POST(
           monitoring: translation.monitoring || "",
           performance: translation.performance || "",
           date: currentDate.split("T")[0], // Date in YYYY-MM-DD format
+          timeline: Number(actionTemplate?.timeline) || 1, // Number of years the action will take place
 
           // Project-specific fields
           type: finalActionType,

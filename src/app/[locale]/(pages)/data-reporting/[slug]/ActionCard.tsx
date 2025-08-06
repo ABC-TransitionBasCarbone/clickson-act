@@ -88,6 +88,11 @@ const ActionCard: React.FC<Props> = ({
         <div className="flex-grow">
           <h3 className="font-medium">{action.title}</h3>
           <p className="text-sm text-gray-500">{action.description}</p>
+          {action.timeline && (
+            <p className="mt-1 text-xs text-blue-600">
+              Timeline: {action.timeline} year{action.timeline !== 1 ? "s" : ""}
+            </p>
+          )}
         </div>
         <div className="flex items-center gap-3 text-right">
           <div className="flex flex-col items-end">
