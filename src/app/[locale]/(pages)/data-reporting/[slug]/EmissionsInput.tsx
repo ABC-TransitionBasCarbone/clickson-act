@@ -1,13 +1,9 @@
 import React, { useState } from "react";
 import { useTranslations } from "next-intl";
+import { ProcessedEmissionCategory } from "@/hooks/useEmissionCategories";
 
 interface EmissionsInputProps {
-  emissions: {
-    label: string;
-    value: string;
-    category: string;
-    subcategories: { subcategoryTitle: string; value: string }[];
-  }[];
+  emissions: ProcessedEmissionCategory[];
   setEmissions: (index: number, value: string) => void;
   handleCalculateEmissions: () => void;
 }
@@ -37,8 +33,8 @@ const EmissionsInput: React.FC<EmissionsInputProps> = ({
 
       <div className="mt-10 mb-5 grid gap-4 lg:grid-cols-2">
         {emissions.map((e, i) => (
-          <div key={i} className="flex w-full flex-col">
-            <label>{t(e.label)}</label>
+          <div key={e.id} className="flex w-full flex-col">
+            <label>{e.name}</label>
             <input
               type="number"
               placeholder={t("currentEmissionsPlaceholder")}

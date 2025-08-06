@@ -19,12 +19,17 @@ import {
   Bus,
   Car,
   Fuel,
+  Plus,
 } from "lucide-react";
 
 interface Props {
   action: Action;
   isSelected: boolean;
   onSelect: (id: string) => void;
+  onAddToMonitoring?: (actionId: string) => void;
+  showMonitoringButton?: boolean;
+  isAddingToMonitoring?: boolean;
+  calculatedReduction?: number; // Optional calculated reduction for display
 }
 
 const categoryIcons: Record<string, React.FC[]> = {
@@ -34,9 +39,32 @@ const categoryIcons: Record<string, React.FC[]> = {
   transport: [Bike, Bus, Car, Fuel],
 };
 
-const ActionCard: React.FC<Props> = ({ action, isSelected, onSelect }) => {
+const ActionCard: React.FC<Props> = ({
+  action,
+  isSelected,
+  onSelect,
+  onAddToMonitoring,
+  showMonitoringButton = false,
+  isAddingToMonitoring = false,
+  calculatedReduction,
+}) => {
   const icons = categoryIcons[action.category as keyof typeof categoryIcons];
   const Icon = icons ? icons[0] : Bolt;
+
+  const handleCardClick = (e: React.MouseEvent) => {
+    // Prevent card selection when clicking the monitoring button
+    if ((e.target as HTMLElement).closest(".monitoring-button")) {
+      return;
+    }
+    onSelect(action.id);
+  };
+
+  const handleAddToMonitoring = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (onAddToMonitoring && !isAddingToMonitoring) {
+      onAddToMonitoring(action.id);
+    }
+  };
 
   return (
     <div
@@ -45,7 +73,7 @@ const ActionCard: React.FC<Props> = ({ action, isSelected, onSelect }) => {
           ? "border-primary-500! bg-primary-50!"
           : "hover:border-primary-200"
       }`}
-      onClick={() => onSelect(action.id)}
+      onClick={handleCardClick}
     >
       <div className="flex items-center">
         <div
@@ -61,10 +89,39 @@ const ActionCard: React.FC<Props> = ({ action, isSelected, onSelect }) => {
           <h3 className="font-medium">{action.title}</h3>
           <p className="text-sm text-gray-500">{action.description}</p>
         </div>
-        <div className="text-right">
-          <span className="text-lg font-bold text-green-600">
-            -{action.reduction}%
-          </span>
+        <div className="flex items-center gap-3 text-right">
+          <div className="flex flex-col items-end">
+            <span className="text-lg font-bold text-green-600">
+              -
+              {Math.round(
+                (calculatedReduction !== undefined
+                  ? calculatedReduction
+                  : action.reduction) * 100,
+              ) / 100}
+              %
+            </span>
+            {calculatedReduction !== undefined &&
+              calculatedReduction !== action.reduction && (
+                <span className="text-xs text-gray-400">
+                  (base: -{action.reduction}%)
+                </span>
+              )}
+          </div>
+
+          {showMonitoringButton && (
+            <button
+              className="monitoring-button btn btn-sm btn-primary"
+              onClick={handleAddToMonitoring}
+              disabled={isAddingToMonitoring}
+              title="Add to Monitoring Screen"
+            >
+              {isAddingToMonitoring ? (
+                <span className="loading loading-spinner loading-xs"></span>
+              ) : (
+                <Plus className="h-4 w-4" />
+              )}
+            </button>
+          )}
         </div>
       </div>
     </div>

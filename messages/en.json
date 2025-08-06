@@ -66,6 +66,8 @@
     "selectButton": "Select",
     "calculateButton": "Calculate",
     "emptyFieldsWarning": "Please fill in at least one field.",
+    "loadingCategories": "Loading emission categories...",
+    "errorLoadingCategories": "Error loading emission categories. Please try again.",
 
     "selectEmissionCategory": "Subcategory Data",
     "selectEmissionCategoryDescription": "Add Subcategory Specific Data",

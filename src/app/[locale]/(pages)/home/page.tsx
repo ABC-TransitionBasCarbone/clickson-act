@@ -69,7 +69,7 @@ const ActionButtons = () => {
 
 const HomePage = () => {
   return (
-    <div className="relative flex h-[calc(100vh-6rem)] w-full flex-col justify-between pt-15">
+    <div className="relative flex h-[calc(100vh-1rem)] w-full flex-col justify-between pt-15">
       <div className="container mx-auto mt-0 flex w-full flex-1 flex-col items-start px-4">
         <HeroSection />
         <ActionButtons />

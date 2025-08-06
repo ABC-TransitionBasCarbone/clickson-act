@@ -15,4 +15,5 @@ export interface Action {
   monitoring: string;
   performance: string;
   date: string;
+  type?: "Fixed" | "Dynamic"; // Type from action template
 }

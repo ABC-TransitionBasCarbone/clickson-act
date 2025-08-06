@@ -18,7 +18,10 @@ const SubcategoryInputs: React.FC<SubcategoryInputsProps> = ({
       {values.map((val, idx) => (
         <div key={idx} className="flex w-full flex-col">
           <label className="mb-1 font-medium">
-            {t(subcategoryTitles[idx])}
+            {subcategoryTitles[idx] &&
+            subcategoryTitles[idx].startsWith("subcat")
+              ? t(subcategoryTitles[idx])
+              : subcategoryTitles[idx]}
           </label>
           <input
             type="text"

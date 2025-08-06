@@ -1,9 +1,9 @@
 import React from "react";
 import SubcategoryInputs from "./SubcategoryInputs";
-import { EmissionType } from "@/types/Emission";
+import { ProcessedEmissionCategory } from "@/hooks/useEmissionCategories";
 
 type SubcategoryFormProps = {
-  emissions: EmissionType[];
+  emissions: ProcessedEmissionCategory[];
   activeEmissionCategories: string[];
   selectedCategory: string | null;
   subcategoryValues: string[];
@@ -41,7 +41,7 @@ export const SubcategoryForm: React.FC<SubcategoryFormProps> = ({
           const e = emissions.find((x) => x.category === cat)!;
           return (
             <option key={cat} value={cat}>
-              {t(e.label)}
+              {e.name}
             </option>
           );
         })}
@@ -54,9 +54,7 @@ export const SubcategoryForm: React.FC<SubcategoryFormProps> = ({
             onChange={onSubcategoryChange}
             subcategoryTitles={emissions
               .find((x) => x.category === selectedCategory)!
-              .subcategories.map(
-                (s: { subcategoryTitle: string }) => s.subcategoryTitle,
-              )}
+              .subcategories.map((s) => s.subcategoryTitle)}
           />
           <button
             className="btn btn-primary mt-4"

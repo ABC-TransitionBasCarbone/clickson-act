@@ -10,6 +10,10 @@ type ActionsSectionProps = {
   onAddActionClick: () => void;
   showAddButton: boolean;
   t: (key: string) => string;
+  onAddToMonitoring?: (actionId: string) => void;
+  showMonitoringButton?: boolean;
+  addingToMonitoring?: Set<string>;
+  calculateDisplayReduction?: (action: any) => number;
 };
 
 export const ActionsSection: React.FC<ActionsSectionProps> = ({
@@ -19,7 +23,17 @@ export const ActionsSection: React.FC<ActionsSectionProps> = ({
   onAddActionClick,
   showAddButton,
   t,
+  onAddToMonitoring,
+  showMonitoringButton = false,
+  addingToMonitoring = new Set(),
+  calculateDisplayReduction,
 }) => {
+  // console.log("ActionsSection rendering with:", {
+  //   filteredActionsCount: filteredActions.length,
+  //   filteredActionTitles: filteredActions.map((a) => a.title),
+  //   showAddButton,
+  // });
+
   return (
     <>
       <div className="mt-6 mb-4 flex items-center justify-between">
@@ -32,11 +46,37 @@ export const ActionsSection: React.FC<ActionsSectionProps> = ({
       </div>
 
       <div className="mb-8 grid gap-4">
-        <ActionList
-          actions={filteredActions}
-          selectedActions={selectedActions}
-          onActionSelect={onActionSelect}
-        />
+        {filteredActions.length === 0 ? (
+          <div className="alert alert-info">
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              fill="none"
+              viewBox="0 0 24 24"
+              className="h-6 w-6 shrink-0 stroke-current"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth="2"
+                d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+              ></path>
+            </svg>
+            <span>
+              No action templates available. Please contact your administrator
+              to add action templates to the database.
+            </span>
+          </div>
+        ) : (
+          <ActionList
+            actions={filteredActions}
+            selectedActions={selectedActions}
+            onActionSelect={onActionSelect}
+            onAddToMonitoring={onAddToMonitoring}
+            showMonitoringButton={showMonitoringButton}
+            addingToMonitoring={addingToMonitoring}
+            calculateDisplayReduction={calculateDisplayReduction}
+          />
+        )}
       </div>
     </>
   );
