@@ -148,9 +148,9 @@ const StudentCalculator: React.FC = () => {
         let calculatedValue = action.reduction;
 
         if (categoryValue > 0 && totalSubcategoryValue > 0) {
-          // Convert to percentages as decimals
-          const subcategoryPercentage = totalSubcategoryValue / categoryValue; // e.g., 0.8 for 80%
-          const categoryPercentage = selectedEmission.totalPercentage / 100; // e.g., 0.2 for 20%
+          // Use the actual percentages as decimals directly
+          const subcategoryPercentage = totalSubcategoryValue / 100; // e.g., 80/100 = 0.8 for 80%
+          const categoryPercentage = categoryValue / 100; // e.g., 20/100 = 0.2 for 20%
 
           calculatedValue =
             action.reduction * subcategoryPercentage * categoryPercentage;
@@ -164,10 +164,10 @@ const StudentCalculator: React.FC = () => {
             categoryValue: categoryValue,
             subcategoryValues: filledSubcategoryValues,
             totalSubcategoryValue: totalSubcategoryValue,
-            subcategoryPercentage: totalSubcategoryValue / categoryValue,
-            categoryPercentage: selectedEmission.totalPercentage / 100,
+            subcategoryPercentage: totalSubcategoryValue / 100,
+            categoryPercentage: categoryValue / 100,
             calculatedValue: calculatedValue,
-            formula: `${action.reduction} × (${totalSubcategoryValue}/${categoryValue}) × (${selectedEmission.totalPercentage}/100) = ${calculatedValue}`,
+            formula: `${action.reduction} × (${totalSubcategoryValue}/100) × (${categoryValue}/100) = ${calculatedValue}`,
           },
         );
 
@@ -425,9 +425,9 @@ const StudentCalculator: React.FC = () => {
 
       // Calculate using the correct formula: action × subcategory_percentage × category_percentage
       if (categoryValue > 0 && totalSubcategoryValue > 0) {
-        // Convert to percentages as decimals
-        const subcategoryPercentage = totalSubcategoryValue / categoryValue; // e.g., 0.8 for 80%
-        const categoryPercentage = selectedEmission.totalPercentage / 100; // e.g., 0.2 for 20%
+        // Use the actual percentages as decimals directly
+        const subcategoryPercentage = totalSubcategoryValue / 100; // e.g., 80/100 = 0.8 for 80%
+        const categoryPercentage = categoryValue / 100; // e.g., 20/100 = 0.2 for 20%
 
         calculatedReduction =
           action.reduction * subcategoryPercentage * categoryPercentage;
@@ -440,10 +440,10 @@ const StudentCalculator: React.FC = () => {
           categoryValue: categoryValue,
           subcategoryValues: filledSubcategoryValues,
           totalSubcategoryValue: totalSubcategoryValue,
-          subcategoryPercentage: totalSubcategoryValue / categoryValue,
-          categoryPercentage: selectedEmission.totalPercentage / 100,
+          subcategoryPercentage: totalSubcategoryValue / 100,
+          categoryPercentage: categoryValue / 100,
           calculatedReduction: calculatedReduction,
-          formula: `${action.reduction} × (${totalSubcategoryValue}/${categoryValue}) × (${selectedEmission.totalPercentage}/100) = ${calculatedReduction}`,
+          formula: `${action.reduction} × (${totalSubcategoryValue}/100) × (${categoryValue}/100) = ${calculatedReduction}`,
         },
       );
     } else {
