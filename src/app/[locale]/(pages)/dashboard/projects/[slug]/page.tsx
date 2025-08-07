@@ -92,16 +92,20 @@ const ProjectDetails = () => {
           schoolGoal={schoolGoal?.goal || 40} // School's overall goal (e.g., 30%)
           subGoal={Number(project.subGoalReductionAmount) || 25} // This project's contribution (e.g., 10%)
           subGoalYear={
-            project.subGoalDeadline
-              ? new Date(project.subGoalDeadline).getFullYear().toString()
-              : "2028"
+            typeof project.subGoalDeadline === "number"
+              ? project.subGoalDeadline.toString()
+              : project.subGoalDeadline
+                ? new Date(project.subGoalDeadline).getFullYear().toString()
+                : "2028"
           } // Project deadline year
           finalGoalYear={schoolGoal?.deadlineYear || "2030"} // School deadline year
           baseReductionPerYear={5} // Placeholder, adjust as needed
           startYear={
-            project.startDate
-              ? new Date(project.startDate).getFullYear().toString()
-              : "2023"
+            typeof project.startDate === "number"
+              ? project.startDate.toString()
+              : project.startDate
+                ? new Date(project.startDate).getFullYear().toString()
+                : "2023"
           }
         />
       </motion.div>

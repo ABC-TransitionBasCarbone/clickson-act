@@ -33,10 +33,9 @@ const TeacherDashboard: React.FC = () => {
   const [isProjectModalOpen, setIsProjectModalOpen] = useState(false);
   const [projectForm, setProjectForm] = useState<ProjectForm>({
     name: "",
-    startDate: new Date().toISOString().split("T")[0],
-    finalGoal: new Date().toISOString().split("T")[0],
+    startDate: new Date().getFullYear(),
+    finalGoal: new Date().getFullYear(),
     goalReductionAmount: 0,
-    schoolId: "",
   });
 
   const fetchProjects = useCallback(async () => {
@@ -167,13 +166,12 @@ const TeacherDashboard: React.FC = () => {
   };
 
   const openProjectModal = () => {
-    const today = new Date().toISOString().split("T")[0];
+    const currentYear = new Date().getFullYear();
     setProjectForm({
       name: "",
-      startDate: today,
-      finalGoal: today,
+      startDate: currentYear,
+      finalGoal: currentYear,
       goalReductionAmount: 0,
-      schoolId: "",
     });
     setIsProjectModalOpen(true);
   };
@@ -416,13 +414,17 @@ const TeacherDashboard: React.FC = () => {
                   <div>
                     <p className="text-muted-foreground">{t("startDate")}</p>
                     <p className="font-medium">
-                      {new Date(project.startDate).toLocaleDateString()}
+                      {typeof project.startDate === "number"
+                        ? project.startDate
+                        : new Date(project.startDate).getFullYear()}
                     </p>
                   </div>
                   <div>
                     <p className="text-muted-foreground">{t("subGoalDate")}</p>
                     <p className="font-medium">
-                      {new Date(project.subGoalDeadline).toLocaleDateString()}
+                      {typeof project.subGoalDeadline === "number"
+                        ? project.subGoalDeadline
+                        : new Date(project.subGoalDeadline).getFullYear()}
                     </p>
                   </div>
                   <div>

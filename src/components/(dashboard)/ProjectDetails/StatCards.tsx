@@ -43,7 +43,9 @@ const StatCards = ({ project }: { project: Project }) => {
           <Users className="text-muted-foreground h-4 w-4" />
         </h3>
         <div className="text-2xl font-bold">
-          {new Date(project.startDate).toLocaleDateString()}
+          {typeof project.startDate === "number"
+            ? project.startDate
+            : new Date(project.startDate).getFullYear()}
         </div>
         <p className="text-muted-foreground mt-2 text-xs">
           {t("startDateHint")}

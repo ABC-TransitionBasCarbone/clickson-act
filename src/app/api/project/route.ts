@@ -26,7 +26,6 @@ export async function POST(req: NextRequest) {
       startDate,
       finalGoal,
       goalReductionAmount,
-      schoolId,
       teacherId,
       teacherName,
     } = body;
@@ -37,7 +36,6 @@ export async function POST(req: NextRequest) {
       !startDate ||
       !finalGoal ||
       !goalReductionAmount ||
-      !schoolId ||
       !teacherId
     ) {
       return NextResponse.json(
@@ -46,15 +44,29 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Get school information using schoolId
-    const schoolDoc = await adminDb.collection("schools").doc(schoolId).get();
+    // Get teacher's school information
+    const teacherDoc = await adminDb
+      .collection("teachers")
+      .where("name", "==", teacherId)
+      .limit(1)
+      .get();
 
-    if (!schoolDoc.exists) {
-      return NextResponse.json({ error: "School not found" }, { status: 404 });
+    if (teacherDoc.empty) {
+      return NextResponse.json({ error: "Teacher not found" }, { status: 404 });
     }
 
-    const schoolData = schoolDoc.data();
-    const schoolName = schoolData?.name || "Unknown School";
+    const teacherData = teacherDoc.docs[0].data();
+    let schoolId = teacherData.schoolId;
+    let schoolName = "Unknown School";
+
+    // Get school information if teacher has a schoolId
+    if (schoolId) {
+      const schoolDoc = await adminDb.collection("schools").doc(schoolId).get();
+      if (schoolDoc.exists) {
+        const schoolData = schoolDoc.data();
+        schoolName = schoolData?.name || "Unknown School";
+      }
+    }
 
     // Sanitize and validate inputs
     const sanitizedName = name.trim();

@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useTranslations } from "next-intl";
 import ProjectForm from "@/types/ProjectForm";
+
 interface ProjectFormModalProps {
   form: ProjectForm;
   setForm: React.Dispatch<React.SetStateAction<ProjectForm>>;
@@ -16,6 +17,7 @@ export const ProjectFormModal: React.FC<ProjectFormModalProps> = ({
 }) => {
   const t = useTranslations("TeacherDashboard");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const currentYear = new Date().getFullYear();
 
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>,
@@ -23,7 +25,12 @@ export const ProjectFormModal: React.FC<ProjectFormModalProps> = ({
     const { name, value } = e.target;
     setForm((prev) => ({
       ...prev,
-      [name]: name === "goalReductionAmount" ? Number(value) : value,
+      [name]:
+        name === "goalReductionAmount" ||
+        name === "startDate" ||
+        name === "finalGoal"
+          ? Number(value)
+          : value,
     }));
   };
 
@@ -32,8 +39,7 @@ export const ProjectFormModal: React.FC<ProjectFormModalProps> = ({
       !form.name ||
       !form.startDate ||
       !form.finalGoal ||
-      !form.goalReductionAmount ||
-      !form.schoolId
+      !form.goalReductionAmount
     ) {
       alert("Please fill in all required fields");
       return;
@@ -73,51 +79,41 @@ export const ProjectFormModal: React.FC<ProjectFormModalProps> = ({
             />
           </div>
 
-          {/* School Selection */}
-          <div>
-            <label htmlFor="schoolId" className="label">
-              <span className="label-text">{t("schoolLabel")}</span>
-            </label>
-            <select
-              id="schoolId"
-              name="schoolId"
-              value={form.schoolId}
-              onChange={handleChange}
-              className="select select-bordered w-full"
-              required
-            >
-              <option value="">{t("selectSchool")}</option>
-              {/* Schools will be populated dynamically */}
-            </select>
-          </div>
-
-          {/* Start Date */}
+          {/* Start Year */}
           <div>
             <label htmlFor="startDate" className="label">
-              <span className="label-text">{t("startDateLabel")}</span>
+              <span className="label-text">{t("startYearLabel")}</span>
             </label>
             <input
               id="startDate"
               name="startDate"
-              type="date"
+              type="number"
+              min={currentYear}
+              max={currentYear + 50}
               value={form.startDate}
               onChange={handleChange}
               className="input-bordered input w-full"
+              placeholder={currentYear.toString()}
+              required
             />
           </div>
 
-          {/* Final Goal */}
+          {/* Final Goal Year */}
           <div>
             <label htmlFor="finalGoal" className="label">
-              <span className="label-text">{t("subGoalDateLabel")}</span>
+              <span className="label-text">{t("finalGoalYearLabel")}</span>
             </label>
             <input
               id="finalGoal"
               name="finalGoal"
-              type="date"
+              type="number"
+              min={currentYear}
+              max={currentYear + 50}
               value={form.finalGoal}
               onChange={handleChange}
               className="input-bordered input w-full"
+              placeholder={currentYear.toString()}
+              required
             />
           </div>
 
@@ -132,10 +128,13 @@ export const ProjectFormModal: React.FC<ProjectFormModalProps> = ({
               id="goalReductionAmount"
               name="goalReductionAmount"
               type="number"
+              min="0"
+              max="100"
               value={form.goalReductionAmount}
               onChange={handleChange}
               className="input-bordered input w-full"
               placeholder={t("goalReductionAmountPlaceholder")}
+              required
             />
           </div>
         </div>

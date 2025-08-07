@@ -8,8 +8,8 @@ type Project = {
   id: string;
   name: string;
   schoolId: string;
-  startDate: string;
-  subGoalDeadline: string;
+  startDate: string | number;
+  subGoalDeadline: string | number;
   subGoalReductionAmount: number;
   status: "active" | "completed" | "pending";
   emissions?: number;

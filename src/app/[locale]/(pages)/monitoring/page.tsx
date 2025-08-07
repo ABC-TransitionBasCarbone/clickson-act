@@ -175,11 +175,13 @@ const Monitoring: React.FC = () => {
           <SchoolGoalCard
             schoolGoal={50} // Default goal
             subGoal={projectData.subGoalReductionAmount || 25}
-            subGoalYear={projectData.subGoalDeadline?.toString() || "2025"}
+            subGoalYear={String(projectData.subGoalDeadline || "2025")}
             finalGoalYear="2030" // Default final goal year
             baseReductionPerYear={5} // Default base reduction
             startYear={
-              projectData.startDate?.split("T")[0]?.split("-")[0] || "2024"
+              typeof projectData.startDate === "number"
+                ? projectData.startDate.toString()
+                : projectData.startDate?.split("T")[0]?.split("-")[0] || "2024"
             }
             currentEmissions={currentEmissions}
             totalReduction={totalReduction}
