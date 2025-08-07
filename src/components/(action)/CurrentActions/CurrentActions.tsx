@@ -72,7 +72,7 @@ const CurrentActions: React.FC<CurrentActionsProps> = ({
           </div>
         ))}
       </div>
-      <div className="flex justify-center gap-5">
+      <div className="flex flex-wrap justify-center gap-2.5">
         <button
           className="btn btn-soft mt-auto w-fit self-center bg-white"
           onClick={onViewAll}

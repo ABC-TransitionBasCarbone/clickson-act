@@ -17,14 +17,13 @@ export const ProjectFormModal: React.FC<ProjectFormModalProps> = ({
   const t = useTranslations("TeacherDashboard");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>,
+  ) => {
     const { name, value } = e.target;
     setForm((prev) => ({
       ...prev,
-      [name]:
-        name === "students" || name === "goalReductionAmount"
-          ? Number(value)
-          : value,
+      [name]: name === "goalReductionAmount" ? Number(value) : value,
     }));
   };
 
@@ -33,7 +32,8 @@ export const ProjectFormModal: React.FC<ProjectFormModalProps> = ({
       !form.name ||
       !form.startDate ||
       !form.finalGoal ||
-      !form.goalReductionAmount
+      !form.goalReductionAmount ||
+      !form.schoolId
     ) {
       alert("Please fill in all required fields");
       return;
@@ -54,7 +54,7 @@ export const ProjectFormModal: React.FC<ProjectFormModalProps> = ({
   return (
     <div className="modal modal-open">
       <div className="modal-box">
-        <h3 className="font-bold text-lg">{t("createNewProject")}</h3>
+        <h3 className="text-lg font-bold">{t("createNewProject")}</h3>
         <div className="space-y-4 py-4">
           {/* Project Name */}
           <div>
@@ -67,27 +67,28 @@ export const ProjectFormModal: React.FC<ProjectFormModalProps> = ({
               type="text"
               value={form.name}
               onChange={handleChange}
-              className="input-bordered w-full input"
+              className="input-bordered input w-full"
               placeholder={t("projectNamePlaceholder")}
               required
             />
           </div>
 
-          {/* Number of Students */}
+          {/* School Selection */}
           <div>
-            <label htmlFor="students" className="label">
-              <span className="label-text">{t("numberOfStudentsLabel")}</span>
+            <label htmlFor="schoolId" className="label">
+              <span className="label-text">{t("schoolLabel")}</span>
             </label>
-            <input
-              id="students"
-              name="students"
-              type="number"
-              value={form.students}
+            <select
+              id="schoolId"
+              name="schoolId"
+              value={form.schoolId}
               onChange={handleChange}
-              className="input-bordered w-full input"
-              placeholder={t("numberOfStudentsPlaceholder")}
-              min="0"
-            />
+              className="select select-bordered w-full"
+              required
+            >
+              <option value="">{t("selectSchool")}</option>
+              {/* Schools will be populated dynamically */}
+            </select>
           </div>
 
           {/* Start Date */}
@@ -101,7 +102,7 @@ export const ProjectFormModal: React.FC<ProjectFormModalProps> = ({
               type="date"
               value={form.startDate}
               onChange={handleChange}
-              className="input-bordered w-full input"
+              className="input-bordered input w-full"
             />
           </div>
 
@@ -116,7 +117,7 @@ export const ProjectFormModal: React.FC<ProjectFormModalProps> = ({
               type="date"
               value={form.finalGoal}
               onChange={handleChange}
-              className="input-bordered w-full input"
+              className="input-bordered input w-full"
             />
           </div>
 
@@ -133,7 +134,7 @@ export const ProjectFormModal: React.FC<ProjectFormModalProps> = ({
               type="number"
               value={form.goalReductionAmount}
               onChange={handleChange}
-              className="input-bordered w-full input"
+              className="input-bordered input w-full"
               placeholder={t("goalReductionAmountPlaceholder")}
             />
           </div>

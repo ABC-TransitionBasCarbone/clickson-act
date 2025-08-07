@@ -5,6 +5,8 @@ import { motion } from "framer-motion";
 import { Star, ChevronRight } from "lucide-react";
 import { useRouter } from "@/i18n/navigation";
 import { Action } from "@/types/Action";
+import { useUser } from "@/context/UserContext";
+import { useProjectData } from "@/hooks/useProjectData";
 
 const categoryColors: { [key: string]: string } = {
   "Waste Management": "bg-green-100 text-green-800",
@@ -15,9 +17,13 @@ const categoryColors: { [key: string]: string } = {
 
 interface AvailableActionsProps {
   actions: Action[];
+  user?: { passcode?: string } | null;
 }
 
-const AvailableActions: React.FC<AvailableActionsProps> = ({ actions }) => {
+const AvailableActions: React.FC<AvailableActionsProps> = ({
+  actions,
+  user,
+}) => {
   const router = useRouter();
 
   return (
@@ -54,7 +60,13 @@ const AvailableActions: React.FC<AvailableActionsProps> = ({ actions }) => {
               </span>
               <ChevronRight
                 className="h-4 w-4 cursor-pointer"
-                onClick={() => router.push("/data-reporting/student/styfrstn")}
+                onClick={() => {
+                  // Navigate to data reporting with user's passcode if available
+                  const passcode = user?.passcode;
+                  if (passcode) {
+                    router.push(`/data-reporting/${passcode}`);
+                  }
+                }}
               />
             </div>
           </div>
@@ -65,21 +77,46 @@ const AvailableActions: React.FC<AvailableActionsProps> = ({ actions }) => {
 };
 
 const AvailableScreen = () => {
+  const { user } = useUser();
+  const router = useRouter();
+
+  // Use project data hook to get real project data
+  const {
+    availableActions: projectAvailableActions,
+    loading,
+    error,
+  } = useProjectData();
+
   const [availableActions, setAvailableActions] = useState<Action[]>([]);
 
+  // Update local state when project data changes
   useEffect(() => {
-    fetch("/data/actions.json")
-      .then((res) => {
-        if (!res.ok) throw new Error("Failed to fetch actions file");
-        return res.json();
-      })
-      .then((data) => {
-        if (data) {
-          setAvailableActions(data);
-        }
-      })
-      .catch((error) => console.error("Error loading actions file:", error));
-  }, []);
+    if (projectAvailableActions) {
+      const convertedActions = projectAvailableActions.map((action) => ({
+        ...action,
+        date: action.dateAdded.split("T")[0], // Convert ISO date to YYYY-MM-DD
+        reduction: action.calculatedReduction, // Use calculated reduction as the main reduction value
+        manager: action.studentName,
+        nature: action.category,
+        objectives: action.description,
+        keyContacts: "",
+        steps: "",
+        calendar: action.dateAdded,
+        indicators: "",
+        monitoring: "",
+        performance: "",
+        effort: "medium", // Default effort level
+      })) as Action[];
+      setAvailableActions(convertedActions);
+    }
+  }, [projectAvailableActions]);
+
+  // Redirect to login if no user or passcode
+  useEffect(() => {
+    if (!user?.passcode) {
+      router.push("/");
+    }
+  }, [user, router]);
 
   return (
     <div className="bg-gray-50">
@@ -97,8 +134,20 @@ const AvailableScreen = () => {
           </p>
         </div>
 
+        {loading && (
+          <div className="mb-8 text-center">
+            <p className="text-gray-500">Loading available actions...</p>
+          </div>
+        )}
+
+        {error && (
+          <div className="mb-8 rounded-lg bg-red-50 p-4">
+            <p className="text-red-700">Error: {error}</p>
+          </div>
+        )}
+
         <div className="mb-6">
-          <AvailableActions actions={availableActions} />
+          <AvailableActions actions={availableActions} user={user} />
         </div>
       </motion.div>
     </div>

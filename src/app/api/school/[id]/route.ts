@@ -7,10 +7,40 @@ import {
   sanitizeString,
 } from "../../../../lib/validation";
 
+// Get school information
+export async function GET(
+  req: NextRequest,
+  { params }: { params: Promise<{ id: string }> },
+) {
+  try {
+    const { id } = await params;
+
+    // Get school document
+    const schoolDoc = await adminDb.collection("schools").doc(id).get();
+
+    if (!schoolDoc.exists) {
+      return NextResponse.json({ error: "School not found" }, { status: 404 });
+    }
+
+    const schoolData = schoolDoc.data();
+
+    return NextResponse.json({
+      id: schoolDoc.id,
+      ...schoolData,
+    });
+  } catch (error: unknown) {
+    console.error("Error fetching school:", error);
+    return NextResponse.json(
+      { error: "Failed to fetch school. Please try again." },
+      { status: 500 },
+    );
+  }
+}
+
 // Update school information
 export async function PUT(
   req: NextRequest,
-  { params }: { params: { id: string } },
+  { params }: { params: Promise<{ id: string }> },
 ) {
   try {
     // Verify admin authentication
@@ -37,7 +67,7 @@ export async function PUT(
       );
     }
 
-    const { id } = params;
+    const { id } = await params;
     const body = await req.json();
     const { goal, deadlineYear, name } = body;
 
@@ -116,7 +146,7 @@ export async function PUT(
 // Delete school
 export async function DELETE(
   req: NextRequest,
-  { params }: { params: { id: string } },
+  { params }: { params: Promise<{ id: string }> },
 ) {
   try {
     // Verify admin authentication
@@ -143,7 +173,7 @@ export async function DELETE(
       );
     }
 
-    const { id } = params;
+    const { id } = await params;
 
     // Check if school exists
     const schoolDoc = await adminDb.collection("schools").doc(id).get();

@@ -12,7 +12,7 @@ import {
 // Add subcategory to emission category
 export async function POST(
   req: NextRequest,
-  { params }: { params: { id: string } },
+  { params }: { params: Promise<{ id: string }> },
 ) {
   try {
     // Verify admin authentication
@@ -59,7 +59,7 @@ export async function POST(
       );
     }
 
-    const { id } = params;
+    const { id } = await params;
     const body = await req.json();
     const { translations, SubcategoryTotalPercentage } = body;
 

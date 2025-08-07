@@ -61,9 +61,9 @@ const ProjectDetails = () => {
 
   if (error) {
     return (
-      <div className="flex justify-center items-center min-h-screen">
+      <div className="flex min-h-screen items-center justify-center">
         <div className="text-center">
-          <h2 className="mb-2 font-bold text-red-600 text-2xl">Error</h2>
+          <h2 className="mb-2 text-2xl font-bold text-red-600">Error</h2>
           <p className="text-gray-600">{error}</p>
         </div>
       </div>
@@ -79,21 +79,21 @@ const ProjectDetails = () => {
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
         transition={{ duration: 0.5 }}
-        className="mx-auto px-6 py-8 container"
+        className="container mx-auto px-6 py-8"
       >
         <Header project={project} />
         <StatCards project={project} />
-        <div className="flex md:flex-row flex-col gap-6 mb-8">
+        <div className="mb-8 flex flex-col gap-6 md:flex-row">
           <OverviewCard school={school} />
           <ActionsCard actions={project.actions || []} />
         </div>
         {/* Goal Graph after overview and completed actions */}
         <SchoolGoalCard
           schoolGoal={schoolGoal?.goal || 40} // School's overall goal (e.g., 30%)
-          subGoal={Number(project.goalReductionAmount) || 25} // This project's contribution (e.g., 10%)
+          subGoal={Number(project.subGoalReductionAmount) || 25} // This project's contribution (e.g., 10%)
           subGoalYear={
-            project.finalGoal
-              ? new Date(project.finalGoal).getFullYear().toString()
+            project.subGoalDeadline
+              ? new Date(project.subGoalDeadline).getFullYear().toString()
               : "2028"
           } // Project deadline year
           finalGoalYear={schoolGoal?.deadlineYear || "2030"} // School deadline year

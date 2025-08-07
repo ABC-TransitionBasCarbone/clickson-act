@@ -579,7 +579,14 @@ const StudentCalculator: React.FC = () => {
                 onAddToMonitoring={handleAddToMonitoring}
                 showMonitoringButton={!!user && !!user.passcode} // Show monitoring button for students with passcode
                 addingToMonitoring={addingToMonitoring}
-                calculateDisplayReduction={calculateDisplayReduction}
+                calculateDisplayReduction={(action: Action) => {
+                  // Convert Action to CustomAction for the calculation
+                  const customAction: CustomAction = {
+                    ...action,
+                    selected: selectedActions.includes(action.id),
+                  };
+                  return calculateDisplayReduction(customAction);
+                }}
                 t={t}
               />
             </>

@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { motion } from "framer-motion";
 import { useTranslations } from "next-intl";
 import { PlusCircle, BarChart3, Building, Edit } from "lucide-react";
@@ -33,26 +33,13 @@ const TeacherDashboard: React.FC = () => {
   const [isProjectModalOpen, setIsProjectModalOpen] = useState(false);
   const [projectForm, setProjectForm] = useState<ProjectForm>({
     name: "",
-    students: 0,
     startDate: new Date().toISOString().split("T")[0],
     finalGoal: new Date().toISOString().split("T")[0],
-    subGoal: new Date().toISOString().split("T")[0],
     goalReductionAmount: 0,
-    reductionSubGoal: new Date().toISOString().split("T")[0],
+    schoolId: "",
   });
 
-  // Fetch projects and teacher school data when component mounts
-  useEffect(() => {
-    if (user && !user.passcode) {
-      // Only for teachers (no passcode)
-      fetchProjects();
-      fetchTeacherSchool();
-    } else {
-      setLoading(false);
-    }
-  }, [user]);
-
-  const fetchProjects = async () => {
+  const fetchProjects = useCallback(async () => {
     if (!user) return;
 
     try {
@@ -71,9 +58,9 @@ const TeacherDashboard: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [user]);
 
-  const fetchTeacherSchool = async () => {
+  const fetchTeacherSchool = useCallback(async () => {
     if (!user) return;
 
     try {
@@ -100,7 +87,18 @@ const TeacherDashboard: React.FC = () => {
     } catch (error) {
       console.error("Error fetching teacher school:", error);
     }
-  };
+  }, [user]);
+
+  // Fetch projects and teacher school data when component mounts
+  useEffect(() => {
+    if (user && !user.passcode) {
+      // Only for teachers (no passcode)
+      fetchProjects();
+      fetchTeacherSchool();
+    } else {
+      setLoading(false);
+    }
+  }, [user, fetchProjects, fetchTeacherSchool]);
 
   const handleSchoolEdit = async () => {
     if (!teacherInfo?.school) return;
@@ -172,12 +170,10 @@ const TeacherDashboard: React.FC = () => {
     const today = new Date().toISOString().split("T")[0];
     setProjectForm({
       name: "",
-      students: 0,
       startDate: today,
       finalGoal: today,
-      subGoal: today,
       goalReductionAmount: 0,
-      reductionSubGoal: today,
+      schoolId: "",
     });
     setIsProjectModalOpen(true);
   };
@@ -286,7 +282,7 @@ const TeacherDashboard: React.FC = () => {
   const avgReduction =
     projects.length > 0
       ? projects.reduce(
-          (sum, project) => sum + (project.goalReductionAmount || 0),
+          (sum, project) => sum + (project.subGoalReductionAmount || 0),
           0,
         ) / projects.length
       : 0;
@@ -418,19 +414,21 @@ const TeacherDashboard: React.FC = () => {
               <div>
                 <div className="grid grid-cols-2 gap-4 text-sm">
                   <div>
-                    <p className="text-muted-foreground">{t("students")}</p>
-                    <p className="font-medium">{project.students}</p>
-                  </div>
-                  <div>
-                    <p className="text-muted-foreground">{t("subGoalDate")}</p>
+                    <p className="text-muted-foreground">{t("startDate")}</p>
                     <p className="font-medium">
                       {new Date(project.startDate).toLocaleDateString()}
                     </p>
                   </div>
                   <div>
+                    <p className="text-muted-foreground">{t("subGoalDate")}</p>
+                    <p className="font-medium">
+                      {new Date(project.subGoalDeadline).toLocaleDateString()}
+                    </p>
+                  </div>
+                  <div>
                     <p className="text-muted-foreground">{t("reduction")}</p>
                     <p className="font-medium text-green-600">
-                      {project.goalReductionAmount}%
+                      {project.subGoalReductionAmount}%
                     </p>
                   </div>
                 </div>

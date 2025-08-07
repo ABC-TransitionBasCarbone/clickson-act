@@ -7,15 +7,10 @@ type Action = {
 type Project = {
   id: string;
   name: string;
-  school: string;
-  students: number;
+  schoolId: string;
   startDate: string;
-  subGoalDate?: string;
-  finalGoalDate?: string;
-  subGoal?: string;
-  finalGoal?: string;
-  subgoal?: number;
-  goalReductionAmount: number;
+  subGoalDeadline: string;
+  subGoalReductionAmount: number;
   status: "active" | "completed" | "pending";
   emissions?: number;
   reduction?: number;

@@ -4,7 +4,7 @@ import { adminAuth, adminDb } from "@/firebaseAdmin";
 
 export async function GET(
   req: NextRequest,
-  { params }: { params: { id: string } },
+  { params }: { params: Promise<{ id: string }> },
 ) {
   try {
     // Verify authentication
@@ -44,7 +44,7 @@ export async function GET(
       );
     }
 
-    const { id } = params;
+    const { id } = await params;
 
     // Get school action
     const actionDoc = await adminDb.collection("school-actions").doc(id).get();
@@ -68,7 +68,7 @@ export async function GET(
       );
     }
 
-    return NextResponse.json({ success: true, action: { id, ...action } });
+    return NextResponse.json({ success: true, action: { ...action, id } });
   } catch (error) {
     console.error("Error fetching school action:", error);
     return NextResponse.json(
@@ -80,7 +80,7 @@ export async function GET(
 
 export async function PUT(
   req: NextRequest,
-  { params }: { params: { id: string } },
+  { params }: { params: Promise<{ id: string }> },
 ) {
   try {
     // Verify authentication
@@ -120,7 +120,7 @@ export async function PUT(
       );
     }
 
-    const { id } = params;
+    const { id } = await params;
     const updateData = await req.json();
 
     // Check if school action exists
@@ -178,7 +178,7 @@ export async function PUT(
 
 export async function DELETE(
   req: NextRequest,
-  { params }: { params: { id: string } },
+  { params }: { params: Promise<{ id: string }> },
 ) {
   try {
     // Verify authentication
@@ -218,7 +218,7 @@ export async function DELETE(
       );
     }
 
-    const { id } = params;
+    const { id } = await params;
 
     // Check if school action exists
     const actionDoc = await adminDb.collection("school-actions").doc(id).get();

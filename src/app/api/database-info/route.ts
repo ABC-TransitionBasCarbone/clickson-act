@@ -55,14 +55,14 @@ export async function GET(req: NextRequest) {
       try {
         const snapshot = await adminDb.collection(collectionName).get();
         collections[collectionName as keyof typeof collections] = snapshot.size;
-      } catch (error) {
+      } catch {
         // Collection might not exist
         collections[collectionName as keyof typeof collections] = 0;
       }
     }
 
     // Get sample documents from main collections
-    const sampleData: { [key: string]: any[] } = {};
+    const sampleData: { [key: string]: Record<string, unknown>[] } = {};
 
     // Sample admin action templates
     const adminActionsSnapshot = await adminDb

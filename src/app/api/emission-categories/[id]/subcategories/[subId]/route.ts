@@ -14,7 +14,7 @@ import {
 // Update subcategory
 export async function PUT(
   req: NextRequest,
-  { params }: { params: { id: string; subId: string } },
+  { params }: { params: Promise<{ id: string; subId: string }> },
 ) {
   try {
     // Verify admin authentication
@@ -61,7 +61,7 @@ export async function PUT(
       );
     }
 
-    const { id, subId } = params;
+    const { id, subId } = await params;
     const body = await req.json();
     const { translations, SubcategoryTotalPercentage } = body;
 
@@ -170,7 +170,7 @@ export async function PUT(
 // Delete subcategory
 export async function DELETE(
   req: NextRequest,
-  { params }: { params: { id: string; subId: string } },
+  { params }: { params: Promise<{ id: string; subId: string }> },
 ) {
   try {
     // Verify admin authentication
@@ -217,7 +217,7 @@ export async function DELETE(
       );
     }
 
-    const { id, subId } = params;
+    const { id, subId } = await params;
 
     // Get current category data
     const categoryDoc = await adminDb

@@ -10,7 +10,7 @@ const ActionList: React.FC<{
   onAddToMonitoring?: (actionId: string) => void;
   showMonitoringButton?: boolean;
   addingToMonitoring?: Set<string>;
-  calculateDisplayReduction?: (action: any) => number;
+  calculateDisplayReduction?: (action: Action) => number;
 }> = ({
   actions,
   selectedActions,

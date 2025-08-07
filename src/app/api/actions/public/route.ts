@@ -1,6 +1,32 @@
 import { NextRequest, NextResponse } from "next/server";
 import { adminDb } from "../../../../firebaseAdmin";
 
+interface ActionTemplateData {
+  id: string;
+  category?: string;
+  reduction?: number;
+  effort?: string;
+  date?: string;
+  type?: string;
+  subcategory?: string;
+  timeline?: number;
+  translations?: Record<
+    string,
+    {
+      title?: string;
+      description?: string;
+      manager?: string;
+      objectives?: string;
+      keyContacts?: string;
+      steps?: string;
+      calendar?: string;
+      indicators?: string;
+      monitoring?: string;
+      performance?: string;
+    }
+  >;
+}
+
 // Public endpoint to get action templates for students
 // This endpoint doesn't require authentication and returns action templates
 export async function GET(req: NextRequest) {
@@ -28,7 +54,7 @@ export async function GET(req: NextRequest) {
 
     // Process translatable actions from database
     const actions = actionsSnapshot.docs.map((doc) => {
-      const actionData = { id: doc.id, ...doc.data() };
+      const actionData = { id: doc.id, ...doc.data() } as ActionTemplateData;
 
       // Get translation for the requested locale
       const translation =
@@ -39,13 +65,13 @@ export async function GET(req: NextRequest) {
 
       return {
         id: actionData.id,
-        category: (actionData as any).category || "",
+        category: actionData.category || "",
         title: translation.title || "Untitled Action",
         description: translation.description || "",
-        reduction: Number((actionData as any).reduction) || 0,
-        effort: (actionData as any).effort || "Medium",
+        reduction: Number(actionData.reduction) || 0,
+        effort: actionData.effort || "Medium",
         manager: translation.manager || "",
-        nature: (actionData as any).category || "",
+        nature: actionData.category || "",
         objectives: translation.objectives || "",
         keyContacts: translation.keyContacts || "",
         steps: translation.steps || "",
@@ -53,11 +79,10 @@ export async function GET(req: NextRequest) {
         indicators: translation.indicators || "",
         monitoring: translation.monitoring || "",
         performance: translation.performance || "",
-        date:
-          (actionData as any).date || new Date().toISOString().split("T")[0],
-        type: (actionData as any).type || "Fixed", // Include type from action template
-        subcategory: (actionData as any).subcategory || undefined, // Optional subcategory field
-        timeline: Number((actionData as any).timeline) || 1, // Number of years the action will take place
+        date: actionData.date || new Date().toISOString().split("T")[0],
+        type: actionData.type || "Fixed", // Include type from action template
+        subcategory: actionData.subcategory || undefined, // Optional subcategory field
+        timeline: Number(actionData.timeline) || 1, // Number of years the action will take place
       };
     });
 

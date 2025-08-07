@@ -1,11 +1,9 @@
 type ProjectForm = {
   name: string;
-  students: number;
   startDate: string;
   finalGoal: string;
   goalReductionAmount: number;
-  subGoal: string;
-  reductionSubGoal: string;
+  schoolId: string;
 };
 
 export default ProjectForm;

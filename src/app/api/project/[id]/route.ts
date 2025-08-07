@@ -4,10 +4,10 @@ import { adminDb } from "../../../../firebaseAdmin";
 // Get project details by ID
 export async function GET(
   req: NextRequest,
-  { params }: { params: { id: string } },
+  { params }: { params: Promise<{ id: string }> },
 ) {
   try {
-    const { id } = params;
+    const { id } = await params;
 
     if (!id) {
       return NextResponse.json(
@@ -26,91 +26,119 @@ export async function GET(
     const projectData = {
       id: projectDoc.id,
       ...projectDoc.data(),
-    } as { id: string; school?: string; [key: string]: unknown };
+    } as {
+      id: string;
+      school?: string;
+      schoolId?: string;
+      [key: string]: unknown;
+    };
 
     // Get complete school information
     let schoolData = null;
     let schoolGoalData = null;
 
-    if (projectData.school) {
-      // Find school by name to get complete school data
-      const schoolQuery = await adminDb
+    if (projectData.schoolId) {
+      // Get school by ID
+      const schoolDoc = await adminDb
         .collection("schools")
-        .where("name", "==", projectData.school)
-        .limit(1)
+        .doc(projectData.schoolId)
         .get();
 
-      if (!schoolQuery.empty) {
-        const schoolDoc = schoolQuery.docs[0];
+      if (schoolDoc.exists) {
         const schoolDocData = schoolDoc.data();
 
         // Complete school object
         schoolData = {
           id: schoolDoc.id,
-          name: schoolDocData.name,
-          goal: schoolDocData.goal,
-          deadlineYear: schoolDocData.deadlineYear,
-          createdAt: schoolDocData.createdAt,
+          name: schoolDocData?.name || "Unknown School",
+          goal: schoolDocData?.goal || 40,
+          deadlineYear: schoolDocData?.deadlineYear || "2030",
+          createdAt: schoolDocData?.createdAt || new Date().toISOString(),
         };
 
         // Backwards compatibility for existing code
         schoolGoalData = {
-          goal: schoolDocData.goal,
-          deadlineYear: schoolDocData.deadlineYear,
+          goal: schoolDocData?.goal || 40,
+          deadlineYear: schoolDocData?.deadlineYear || "2030",
         };
-      } else {
-        // Alternative approach: Try to get school data from the teacher who created the project
-        if (projectData.teacherId) {
-          const teacherQuery = await adminDb
-            .collection("teachers")
-            .where("name", "==", projectData.teacherId)
-            .limit(1)
-            .get();
+      } else if (projectData.school) {
+        // Fallback: Find school by name for backward compatibility
+        const schoolQuery = await adminDb
+          .collection("schools")
+          .where("name", "==", projectData.school)
+          .limit(1)
+          .get();
 
-          if (!teacherQuery.empty) {
-            const teacherData = teacherQuery.docs[0].data();
+        if (!schoolQuery.empty) {
+          const schoolQueryDoc = schoolQuery.docs[0];
+          const schoolQueryData = schoolQueryDoc.data();
 
-            // If teacher has a schoolId, get the school from that
-            if (teacherData.schoolId) {
-              const schoolDoc = await adminDb
-                .collection("schools")
-                .doc(teacherData.schoolId)
-                .get();
+          schoolData = {
+            id: schoolQueryDoc.id,
+            name: schoolQueryData.name,
+            goal: schoolQueryData.goal,
+            deadlineYear: schoolQueryData.deadlineYear,
+            createdAt: schoolQueryData.createdAt,
+          };
 
-              if (schoolDoc.exists) {
-                const schoolDocData = schoolDoc.data();
+          schoolGoalData = {
+            goal: schoolQueryData.goal,
+            deadlineYear: schoolQueryData.deadlineYear,
+          };
+        } else {
+          // Alternative approach: Try to get school data from the teacher who created the project
+          if (projectData.teacherId) {
+            const teacherQuery = await adminDb
+              .collection("teachers")
+              .where("name", "==", projectData.teacherId)
+              .limit(1)
+              .get();
 
+            if (!teacherQuery.empty) {
+              const teacherData = teacherQuery.docs[0].data();
+
+              // If teacher has a schoolId, get the school from that
+              if (teacherData.schoolId) {
+                const schoolDoc = await adminDb
+                  .collection("schools")
+                  .doc(teacherData.schoolId)
+                  .get();
+
+                if (schoolDoc.exists) {
+                  const schoolDocData = schoolDoc.data();
+
+                  schoolData = {
+                    id: schoolDoc.id,
+                    name:
+                      schoolDocData?.name ||
+                      teacherData.school ||
+                      projectData.school,
+                    goal: schoolDocData?.goal || 50,
+                    deadlineYear: schoolDocData?.deadlineYear || "2030",
+                    createdAt:
+                      schoolDocData?.createdAt || new Date().toISOString(),
+                  };
+
+                  schoolGoalData = {
+                    goal: schoolDocData?.goal || 50,
+                    deadlineYear: schoolDocData?.deadlineYear || "2030",
+                  };
+                }
+              } else if (teacherData.school) {
+                // Create a fallback school object from teacher's school name
                 schoolData = {
-                  id: schoolDoc.id,
-                  name:
-                    schoolDocData?.name ||
-                    teacherData.school ||
-                    projectData.school,
-                  goal: schoolDocData?.goal || 50,
-                  deadlineYear: schoolDocData?.deadlineYear || "2030",
-                  createdAt:
-                    schoolDocData?.createdAt || new Date().toISOString(),
+                  id: `fallback-${Date.now()}`,
+                  name: teacherData.school,
+                  goal: 50, // Default goal
+                  deadlineYear: "2030", // Default deadline
+                  createdAt: new Date().toISOString(),
                 };
 
                 schoolGoalData = {
-                  goal: schoolDocData?.goal || 50,
-                  deadlineYear: schoolDocData?.deadlineYear || "2030",
+                  goal: 50,
+                  deadlineYear: "2030",
                 };
               }
-            } else if (teacherData.school) {
-              // Create a fallback school object from teacher's school name
-              schoolData = {
-                id: `fallback-${Date.now()}`,
-                name: teacherData.school,
-                goal: 50, // Default goal
-                deadlineYear: "2030", // Default deadline
-                createdAt: new Date().toISOString(),
-              };
-
-              schoolGoalData = {
-                goal: 50,
-                deadlineYear: "2030",
-              };
             }
           }
         }

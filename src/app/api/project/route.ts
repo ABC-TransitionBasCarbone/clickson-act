@@ -23,11 +23,10 @@ export async function POST(req: NextRequest) {
     const body = await req.json();
     const {
       name,
-      students,
       startDate,
       finalGoal,
-      subGoal,
       goalReductionAmount,
+      schoolId,
       teacherId,
       teacherName,
     } = body;
@@ -38,6 +37,7 @@ export async function POST(req: NextRequest) {
       !startDate ||
       !finalGoal ||
       !goalReductionAmount ||
+      !schoolId ||
       !teacherId
     ) {
       return NextResponse.json(
@@ -46,32 +46,15 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Get teacher's school information
-    const teacherDoc = await adminDb
-      .collection("teachers")
-      .where("name", "==", teacherId)
-      .limit(1)
-      .get();
+    // Get school information using schoolId
+    const schoolDoc = await adminDb.collection("schools").doc(schoolId).get();
 
-    if (teacherDoc.empty) {
-      return NextResponse.json({ error: "Teacher not found" }, { status: 404 });
+    if (!schoolDoc.exists) {
+      return NextResponse.json({ error: "School not found" }, { status: 404 });
     }
 
-    const teacherData = teacherDoc.docs[0].data();
-    let schoolName = teacherData.school || "Unknown School";
-
-    // If teacher has a schoolId, get the school name from the schools collection
-    if (teacherData.schoolId) {
-      const schoolDoc = await adminDb
-        .collection("schools")
-        .doc(teacherData.schoolId)
-        .get();
-
-      if (schoolDoc.exists) {
-        const schoolData = schoolDoc.data();
-        schoolName = schoolData?.name || schoolName;
-      }
-    }
+    const schoolData = schoolDoc.data();
+    const schoolName = schoolData?.name || "Unknown School";
 
     // Sanitize and validate inputs
     const sanitizedName = name.trim();
@@ -80,14 +63,6 @@ export async function POST(req: NextRequest) {
     if (sanitizedName.length < 1 || sanitizedName.length > 200) {
       return NextResponse.json(
         { error: "Project name must be between 1 and 200 characters" },
-        { status: 400 },
-      );
-    }
-
-    const studentsCount = parseInt(students) || 0;
-    if (studentsCount < 0 || studentsCount > 10000) {
-      return NextResponse.json(
-        { error: "Students count must be between 0 and 10000" },
         { status: 400 },
       );
     }
@@ -130,12 +105,11 @@ export async function POST(req: NextRequest) {
     const projectData = {
       id: passcode,
       name: sanitizedName,
-      school: schoolName,
-      students: studentsCount,
+      schoolId: schoolId,
+      schoolName: schoolName,
       startDate,
-      finalGoal,
-      subGoal,
-      goalReductionAmount: goalAmount,
+      subGoalDeadline: finalGoal, // Using finalGoal as the sub-goal deadline
+      subGoalReductionAmount: goalAmount,
       teacherId: teacherId || "",
       teacherName: sanitizedTeacherName,
       status: "active",

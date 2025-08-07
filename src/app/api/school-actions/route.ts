@@ -51,14 +51,16 @@ export async function GET(req: NextRequest) {
 
     // If specific school ID requested
     if (schoolId) {
-      query = query.where("schoolId", "==", schoolId);
+      query = query.where("schoolId", "==", schoolId) as ReturnType<
+        typeof adminDb.collection
+      >;
     } else if (userData.role !== "admin") {
       // Non-admin users can only see their school's actions
       query = query.where(
         "schoolId",
         "==",
         userData.schoolId || decodedToken.uid,
-      );
+      ) as ReturnType<typeof adminDb.collection>;
     }
 
     // Fetch school actions from Firestore

@@ -13,7 +13,7 @@ type ActionsSectionProps = {
   onAddToMonitoring?: (actionId: string) => void;
   showMonitoringButton?: boolean;
   addingToMonitoring?: Set<string>;
-  calculateDisplayReduction?: (action: any) => number;
+  calculateDisplayReduction?: (action: Action) => number;
 };
 
 export const ActionsSection: React.FC<ActionsSectionProps> = ({

@@ -39,12 +39,14 @@ const StatCards = ({ project }: { project: Project }) => {
 
       <div className="card">
         <h3 className="flex justify-between pb-2 text-sm font-medium">
-          {t("students")}
+          {t("startDate")}
           <Users className="text-muted-foreground h-4 w-4" />
         </h3>
-        <div className="text-2xl font-bold">{project.students}</div>
+        <div className="text-2xl font-bold">
+          {new Date(project.startDate).toLocaleDateString()}
+        </div>
         <p className="text-muted-foreground mt-2 text-xs">
-          {t("studentsHint")}
+          {t("startDateHint")}
         </p>
       </div>
 
@@ -53,7 +55,9 @@ const StatCards = ({ project }: { project: Project }) => {
           {t("reduction")}
           <Leaf className="text-muted-foreground h-4 w-4" />
         </h3>
-        <div className="text-2xl font-bold">{project.reduction}%</div>
+        <div className="text-2xl font-bold">
+          {project.subGoalReductionAmount}%
+        </div>
         <p className="text-muted-foreground mt-2 text-xs">
           {t("reductionHint")}
         </p>

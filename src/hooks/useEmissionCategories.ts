@@ -9,6 +9,17 @@ import {
 import { authenticatedFetch } from "@/lib/auth-utils";
 import { useUser } from "@/context/UserContext";
 
+// Interface for fallback data structure
+interface FallbackEmissionItem {
+  label: string;
+  subcategories: FallbackSubcategory[];
+}
+
+interface FallbackSubcategory {
+  subcategoryTitle: string;
+  [key: string]: unknown;
+}
+
 // Function to map database category names to legacy category names
 const mapToLegacyCategory = (categoryName: string): string => {
   const name = categoryName.toLowerCase().trim();
@@ -107,20 +118,24 @@ export const useEmissionCategories = () => {
                 "Failed to fetch emission categories from both API and static file",
               );
             }
-            const fallbackData = await fallbackResponse.json();
+            const fallbackData =
+              (await fallbackResponse.json()) as FallbackEmissionItem[];
             setCategories(
-              fallbackData.map((item: any, index: number) => ({
+              fallbackData.map((item: FallbackEmissionItem, index: number) => ({
                 ...item,
                 id: `fallback-${index}`,
                 name: item.label,
                 description: "",
                 label: item.label,
+                category: `fallback-${index}`,
+                value: "0",
                 subcategories: item.subcategories.map(
-                  (sub: any, subIndex: number) => ({
+                  (sub: FallbackSubcategory, subIndex: number) => ({
                     ...sub,
                     id: `fallback-sub-${index}-${subIndex}`,
                     name: sub.subcategoryTitle,
                     description: "",
+                    value: "0",
                   }),
                 ),
               })),
@@ -162,20 +177,24 @@ export const useEmissionCategories = () => {
               "Failed to fetch emission categories from static file",
             );
           }
-          const fallbackData = await fallbackResponse.json();
+          const fallbackData =
+            (await fallbackResponse.json()) as FallbackEmissionItem[];
           setCategories(
-            fallbackData.map((item: any, index: number) => ({
+            fallbackData.map((item: FallbackEmissionItem, index: number) => ({
               ...item,
               id: `fallback-${index}`,
               name: item.label,
               description: "",
               label: item.label,
+              category: `fallback-${index}`,
+              value: "0",
               subcategories: item.subcategories.map(
-                (sub: any, subIndex: number) => ({
+                (sub: FallbackSubcategory, subIndex: number) => ({
                   ...sub,
                   id: `fallback-sub-${index}-${subIndex}`,
                   name: sub.subcategoryTitle,
                   description: "",
+                  value: "0",
                 }),
               ),
             })),
@@ -192,20 +211,24 @@ export const useEmissionCategories = () => {
               "Failed to fetch emission categories from both API and static file",
             );
           }
-          const fallbackData = await fallbackResponse.json();
+          const fallbackData =
+            (await fallbackResponse.json()) as FallbackEmissionItem[];
           setCategories(
-            fallbackData.map((item: any, index: number) => ({
+            fallbackData.map((item: FallbackEmissionItem, index: number) => ({
               ...item,
               id: `fallback-${index}`,
               name: item.label,
               description: "",
               label: item.label,
+              category: `fallback-${index}`,
+              value: "0",
               subcategories: item.subcategories.map(
-                (sub: any, subIndex: number) => ({
+                (sub: FallbackSubcategory, subIndex: number) => ({
                   ...sub,
                   id: `fallback-sub-${index}-${subIndex}`,
                   name: sub.subcategoryTitle,
                   description: "",
+                  value: "0",
                 }),
               ),
             })),
@@ -277,20 +300,24 @@ export const useEmissionCategories = () => {
         try {
           const fallbackResponse = await fetch("/data/emissions.json");
           if (fallbackResponse.ok) {
-            const fallbackData = await fallbackResponse.json();
+            const fallbackData =
+              (await fallbackResponse.json()) as FallbackEmissionItem[];
             setCategories(
-              fallbackData.map((item: any, index: number) => ({
+              fallbackData.map((item: FallbackEmissionItem, index: number) => ({
                 ...item,
                 id: `fallback-${index}`,
                 name: item.label,
                 description: "",
                 label: item.label,
+                category: `fallback-${index}`,
+                value: "0",
                 subcategories: item.subcategories.map(
-                  (sub: any, subIndex: number) => ({
+                  (sub: FallbackSubcategory, subIndex: number) => ({
                     ...sub,
                     id: `fallback-sub-${index}-${subIndex}`,
                     name: sub.subcategoryTitle,
                     description: "",
+                    value: "0",
                   }),
                 ),
               })),

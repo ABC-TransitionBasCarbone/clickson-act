@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
 import { adminDb, adminAuth } from "../../../../firebaseAdmin";
-import { TranslatableCategory } from "../../../../types/EmissionCategory";
 import { locales } from "../../../../i18n/config";
 import {
   validateName,
@@ -11,7 +10,7 @@ import {
 // Update emission category
 export async function PUT(
   req: NextRequest,
-  { params }: { params: { id: string } },
+  { params }: { params: Promise<{ id: string }> },
 ) {
   try {
     // Verify admin authentication
@@ -58,7 +57,7 @@ export async function PUT(
       );
     }
 
-    const { id } = params;
+    const { id } = await params;
     const body = await req.json();
     const { translations, totalPercentage } = body;
 
@@ -142,7 +141,7 @@ export async function PUT(
 // Delete emission category
 export async function DELETE(
   req: NextRequest,
-  { params }: { params: { id: string } },
+  { params }: { params: Promise<{ id: string }> },
 ) {
   try {
     // Verify admin authentication
@@ -189,7 +188,7 @@ export async function DELETE(
       );
     }
 
-    const { id } = params;
+    const { id } = await params;
 
     // Check if category exists
     const categoryDoc = await adminDb

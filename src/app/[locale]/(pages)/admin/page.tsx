@@ -21,6 +21,7 @@ const AdminDashboard: React.FC = () => {
 
   const [schools, setSchools] = useState<SchoolData[]>([]);
   const [loading, setLoading] = useState(true);
+  const [initializing, setInitializing] = useState(false);
   const [editingSchool, setEditingSchool] = useState<SchoolData | null>(null);
   const [newSchool, setNewSchool] = useState({
     name: "",
@@ -41,20 +42,20 @@ const AdminDashboard: React.FC = () => {
   // Fetch schools
   const fetchSchools = async () => {
     try {
-      const token = localStorage.getItem("token");
-      if (!token) {
-        console.error("No authentication token found");
+      const response = await fetch("/api/schools");
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        console.error("Schools API error:", errorData);
         return;
       }
 
-      const response = await fetch("/api/schools", {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
       const data = await response.json();
+
       if (data.success) {
         setSchools(data.schools);
+      } else {
+        console.error("Schools API returned success: false", data);
       }
     } catch (error) {
       console.error("Error fetching schools:", error);
@@ -87,6 +88,8 @@ const AdminDashboard: React.FC = () => {
         ) as HTMLDialogElement;
         if (modal) modal.close();
         setNewSchool({ name: "", goal: 40, deadlineYear: "2030" });
+      } else {
+        console.error("Failed to create school:", data.error);
       }
     } catch (error) {
       console.error("Error creating school:", error);
@@ -151,6 +154,28 @@ const AdminDashboard: React.FC = () => {
       }
     } catch (error) {
       console.error("Error deleting school:", error);
+    }
+  };
+
+  const handleInitializeSchools = async () => {
+    try {
+      setInitializing(true);
+
+      const response = await fetch("/api/schools/init", {
+        method: "POST",
+      });
+
+      const data = await response.json();
+      if (data.success) {
+        // Refresh the schools list
+        fetchSchools();
+      } else {
+        console.error("Failed to initialize schools:", data.error);
+      }
+    } catch (error) {
+      console.error("Error initializing schools:", error);
+    } finally {
+      setInitializing(false);
     }
   };
 
@@ -386,7 +411,7 @@ const AdminDashboard: React.FC = () => {
         {/* Tab Content */}
         {activeTab === "schools" && (
           <>
-            <div className="mb-4 flex justify-end">
+            <div className="mb-4 flex justify-end gap-2">
               <button
                 onClick={() => {
                   const modal = document.getElementById(
@@ -405,6 +430,28 @@ const AdminDashboard: React.FC = () => {
             {loading ? (
               <div className="flex items-center justify-center py-8">
                 <div className="loading loading-spinner loading-lg"></div>
+              </div>
+            ) : schools.length === 0 ? (
+              <div className="flex flex-col items-center justify-center py-12">
+                <div className="mb-4 text-center text-gray-500">
+                  <School className="mx-auto mb-4 h-12 w-12 text-gray-300" />
+                  <h3 className="mb-2 text-lg font-medium text-gray-900">
+                    No schools found
+                  </h3>
+                  <p className="text-gray-600">
+                    Create your first school to get started.
+                  </p>
+                </div>
+                <button
+                  onClick={handleInitializeSchools}
+                  disabled={initializing}
+                  className="btn btn-primary"
+                >
+                  <Plus size={20} />
+                  {initializing
+                    ? "Initializing..."
+                    : "Initialize Default Schools"}
+                </button>
               </div>
             ) : (
               <div className="overflow-hidden rounded-2xl border border-gray-200">

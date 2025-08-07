@@ -6,6 +6,9 @@ import { Check, CheckCircle2 } from "lucide-react";
 import ActionModal from "@/components/ActionModal";
 import { Action } from "@/types/Action";
 import { EmissionType } from "@/types/Emission";
+import { useUser } from "@/context/UserContext";
+import { useProjectData } from "@/hooks/useProjectData";
+import { useRouter } from "@/i18n/navigation";
 
 const EFFORT_CATEGORIES = [
   { value: "easy", label: "Easy" },
@@ -15,6 +18,7 @@ const EFFORT_CATEGORIES = [
 
 interface CustomAction extends Action {
   selected: boolean;
+  calculatedReduction?: number;
 }
 
 interface CompletedActionsProps {
@@ -54,7 +58,7 @@ const CompletedActions: React.FC<CompletedActionsProps> = ({
             </div>
           </div>
           <span className="font-medium text-green-600">
-            -{action.reduction}%
+            -{action.calculatedReduction}%
           </span>
         </div>
       ))}
@@ -63,22 +67,52 @@ const CompletedActions: React.FC<CompletedActionsProps> = ({
 );
 
 const Monitoring: React.FC = () => {
+  const { user } = useUser();
+  const router = useRouter();
+
+  // Use project data hook to get real project data
+  const {
+    completedActions: projectCompletedActions,
+    loading,
+    error,
+  } = useProjectData();
+
   const [completedActions, setCompletedActions] = useState<CustomAction[]>([]);
   const [emissions, setEmissions] = useState<EmissionType[]>([]);
   const [editingAction, setEditingAction] = useState<CustomAction | null>(null);
 
+  // Update local state when project data changes
   useEffect(() => {
-    fetch("/data/actions.json")
-      .then((res) => {
-        if (!res.ok) throw new Error("Failed to fetch actions file");
-        return res.json();
-      })
-      .then((data) => {
-        if (data) setCompletedActions(data);
-      })
-      .catch((error) => console.error("Error loading actions file:", error));
-  }, []);
+    if (projectCompletedActions) {
+      const convertedCompleted = projectCompletedActions.map((action) => ({
+        ...action,
+        selected: false,
+        manager: action.studentName,
+        nature: action.category,
+        objectives: action.description,
+        keyContacts: "",
+        steps: "",
+        calendar: action.dateCompleted || action.dateAdded,
+        indicators: "",
+        monitoring: "",
+        performance: "",
+        effort: "medium", // Default effort level
+        timeline: 1, // Default timeline
+        date: (action.dateCompleted || action.dateAdded).split("T")[0], // Convert ISO date to YYYY-MM-DD
+        reduction: action.calculatedReduction, // Use calculated reduction as the main reduction value
+      })) as CustomAction[];
+      setCompletedActions(convertedCompleted);
+    }
+  }, [projectCompletedActions]);
 
+  // Redirect to login if no user or passcode
+  useEffect(() => {
+    if (!user?.passcode) {
+      router.push("/");
+    }
+  }, [user, router]);
+
+  // Keep the emissions loading for now (this could be removed if not needed)
   useEffect(() => {
     fetch("/data/emissions.json")
       .then((res) => {
@@ -122,6 +156,18 @@ const Monitoring: React.FC = () => {
             Find All The Actions Of Your Project
           </p>
         </div>
+
+        {loading && (
+          <div className="mb-8 text-center">
+            <p className="text-gray-500">Loading completed actions...</p>
+          </div>
+        )}
+
+        {error && (
+          <div className="mb-8 rounded-lg bg-red-50 p-4">
+            <p className="text-red-700">Error: {error}</p>
+          </div>
+        )}
 
         <CompletedActions
           actions={completedActions}
