@@ -180,7 +180,7 @@ const Monitoring: React.FC = () => {
             baseReductionPerYear={5} // Default base reduction
             startYear={
               typeof projectData.startDate === "number"
-                ? projectData.startDate.toString()
+                ? String(projectData.startDate)
                 : projectData.startDate?.split("T")[0]?.split("-")[0] || "2024"
             }
             currentEmissions={currentEmissions}

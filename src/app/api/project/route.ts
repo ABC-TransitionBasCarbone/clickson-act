@@ -56,7 +56,7 @@ export async function POST(req: NextRequest) {
     }
 
     const teacherData = teacherDoc.docs[0].data();
-    let schoolId = teacherData.schoolId;
+    const schoolId = teacherData.schoolId;
     let schoolName = "Unknown School";
 
     // Get school information if teacher has a schoolId

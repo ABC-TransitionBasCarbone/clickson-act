@@ -33,8 +33,8 @@ const TeacherDashboard: React.FC = () => {
   const [isProjectModalOpen, setIsProjectModalOpen] = useState(false);
   const [projectForm, setProjectForm] = useState<ProjectForm>({
     name: "",
-    startDate: new Date().getFullYear(),
-    finalGoal: new Date().getFullYear(),
+    startDate: new Date().getFullYear().toString(),
+    finalGoal: new Date().getFullYear().toString(),
     goalReductionAmount: 0,
   });
 
@@ -169,8 +169,8 @@ const TeacherDashboard: React.FC = () => {
     const currentYear = new Date().getFullYear();
     setProjectForm({
       name: "",
-      startDate: currentYear,
-      finalGoal: currentYear,
+      startDate: currentYear.toString(),
+      finalGoal: currentYear.toString(),
       goalReductionAmount: 0,
     });
     setIsProjectModalOpen(true);
