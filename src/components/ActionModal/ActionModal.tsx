@@ -4,6 +4,7 @@ import Modal from "@/components/Modal";
 import { Action } from "@/types/Action";
 import { useTranslations } from "next-intl";
 import { useEffect, useState } from "react";
+import { useUser } from "@/context/UserContext";
 
 interface CustomAction extends Action {
   selected: boolean;
@@ -20,7 +21,6 @@ interface ActionModalProps {
   effortCategories: { value: string; label: string }[];
   subcategoryOptions?: { value: string; label: string }[];
   initialAction?: CustomAction;
-  onApprove?: (action: CustomAction) => void;
   onDelete?: (action: CustomAction) => void;
 }
 
@@ -31,10 +31,13 @@ const ActionModal: React.FC<ActionModalProps> = ({
   effortCategories,
   subcategoryOptions = [],
   initialAction,
-  onApprove,
   onDelete,
 }) => {
   const t = useTranslations("Action");
+  const { user } = useUser();
+
+  // Check if user is a teacher (has role "teacher" or "admin")
+  const isTeacher = user?.role === "teacher" || user?.role === "admin";
 
   const [newAction, setNewAction] = useState<CustomAction>({
     id: "",
@@ -414,22 +417,14 @@ const ActionModal: React.FC<ActionModalProps> = ({
         </div>
 
         <div className="mt-6 flex justify-end gap-3">
-          {/* Approve/Delete in edit mode */}
-          {mode === "edit" && !isEditing && (
-            <>
-              <button
-                className="btn btn-success"
-                onClick={() => onApprove && onApprove(newAction)}
-              >
-                {t("approve")}
-              </button>
-              <button
-                className="btn btn-error"
-                onClick={() => onDelete && onDelete(newAction)}
-              >
-                {t("delete")}
-              </button>
-            </>
+          {/* Delete button in edit mode - only for teachers */}
+          {mode === "edit" && !isEditing && isTeacher && onDelete && (
+            <button
+              className="btn btn-error"
+              onClick={() => onDelete(newAction)}
+            >
+              {t("delete")}
+            </button>
           )}
           {mode === "edit" && !isEditing && (
             <button

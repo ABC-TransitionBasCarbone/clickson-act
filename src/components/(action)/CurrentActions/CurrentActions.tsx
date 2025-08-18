@@ -4,6 +4,7 @@ import { PlusCircle } from "lucide-react";
 
 import { Action } from "@/types/Action";
 import { useTranslations } from "next-intl";
+import { useUser } from "@/context/UserContext";
 
 interface CustomAction extends Action {
   selected: boolean;
@@ -23,6 +24,10 @@ const CurrentActions: React.FC<CurrentActionsProps> = ({
   onAddAction,
 }) => {
   const t = useTranslations();
+  const { user } = useUser();
+
+  // Check if user is a teacher (has role "teacher" or "admin")
+  const isTeacher = user?.role === "teacher" || user?.role === "admin";
 
   return (
     <div className="card p-6">
@@ -85,13 +90,15 @@ const CurrentActions: React.FC<CurrentActionsProps> = ({
         >
           {t("currentActions.viewAllAvailable")}
         </button>
-        <button
-          className="btn btn-soft mt-auto flex w-fit items-center gap-2 self-center bg-white"
-          onClick={onAddAction}
-        >
-          <PlusCircle className="h-4 w-4" />
-          {t("StudentCalculator.addActionButton")}
-        </button>
+        {isTeacher && (
+          <button
+            className="btn btn-soft mt-auto flex w-fit items-center gap-2 self-center bg-white"
+            onClick={onAddAction}
+          >
+            <PlusCircle className="h-4 w-4" />
+            {t("StudentCalculator.addActionButton")}
+          </button>
+        )}
       </div>
     </div>
   );
