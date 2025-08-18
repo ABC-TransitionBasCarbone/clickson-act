@@ -194,14 +194,14 @@ export const useProjectData = (passcode?: string) => {
     [projectActions?.actions],
   );
 
-  // Calculate total reduction from completed actions
+  // Calculate total reduction from both completed and available actions (to match graph)
   const totalReduction = useMemo(
     () =>
-      completedActions.reduce(
+      [...completedActions, ...availableActions].reduce(
         (sum, action) => sum + action.calculatedReduction,
         0,
       ),
-    [completedActions],
+    [completedActions, availableActions],
   );
 
   return {

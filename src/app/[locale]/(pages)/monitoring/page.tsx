@@ -14,6 +14,12 @@ import { useUser } from "@/context/UserContext";
 import { useProjectData } from "@/hooks/useProjectData";
 import Project from "@/types/ProjectType";
 
+// Custom action interface that extends Action
+interface CustomAction extends Action {
+  selected: boolean;
+  calculatedReduction?: number; // Add calculated reduction field
+}
+
 const Monitoring: React.FC = () => {
   const router = useRouter();
   const { user } = useUser();
@@ -35,6 +41,80 @@ const Monitoring: React.FC = () => {
     error,
     refetch,
   } = useProjectData();
+
+  // Student-specific state (moved to top to avoid conditional hooks)
+  const [completedActions, setCompletedActions] = useState<CustomAction[]>([]);
+  const [availableActions, setAvailableActions] = useState<CustomAction[]>([]);
+  const [editingAction, setEditingAction] = useState<CustomAction | null>(null);
+  const [editingType, setEditingType] = useState<
+    "completed" | "available" | null
+  >(null);
+  const [showCreateModal, setShowCreateModal] = useState(false);
+
+  // Memoize converted actions to prevent unnecessary re-renders (for students)
+  const convertedCompletedActions = useMemo(() => {
+    if (!projectCompletedActions || projectCompletedActions.length === 0) {
+      return [];
+    }
+    return projectCompletedActions.map((action) => ({
+      ...action,
+      selected: false,
+      manager: action.studentName,
+      nature: action.category,
+      objectives: action.description,
+      keyContacts: "",
+      steps: "",
+      calendar: action.dateCompleted || action.dateAdded,
+      indicators: "",
+      monitoring: "",
+      performance: "",
+      effort: "medium", // Default effort level since project actions don't have effort property
+      timeline: 1, // Default timeline
+      date: (action.dateCompleted || action.dateAdded).split("T")[0], // Convert ISO date to YYYY-MM-DD
+      reduction: action.calculatedReduction, // Use calculated reduction as the main reduction value
+      calculatedReduction: action.calculatedReduction, // Also keep it as calculatedReduction
+    })) as CustomAction[];
+  }, [projectCompletedActions]);
+
+  const convertedAvailableActions = useMemo(() => {
+    if (!projectAvailableActions || projectAvailableActions.length === 0) {
+      return [];
+    }
+    return projectAvailableActions.map((action) => ({
+      ...action,
+      selected: false,
+      manager: action.studentName,
+      nature: action.category,
+      objectives: action.description,
+      keyContacts: "",
+      steps: "",
+      calendar: action.dateAdded,
+      indicators: "",
+      monitoring: "",
+      performance: "",
+      effort: "medium", // Default effort level since project actions don't have effort property
+      timeline: action.timeline || 1, // Use existing timeline or default to 1
+      date: action.dateAdded.split("T")[0], // Convert ISO date to YYYY-MM-DD
+      reduction: action.calculatedReduction, // Use calculated reduction as the main reduction value
+      calculatedReduction: action.calculatedReduction, // Also keep it as calculatedReduction
+    })) as CustomAction[];
+  }, [projectAvailableActions]);
+
+  // Update local state when converted actions change (for students)
+  useEffect(() => {
+    setCompletedActions(convertedCompletedActions);
+  }, [convertedCompletedActions]);
+
+  useEffect(() => {
+    setAvailableActions(convertedAvailableActions);
+  }, [convertedAvailableActions]);
+
+  // Redirect to login if no user - only after user context is loaded and we're not loading project data
+  useEffect(() => {
+    if (user !== undefined && !user && !loading) {
+      router.push("/");
+    }
+  }, [user, router, loading]);
 
   // Fetch teacher's projects
   const fetchProjects = useCallback(async () => {
@@ -180,7 +260,7 @@ const Monitoring: React.FC = () => {
             <div className="py-12 text-center">
               <h2 className="mb-2 text-xl font-semibold">No Projects Found</h2>
               <p className="mb-4 text-gray-600">
-                You haven't created any projects yet.
+                You haven&apos;t created any projects yet.
               </p>
               <Link href="/dashboard" className="btn btn-primary">
                 Go to Dashboard
@@ -192,85 +272,7 @@ const Monitoring: React.FC = () => {
     );
   }
 
-  interface CustomAction extends Action {
-    selected: boolean;
-    calculatedReduction?: number; // Add calculated reduction field
-  }
-
-  // Convert project actions to CustomAction format
-  const [completedActions, setCompletedActions] = useState<CustomAction[]>([]);
-  const [availableActions, setAvailableActions] = useState<CustomAction[]>([]);
-
-  const [editingAction, setEditingAction] = useState<CustomAction | null>(null);
-  const [editingType, setEditingType] = useState<
-    "completed" | "available" | null
-  >(null);
-  const [showCreateModal, setShowCreateModal] = useState(false);
-
-  // Memoize converted actions to prevent unnecessary re-renders
-  const convertedCompletedActions = useMemo(() => {
-    if (!projectCompletedActions || projectCompletedActions.length === 0) {
-      return [];
-    }
-    return projectCompletedActions.map((action) => ({
-      ...action,
-      selected: false,
-      manager: action.studentName,
-      nature: action.category,
-      objectives: action.description,
-      keyContacts: "",
-      steps: "",
-      calendar: action.dateCompleted || action.dateAdded,
-      indicators: "",
-      monitoring: "",
-      performance: "",
-      effort: "medium", // Default effort level since project actions don't have effort property
-      timeline: 1, // Default timeline
-      date: (action.dateCompleted || action.dateAdded).split("T")[0], // Convert ISO date to YYYY-MM-DD
-      reduction: action.calculatedReduction, // Use calculated reduction as the main reduction value
-      calculatedReduction: action.calculatedReduction, // Also keep it as calculatedReduction
-    })) as CustomAction[];
-  }, [projectCompletedActions]);
-
-  const convertedAvailableActions = useMemo(() => {
-    if (!projectAvailableActions || projectAvailableActions.length === 0) {
-      return [];
-    }
-    return projectAvailableActions.map((action) => ({
-      ...action,
-      selected: false,
-      manager: action.studentName,
-      nature: action.category,
-      objectives: action.description,
-      keyContacts: "",
-      steps: "",
-      calendar: action.dateAdded,
-      indicators: "",
-      monitoring: "",
-      performance: "",
-      effort: "medium", // Default effort level since project actions don't have effort property
-      timeline: action.timeline || 1, // Use existing timeline or default to 1
-      date: action.dateAdded.split("T")[0], // Convert ISO date to YYYY-MM-DD
-      reduction: action.calculatedReduction, // Use calculated reduction as the main reduction value
-      calculatedReduction: action.calculatedReduction, // Also keep it as calculatedReduction
-    })) as CustomAction[];
-  }, [projectAvailableActions]);
-
-  // Update local state when converted actions change
-  useEffect(() => {
-    setCompletedActions(convertedCompletedActions);
-  }, [convertedCompletedActions]);
-
-  useEffect(() => {
-    setAvailableActions(convertedAvailableActions);
-  }, [convertedAvailableActions]);
-
-  // Redirect to login if no user - only after user context is loaded and we're not loading project data
-  useEffect(() => {
-    if (user !== undefined && !user && !loading) {
-      router.push("/");
-    }
-  }, [user, router, loading]);
+  // Student-specific handlers (only used for students, but defined for all to avoid conditional hooks)
 
   const handleEditClick = (
     action: CustomAction,

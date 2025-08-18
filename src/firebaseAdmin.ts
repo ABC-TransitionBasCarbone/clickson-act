@@ -14,7 +14,10 @@ function loadServiceAccount(): ServiceAccount {
       process.env.FIREBASE_CLIENT_EMAIL &&
       process.env.FIREBASE_PROJECT_ID
     ) {
-      console.log("Loading service account from environment variables");
+      // Only log during development, not during build
+      if (process.env.NODE_ENV !== "production") {
+        console.log("Loading service account from environment variables");
+      }
 
       let privateKey = process.env.FIREBASE_PRIVATE_KEY;
 
@@ -52,13 +55,16 @@ function loadServiceAccount(): ServiceAccount {
         clientEmail: process.env.FIREBASE_CLIENT_EMAIL!,
       };
 
-      console.log("Service account loaded from environment variables");
-      console.log("Project ID:", serviceAccount.projectId);
-      console.log("Client email:", serviceAccount.clientEmail);
-      console.log(
-        "Private key format check:",
-        privateKey.substring(0, 30) + "...",
-      );
+      // Only log during development
+      if (process.env.NODE_ENV !== "production") {
+        console.log("Service account loaded from environment variables");
+        console.log("Project ID:", serviceAccount.projectId);
+        console.log("Client email:", serviceAccount.clientEmail);
+        console.log(
+          "Private key format check:",
+          privateKey.substring(0, 30) + "...",
+        );
+      }
 
       return serviceAccount;
     }
@@ -129,31 +135,43 @@ function loadServiceAccount(): ServiceAccount {
   }
 }
 
-// Initialize Firebase Admin SDK
+// Initialize Firebase Admin SDK with proper singleton pattern
 function initializeFirebaseAdmin(): App {
+  // Check if app is already initialized globally
+  const existingApps = getApps();
+  if (existingApps.length > 0) {
+    // Only log during development
+    if (process.env.NODE_ENV !== "production") {
+      console.log("Using existing Firebase Admin app");
+    }
+    return existingApps[0];
+  }
+
   try {
     const serviceAccount = loadServiceAccount();
 
-    // Check if app is already initialized
-    const existingApps = getApps();
-    if (existingApps.length > 0) {
-      console.log("Using existing Firebase Admin app");
-      return existingApps[0];
+    // Only log during development
+    if (process.env.NODE_ENV !== "production") {
+      console.log("Initializing new Firebase Admin app");
     }
 
-    console.log("Initializing new Firebase Admin app");
-    const app = initializeApp({
+    const newApp = initializeApp({
       credential: cert(serviceAccount),
     });
 
-    console.log("Firebase Admin SDK initialized successfully");
-    return app;
+    // Only log during development
+    if (process.env.NODE_ENV !== "production") {
+      console.log("Firebase Admin SDK initialized successfully");
+    }
+
+    return newApp;
   } catch (error) {
     console.error("Failed to initialize Firebase Admin SDK:", error);
     throw error;
   }
 }
 
+// Initialize once at module load - but with reduced logging
 const app = initializeFirebaseAdmin();
 const adminAuth = getAuth(app);
 const adminDb = getFirestore(app);

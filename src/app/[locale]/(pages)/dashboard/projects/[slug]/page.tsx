@@ -4,58 +4,210 @@ import { useParams } from "next/navigation";
 
 import Loading from "@/components/(dashboard)/ProjectDetails/Loading";
 import NotFound from "@/components/(dashboard)/ProjectDetails/NotFound";
-import Header from "@/components/(dashboard)/ProjectDetails/Header";
-import StatCards from "@/components/(dashboard)/ProjectDetails/StatCards";
-import OverviewCard from "@/components/(dashboard)/ProjectDetails/OverviewCard";
-import ActionsCard from "@/components/(dashboard)/ProjectDetails/ActionsCard";
 import SchoolGoalCard from "@/components/SchoolGoalCard";
+import CurrentActions from "@/components/(action)/CurrentActions";
+import CompletedActions from "@/components/(action)/CompletedActions";
+import CustomActionFormModal from "@/components/ActionModal";
 
-import Project from "@/types/ProjectType";
-import { School } from "@/types/School";
 import { motion } from "framer-motion";
+import { useProjectData } from "@/hooks/useProjectData";
+import { Edit, Share2 } from "lucide-react";
+import { useUser } from "@/context/UserContext";
+import { usePathname } from "@/i18n/navigation";
+import { useLocale } from "next-intl";
+import { Action } from "@/types/Action";
+
+// Action interface for type safety - matches the data from the hook
+interface ActionData {
+  id: string;
+  title: string;
+  description: string;
+  category: string;
+  reduction: number;
+  calculatedReduction: number;
+  status: "Available" | "Selected" | "In Progress" | "Completed";
+  studentName: string;
+  dateAdded: string;
+  dateCompleted?: string;
+  timeline?: number;
+}
+
+// Custom action interface that extends Action and adds selected property
+interface CustomAction extends Action {
+  selected: boolean;
+}
 
 const ProjectDetails = () => {
   const { slug: projectId } = useParams<{ slug: string }>();
-  const [project, setProject] = useState<Project | null>(null);
-  const [school, setSchool] = useState<School | null>(null);
-  const [schoolGoal, setSchoolGoal] = useState<{
-    goal: number;
-    deadlineYear: string;
-  } | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const { user } = useUser();
+  const pathname = usePathname();
+  const locale = useLocale();
 
+  // Use the project data hook to get comprehensive data
+  const {
+    projectData: project,
+    schoolData: school,
+    availableActions,
+    completedActions,
+    totalReduction,
+    loading,
+    error,
+    refetch,
+  } = useProjectData(projectId);
+
+  // Edit modal states
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [editForm, setEditForm] = useState({
+    name: "",
+    subGoalReductionAmount: 0,
+    subGoalDeadline: "",
+    status: "active" as "active" | "completed" | "pending",
+  });
+
+  // Action modal states
+  const [editingAction, setEditingAction] = useState<CustomAction | null>(null);
+  const [showCreateModal, setShowCreateModal] = useState(false);
+
+  // Share and copy states
+  const [shareButtonText, setShareButtonText] = useState("Share");
+  const [passcodeButtonText, setPasscodeButtonText] = useState("Copy Passcode");
+
+  // Initialize edit form when project data loads
   useEffect(() => {
-    const fetchProject = async () => {
-      if (!projectId) return;
+    if (project) {
+      setEditForm({
+        name: project.name || "",
+        subGoalReductionAmount: project.subGoalReductionAmount || 0,
+        subGoalDeadline:
+          typeof project.subGoalDeadline === "number"
+            ? project.subGoalDeadline.toString()
+            : project.subGoalDeadline || "",
+        status: project.status || "active",
+      });
+    }
+  }, [project]);
 
-      setLoading(true);
-      setError(null);
+  // Handle project edit save
+  const handleSaveEdit = async () => {
+    if (!project?.id) return;
 
-      try {
-        const response = await fetch(`/api/project/${projectId}`);
-        const data = await response.json();
+    try {
+      const response = await fetch(`/api/project/${project.id}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(editForm),
+      });
 
-        if (response.ok) {
-          console.log("Project data:", data.project); // Debug log
-          console.log("School data:", data.school); // Debug log
-          console.log("School goal data:", data.schoolGoal); // Debug log
-          setProject(data.project);
-          setSchool(data.school);
-          setSchoolGoal(data.schoolGoal);
-        } else {
-          setError(data.error || "Failed to fetch project");
-        }
-      } catch (err) {
-        console.error("Error fetching project:", err);
-        setError("Failed to fetch project details");
-      } finally {
-        setLoading(false);
+      const data = await response.json();
+
+      if (response.ok) {
+        setIsEditModalOpen(false);
+        refetch(); // Refresh the data
+        alert("Project updated successfully!");
+      } else {
+        alert(`Error updating project: ${data.error}`);
       }
-    };
+    } catch (error) {
+      console.error("Error updating project:", error);
+      alert("Error updating project. Please try again.");
+    }
+  };
 
-    fetchProject();
-  }, [projectId]);
+  // Handle action editing
+  const handleEditClick = (action: CustomAction) => {
+    setEditingAction(action);
+  };
+
+  const handleAddAction = () => {
+    setShowCreateModal(true);
+  };
+
+  // Handle share URL copy
+  const handleShareClick = () => {
+    const fullUrl = `${window.location.origin}/${locale}${pathname}`;
+    navigator.clipboard
+      .writeText(fullUrl)
+      .then(() => {
+        setShareButtonText("Link Copied!");
+        setTimeout(() => {
+          setShareButtonText("Share");
+        }, 2000);
+      })
+      .catch((err) => {
+        console.error("Failed to copy URL: ", err);
+        alert("Failed to copy link");
+      });
+  };
+
+  // Handle passcode copy
+  const handlePasscodeClick = () => {
+    if (project?.passcode) {
+      navigator.clipboard
+        .writeText(project.passcode)
+        .then(() => {
+          setPasscodeButtonText("Copied!");
+          setTimeout(() => {
+            setPasscodeButtonText("Copy Passcode");
+          }, 2000);
+        })
+        .catch((err) => {
+          console.error("Failed to copy passcode: ", err);
+          alert("Failed to copy passcode");
+        });
+    }
+  };
+
+  // Check if user is admin
+  const isAdmin = user?.role === "admin";
+
+  // Convert actions to the format expected by the action components
+  const convertedAvailableActions: CustomAction[] = availableActions.map(
+    (action: ActionData) => ({
+      id: action.id,
+      category: action.category,
+      title: action.title,
+      description: action.description,
+      reduction: action.reduction,
+      effort: "medium", // Default value since not in project actions
+      manager: action.studentName,
+      nature: action.category,
+      objectives: action.description,
+      keyContacts: "",
+      steps: "",
+      calendar: action.dateAdded,
+      indicators: "",
+      monitoring: "",
+      performance: "",
+      date: action.dateAdded,
+      timeline: action.timeline || 1,
+      selected: false,
+    }),
+  );
+
+  const convertedCompletedActions: CustomAction[] = completedActions.map(
+    (action: ActionData) => ({
+      id: action.id,
+      category: action.category,
+      title: action.title,
+      description: action.description,
+      reduction: action.reduction,
+      effort: "medium", // Default value since not in project actions
+      manager: action.studentName,
+      nature: action.category,
+      objectives: action.description,
+      keyContacts: "",
+      steps: "",
+      calendar: action.dateCompleted || action.dateAdded,
+      indicators: "",
+      monitoring: "",
+      performance: "",
+      date: action.dateCompleted || action.dateAdded,
+      timeline: action.timeline || 1,
+      selected: false,
+    }),
+  );
 
   if (loading) return <Loading />;
 
@@ -81,34 +233,313 @@ const ProjectDetails = () => {
         transition={{ duration: 0.5 }}
         className="container mx-auto px-6 py-8"
       >
-        <Header project={project} />
-        <StatCards project={project} />
-        <div className="mb-8 flex flex-col gap-6 md:flex-row">
-          <OverviewCard school={school} />
-          <ActionsCard actions={project.actions || []} />
+        {/* Simple Header */}
+        <div className="mb-8">
+          <h1 className="text-3xl font-bold tracking-tight">{project?.name}</h1>
+          <p className="text-muted-foreground mt-1">
+            Project Details and Progress
+          </p>
         </div>
-        {/* Goal Graph after overview and completed actions */}
+
+        {/* Project Overview Card */}
+        <div className="mb-8">
+          <div className="card relative">
+            <div className="flex items-start justify-between">
+              <div className="flex-1">
+                <h3 className="mb-6 text-2xl font-bold">Project Overview</h3>
+                <div className="space-y-4">
+                  <div className="flex gap-2.5">
+                    <h3 className="font-medium">Project Name:</h3>
+                    <span>{project?.name}</span>
+                  </div>
+                  <div className="flex gap-2.5">
+                    <h3 className="font-medium">Current Status:</h3>
+                    <span
+                      className={`rounded-full px-3 py-1 text-sm font-medium ${
+                        project?.status === "active"
+                          ? "bg-green-100 text-green-800"
+                          : project?.status === "completed"
+                            ? "bg-blue-100 text-blue-800"
+                            : "bg-amber-100 text-amber-800"
+                      }`}
+                    >
+                      {project?.status || "Active"}
+                    </span>
+                  </div>
+                  <div className="flex gap-2.5">
+                    <h3 className="font-medium">Sub-goal Target:</h3>
+                    <span>
+                      {project?.subGoalReductionAmount}% by{" "}
+                      {project?.subGoalDeadline}
+                    </span>
+                  </div>
+                  {school && (
+                    <div className="flex gap-2.5">
+                      <h3 className="font-medium">School Goal:</h3>
+                      <span>
+                        {school.goal}% by {school.deadlineYear}
+                      </span>
+                    </div>
+                  )}
+                </div>
+                {/* Passcode and Buttons in horizontal flex container */}
+                <div className="mt-5 flex items-center gap-4">
+                  {/* Passcode Display */}
+                  {project?.passcode && (
+                    <div className="flex flex-col items-center gap-2">
+                      <button
+                        onClick={handlePasscodeClick}
+                        className={`cursor-pointer rounded-lg border-2 border-dashed px-3 py-1 text-xl font-bold transition-colors ${
+                          passcodeButtonText === "Copied!"
+                            ? "border-green-300 bg-green-50 text-green-600 hover:border-green-400 hover:bg-green-100 hover:text-green-800"
+                            : "border-blue-300 bg-blue-50 text-blue-600 hover:border-blue-400 hover:bg-blue-100 hover:text-blue-800"
+                        }`}
+                        title="Click to copy passcode"
+                      >
+                        {passcodeButtonText === "Copied!"
+                          ? "Copied!"
+                          : project.passcode}
+                      </button>
+                    </div>
+                  )}
+
+                  {/* Action Buttons */}
+                  <div className="flex items-center gap-2">
+                    {/* Share Button */}
+                    <button
+                      onClick={handleShareClick}
+                      className="btn btn-secondary flex items-center gap-2"
+                    >
+                      <Share2 className="h-4 w-4" />
+                      {shareButtonText}
+                    </button>
+
+                    {/* Admin-only Edit Button */}
+                    {isAdmin && (
+                      <button
+                        onClick={() => setIsEditModalOpen(true)}
+                        className="btn btn-primary flex items-center gap-2"
+                      >
+                        <Edit className="h-4 w-4" />
+                        Edit Project
+                      </button>
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              {/* Total Reduction Display and Actions */}
+              <div className="flex flex-col items-end justify-start gap-5">
+                {/* Total Reduction at the top */}
+                <div className="text-center">
+                  <div className="text-5xl font-bold text-purple-600">
+                    {totalReduction.toFixed(1)}%
+                  </div>
+                  <div className="text-lg font-medium text-purple-800">
+                    Total Reduction
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Current and Completed Actions - same as monitoring page */}
+        <div className="mb-8 grid gap-6 md:grid-cols-2">
+          <CurrentActions
+            currentActions={convertedAvailableActions}
+            onEdit={(action) => handleEditClick(action)}
+            onViewAll={() => {}} // Could add navigation to full actions page
+            onAddAction={handleAddAction}
+          />
+          <CompletedActions
+            completedActions={convertedCompletedActions}
+            onEdit={(action) => handleEditClick(action)}
+            onViewAll={() => {}} // Could add navigation to full actions page
+          />
+        </div>
+
+        {/* Goal Graph with project actions data */}
         <SchoolGoalCard
-          schoolGoal={schoolGoal?.goal || 40} // School's overall goal (e.g., 30%)
-          subGoal={Number(project.subGoalReductionAmount) || 25} // This project's contribution (e.g., 10%)
+          schoolGoal={school?.goal || 40}
+          subGoal={Number(project?.subGoalReductionAmount) || 25}
           subGoalYear={
-            typeof project.subGoalDeadline === "number"
+            typeof project?.subGoalDeadline === "number"
               ? project.subGoalDeadline.toString()
-              : project.subGoalDeadline
+              : typeof project?.subGoalDeadline === "string"
                 ? new Date(project.subGoalDeadline).getFullYear().toString()
                 : "2028"
-          } // Project deadline year
-          finalGoalYear={schoolGoal?.deadlineYear || "2030"} // School deadline year
-          baseReductionPerYear={5} // Placeholder, adjust as needed
-          startYear={
-            typeof project.startDate === "number"
-              ? project.startDate.toString()
-              : project.startDate
-                ? new Date(project.startDate).getFullYear().toString()
-                : "2023"
           }
+          finalGoalYear={school?.deadlineYear || "2030"}
+          baseReductionPerYear={5}
+          startYear={
+            project?.startDate
+              ? String(
+                  typeof project.startDate === "number"
+                    ? project.startDate
+                    : new Date(project.startDate as string).getFullYear(),
+                )
+              : "2023"
+          }
+          availableActions={availableActions}
+          completedActions={completedActions}
         />
       </motion.div>
+
+      {/* Action Edit Modal */}
+      {editingAction && (
+        <CustomActionFormModal
+          mode="edit"
+          initialAction={editingAction}
+          onSubmit={() => {
+            // Handle action update
+            setEditingAction(null);
+            refetch();
+          }}
+          categories={[]}
+          effortCategories={[
+            { value: "low", label: "Low" },
+            { value: "medium", label: "Medium" },
+            { value: "hard", label: "Hard" },
+          ]}
+        />
+      )}
+
+      {/* Add Action Modal */}
+      {showCreateModal && (
+        <CustomActionFormModal
+          mode="create"
+          onSubmit={() => {
+            // Handle new action creation
+            setShowCreateModal(false);
+            refetch();
+          }}
+          categories={[]}
+          effortCategories={[
+            { value: "low", label: "Low" },
+            { value: "medium", label: "Medium" },
+            { value: "hard", label: "Hard" },
+          ]}
+        />
+      )}
+
+      {/* Project Edit Modal */}
+      {isEditModalOpen && (
+        <div className="modal modal-open">
+          <div className="modal-box">
+            <h3 className="mb-4 text-lg font-bold">Edit Project</h3>
+            <form
+              className="space-y-4"
+              onSubmit={(e) => {
+                e.preventDefault();
+                handleSaveEdit();
+              }}
+            >
+              <div>
+                <label htmlFor="projectName" className="mb-1 block font-medium">
+                  Project Name
+                </label>
+                <input
+                  id="projectName"
+                  type="text"
+                  value={editForm.name}
+                  onChange={(e) =>
+                    setEditForm((prev) => ({ ...prev, name: e.target.value }))
+                  }
+                  className="input-bordered input w-full"
+                  placeholder="Project Name"
+                  required
+                />
+              </div>
+
+              <div>
+                <label
+                  htmlFor="subGoalReduction"
+                  className="mb-1 block font-medium"
+                >
+                  Sub-goal Reduction (%)
+                </label>
+                <input
+                  id="subGoalReduction"
+                  type="number"
+                  value={editForm.subGoalReductionAmount}
+                  onChange={(e) =>
+                    setEditForm((prev) => ({
+                      ...prev,
+                      subGoalReductionAmount: Number(e.target.value),
+                    }))
+                  }
+                  className="input-bordered input w-full"
+                  min="0"
+                  max="100"
+                  required
+                />
+              </div>
+
+              <div>
+                <label
+                  htmlFor="subGoalDeadline"
+                  className="mb-1 block font-medium"
+                >
+                  Sub-goal Deadline (Year)
+                </label>
+                <input
+                  id="subGoalDeadline"
+                  type="number"
+                  value={editForm.subGoalDeadline}
+                  onChange={(e) =>
+                    setEditForm((prev) => ({
+                      ...prev,
+                      subGoalDeadline: e.target.value,
+                    }))
+                  }
+                  className="input-bordered input w-full"
+                  min={new Date().getFullYear()}
+                  max={new Date().getFullYear() + 50}
+                  required
+                />
+              </div>
+
+              <div>
+                <label htmlFor="status" className="mb-1 block font-medium">
+                  Status
+                </label>
+                <select
+                  id="status"
+                  value={editForm.status}
+                  onChange={(e) =>
+                    setEditForm((prev) => ({
+                      ...prev,
+                      status: e.target.value as
+                        | "active"
+                        | "completed"
+                        | "pending",
+                    }))
+                  }
+                  className="select-bordered select w-full"
+                >
+                  <option value="active">Active</option>
+                  <option value="pending">Pending</option>
+                  <option value="completed">Completed</option>
+                </select>
+              </div>
+
+              <div className="modal-action">
+                <button
+                  type="button"
+                  className="btn"
+                  onClick={() => setIsEditModalOpen(false)}
+                >
+                  Cancel
+                </button>
+                <button type="submit" className="btn btn-primary">
+                  Save Changes
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
