@@ -64,7 +64,12 @@ const ActionModal: React.FC<ActionModalProps> = ({
 
   useEffect(() => {
     if (initialAction && mode === "edit") {
-      setNewAction({ ...initialAction });
+      setNewAction({
+        ...initialAction,
+        assignedTo: initialAction.assignedTo || "",
+        timeline: initialAction.timeline || 1,
+        subcategory: initialAction.subcategory || "",
+      });
       setIsEditing(false);
     }
   }, [initialAction, mode]);
@@ -141,7 +146,7 @@ const ActionModal: React.FC<ActionModalProps> = ({
             <label htmlFor="assignedTo">{t("assignedTo")}</label>
             <input
               id="assignedTo"
-              value={newAction.assignedTo}
+              value={newAction.assignedTo || ""}
               onChange={(e) =>
                 setNewAction({ ...newAction, assignedTo: e.target.value })
               }
@@ -180,7 +185,7 @@ const ActionModal: React.FC<ActionModalProps> = ({
             <label htmlFor="subcategory">{t("subcategory")}</label>
             <select
               id="subcategory"
-              value={newAction.subcategory}
+              value={newAction.subcategory || ""}
               onChange={(e) =>
                 setNewAction({ ...newAction, subcategory: e.target.value })
               }
@@ -208,7 +213,7 @@ const ActionModal: React.FC<ActionModalProps> = ({
             <input
               id="timeline"
               type="number"
-              value={newAction.timeline}
+              value={newAction.timeline || 1}
               onChange={(e) =>
                 setNewAction({ ...newAction, timeline: Number(e.target.value) })
               }

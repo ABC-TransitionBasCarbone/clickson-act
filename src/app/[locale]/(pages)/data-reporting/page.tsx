@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useTranslations } from "next-intl";
 import Image from "next/image";
 import { motion } from "motion/react";
@@ -177,6 +177,21 @@ const openModal = (id: string) => {
 const Calculator = () => {
   const t = useTranslations("DataReporting");
   const tUser = useTranslations("User");
+  const { user } = useUser();
+  const router = useRouter();
+
+  // Redirect logged-in users to their appropriate destination
+  useEffect(() => {
+    if (user) {
+      if (user.passcode) {
+        // Student user - redirect to their project calculator
+        router.push(`/data-reporting/${user.passcode}`);
+      } else if (user.role === "teacher" || user.role === "admin") {
+        // Teacher/Admin user - redirect to dashboard
+        router.push("/dashboard");
+      }
+    }
+  }, [user, router]);
 
   return (
     <div className="relative flex h-[calc(100vh-6rem)] w-full flex-col justify-between pt-15">

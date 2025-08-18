@@ -437,14 +437,19 @@ const TeacherDashboard: React.FC = () => {
               </div>
               <div className="mt-5 flex w-full justify-between">
                 {/* Assuming project.id is available and can be used for the link */}
-                {project.id && (
-                  <Link
-                    href={`/dashboard/projects/${project.id}`}
-                    className="btn-outline btn btn-primary"
-                  >
-                    {t("viewDetails")}
+                <div className="flex gap-2">
+                  {project.id && (
+                    <Link
+                      href={`/dashboard/projects/${project.id}`}
+                      className="btn-outline btn btn-primary"
+                    >
+                      {t("viewDetails")}
+                    </Link>
+                  )}
+                  <Link href="/monitoring" className="btn btn-secondary">
+                    {t("monitoring")}
                   </Link>
-                )}
+                </div>
               </div>
             </div>
           ))}

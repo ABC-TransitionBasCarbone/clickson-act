@@ -1,9 +1,9 @@
 "use client";
 
-import React, { useEffect, useState, useMemo, useCallback } from "react";
+import React, { useEffect, useState, useMemo } from "react";
 import { motion } from "framer-motion";
-import { useRouter, Link } from "@/i18n/navigation";
-import { useTranslations } from "next-intl";
+import { useRouter } from "@/i18n/navigation";
+import { useParams } from "next/navigation";
 import CustomActionFormModal from "@/components/ActionModal";
 import SchoolGoalCard from "@/components/SchoolGoalCard";
 
@@ -12,19 +12,16 @@ import { Action } from "@/types/Action";
 import CurrentActions from "@/components/(action)/CurrentActions";
 import { useUser } from "@/context/UserContext";
 import { useProjectData } from "@/hooks/useProjectData";
-import Project from "@/types/ProjectType";
 
-const Monitoring: React.FC = () => {
+const ProjectMonitoring: React.FC = () => {
   const router = useRouter();
+  const params = useParams();
   const { user } = useUser();
-  const t = useTranslations("TeacherDashboard");
 
-  // State for teacher's projects (when user is a teacher)
-  const [projects, setProjects] = useState<Project[]>([]);
-  const [teacherLoading, setTeacherLoading] = useState(false);
-  const [teacherError, setTeacherError] = useState<string | null>(null);
+  // Get the passcode from the URL parameter
+  const passcode = params.passcode as string;
 
-  // Use project data hook to get real project data (for students)
+  // Use project data hook with the specific passcode
   const {
     projectData,
     availableActions: projectAvailableActions,
@@ -34,163 +31,7 @@ const Monitoring: React.FC = () => {
     loading,
     error,
     refetch,
-  } = useProjectData();
-
-  // Fetch teacher's projects
-  const fetchProjects = useCallback(async () => {
-    if (!user || user.passcode) return; // Only for teachers (no passcode)
-
-    try {
-      setTeacherLoading(true);
-      const response = await fetch(`/api/project?teacherId=${user.username}`);
-      const data = await response.json();
-
-      if (response.ok) {
-        setProjects(data.projects || []);
-      } else {
-        setTeacherError(data.error || "Failed to fetch projects");
-      }
-    } catch (error) {
-      console.error("Error fetching projects:", error);
-      setTeacherError("Failed to fetch projects");
-    } finally {
-      setTeacherLoading(false);
-    }
-  }, [user]);
-
-  // Fetch projects when component mounts (for teachers)
-  useEffect(() => {
-    if (user && !user.passcode) {
-      fetchProjects();
-    }
-  }, [user, fetchProjects]);
-
-  // If user is a teacher (no passcode), show project selection
-  if (user && !user.passcode) {
-    if (teacherLoading) {
-      return (
-        <div className="bg-gray-50">
-          <div className="container mx-auto px-6 py-8">
-            <div className="text-center">
-              <div className="mx-auto h-32 w-32 animate-spin rounded-full border-b-2 border-gray-900"></div>
-              <p className="mt-4 text-gray-600">Loading projects...</p>
-            </div>
-          </div>
-        </div>
-      );
-    }
-
-    if (teacherError) {
-      return (
-        <div className="bg-gray-50">
-          <div className="container mx-auto px-6 py-8">
-            <div className="text-center">
-              <h1 className="mb-4 text-2xl font-bold text-red-600">Error</h1>
-              <p className="mb-4 text-gray-600">{teacherError}</p>
-              <button onClick={fetchProjects} className="btn btn-primary">
-                Try Again
-              </button>
-            </div>
-          </div>
-        </div>
-      );
-    }
-
-    return (
-      <div className="bg-gray-50">
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-          transition={{ duration: 0.5 }}
-          className="container mx-auto px-6 py-8"
-        >
-          <div className="mb-8">
-            <h1 className="text-3xl font-bold tracking-tight">
-              Project Monitoring
-            </h1>
-            <p className="text-muted-foreground mt-1">
-              Select a project to monitor its progress and actions
-            </p>
-          </div>
-
-          <div className="mb-6 grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-            {projects.map((project) => (
-              <div
-                key={project.id}
-                className="card transition-shadow hover:shadow-md"
-              >
-                <div>
-                  <div className="mb-5 flex items-start justify-between text-xl font-bold">
-                    <h3>{project.name}</h3>
-                    <span
-                      className={`rounded-full px-2 py-1 text-xs font-medium ${
-                        project.status === "active"
-                          ? "bg-green-100 text-green-800"
-                          : project.status === "completed"
-                            ? "bg-blue-100 text-blue-800"
-                            : "bg-amber-100 text-amber-800"
-                      }`}
-                    >
-                      {t(`status.${project.status}`)}
-                    </span>
-                  </div>
-                </div>
-                <div>
-                  <div className="grid grid-cols-2 gap-4 text-sm">
-                    <div>
-                      <p className="text-muted-foreground">{t("startDate")}</p>
-                      <p className="font-medium">
-                        {typeof project.startDate === "number"
-                          ? project.startDate
-                          : new Date(project.startDate).getFullYear()}
-                      </p>
-                    </div>
-                    <div>
-                      <p className="text-muted-foreground">Sub Goal</p>
-                      <p className="font-medium">
-                        {typeof project.subGoalDeadline === "number"
-                          ? project.subGoalDeadline
-                          : new Date(project.subGoalDeadline).getFullYear()}
-                      </p>
-                    </div>
-                    <div>
-                      <p className="text-muted-foreground">{t("reduction")}</p>
-                      <p className="font-medium text-green-600">
-                        {project.subGoalReductionAmount}%
-                      </p>
-                    </div>
-                  </div>
-                </div>
-                <div className="mt-5">
-                  {project.passcode && (
-                    <Link
-                      href={`/monitoring/${project.passcode}`}
-                      className="btn btn-primary w-full"
-                    >
-                      Monitor Project
-                    </Link>
-                  )}
-                </div>
-              </div>
-            ))}
-          </div>
-
-          {projects.length === 0 && (
-            <div className="py-12 text-center">
-              <h2 className="mb-2 text-xl font-semibold">No Projects Found</h2>
-              <p className="mb-4 text-gray-600">
-                You haven't created any projects yet.
-              </p>
-              <Link href="/dashboard" className="btn btn-primary">
-                Go to Dashboard
-              </Link>
-            </div>
-          )}
-        </motion.div>
-      </div>
-    );
-  }
+  } = useProjectData(passcode);
 
   interface CustomAction extends Action {
     selected: boolean;
@@ -265,7 +106,7 @@ const Monitoring: React.FC = () => {
     setAvailableActions(convertedAvailableActions);
   }, [convertedAvailableActions]);
 
-  // Redirect to login if no user - only after user context is loaded and we're not loading project data
+  // Only redirect if no user and not loading
   useEffect(() => {
     if (user !== undefined && !user && !loading) {
       router.push("/");
@@ -327,9 +168,9 @@ const Monitoring: React.FC = () => {
         className="container mx-auto px-6 py-8"
       >
         <div className="mb-8">
-          <h1 className="text-3xl font-bold">Monitoring Dashboard</h1>
+          <h1 className="text-3xl font-bold">Project Monitoring Dashboard</h1>
           <p className="mt-1 text-gray-500">
-            Track your progress and plan future actions
+            Track progress and plan future actions
             {projectData && ` - ${projectData.name}`}
           </p>
         </div>
@@ -376,14 +217,18 @@ const Monitoring: React.FC = () => {
             <CurrentActions
               currentActions={availableActions}
               onEdit={(action) => handleEditClick(action, "available")}
-              onViewAll={() => router.push("/monitoring/available-actions")}
+              onViewAll={() =>
+                router.push(`/monitoring/${passcode}/available-actions`)
+              }
               onAddAction={handleAddAction}
             />
 
             <CompletedActions
               completedActions={completedActions}
               onEdit={(action) => handleEditClick(action, "completed")}
-              onViewAll={() => router.push("/monitoring/completed-actions")}
+              onViewAll={() =>
+                router.push(`/monitoring/${passcode}/completed-actions`)
+              }
             />
           </div>
         )}
@@ -429,4 +274,4 @@ const Monitoring: React.FC = () => {
   );
 };
 
-export default Monitoring;
+export default ProjectMonitoring;
