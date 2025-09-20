@@ -181,7 +181,7 @@ const AdminDashboard: React.FC = () => {
 
   if (!isLoaded) {
     return (
-      <div className="flex min-h-screen items-center justify-center">
+      <div className="flex justify-center items-center min-h-screen">
         Loading...
       </div>
     );
@@ -189,23 +189,23 @@ const AdminDashboard: React.FC = () => {
 
   if (!user || user.role !== "admin") {
     return (
-      <div className="flex min-h-screen items-center justify-center">
+      <div className="flex justify-center items-center min-h-screen">
         Access Denied
       </div>
     );
   }
 
   return (
-    <div className="container mx-auto px-4 py-8">
+    <div className="mx-auto px-4 py-8 container">
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5 }}
       >
         <div className="mb-8">
-          <div className="mb-6 flex items-center justify-between">
+          <div className="flex justify-between items-center mb-6">
             <div>
-              <h1 className="text-3xl font-bold text-gray-900">
+              <h1 className="font-bold text-gray-900 text-3xl">
                 Admin Dashboard
               </h1>
               <p className="mt-2 text-gray-600">
@@ -215,8 +215,8 @@ const AdminDashboard: React.FC = () => {
           </div>
 
           {/* Tab Navigation */}
-          <div className="border-b border-gray-200">
-            <nav className="-mb-px flex space-x-8">
+          <div className="border-gray-200 border-b">
+            <nav className="flex space-x-8 -mb-px">
               <button
                 onClick={() => setActiveTab("schools")}
                 className={`border-b-2 px-1 py-2 text-sm font-medium ${
@@ -263,41 +263,41 @@ const AdminDashboard: React.FC = () => {
           }}
         >
           <div className="mb-4">
-            <label className="mb-1 block">School Name</label>
+            <label className="block mb-1">School Name</label>
             <input
               type="text"
               value={newSchool.name}
               onChange={(e) =>
                 setNewSchool({ ...newSchool, name: e.target.value })
               }
-              className="input input-bordered w-full"
+              className="input-bordered w-full input"
               placeholder="Enter school name"
             />
           </div>
 
           <div className="mb-4">
-            <label className="mb-1 block">Goal (%)</label>
+            <label className="block mb-1">Goal (%)</label>
             <input
               type="number"
               value={newSchool.goal}
               onChange={(e) =>
                 setNewSchool({ ...newSchool, goal: Number(e.target.value) })
               }
-              className="input input-bordered w-full"
+              className="input-bordered w-full input"
               min="0"
               max="100"
             />
           </div>
 
           <div className="mb-4">
-            <label className="mb-1 block">Deadline Year</label>
+            <label className="block mb-1">Deadline Year</label>
             <input
               type="number"
               value={newSchool.deadlineYear}
               onChange={(e) =>
                 setNewSchool({ ...newSchool, deadlineYear: e.target.value })
               }
-              className="input input-bordered w-full"
+              className="input-bordered w-full input"
               min={new Date().getFullYear()}
               max={new Date().getFullYear() + 50}
             />
@@ -333,7 +333,7 @@ const AdminDashboard: React.FC = () => {
           onClose={() => setEditingSchool(null)}
         >
           <div className="mb-4">
-            <label className="mb-1 block">School Name</label>
+            <label className="block mb-1">School Name</label>
             <input
               type="text"
               value={editingSchool?.name || ""}
@@ -344,13 +344,13 @@ const AdminDashboard: React.FC = () => {
                     : null,
                 )
               }
-              className="input input-bordered w-full"
+              className="input-bordered w-full input"
               placeholder="Enter school name"
             />
           </div>
 
           <div className="mb-4">
-            <label className="mb-1 block">Goal (%)</label>
+            <label className="block mb-1">Goal (%)</label>
             <input
               type="number"
               value={editingSchool?.goal || 0}
@@ -361,14 +361,14 @@ const AdminDashboard: React.FC = () => {
                     : null,
                 )
               }
-              className="input input-bordered w-full"
+              className="input-bordered w-full input"
               min="0"
               max="100"
             />
           </div>
 
           <div className="mb-4">
-            <label className="mb-1 block">Deadline Year</label>
+            <label className="block mb-1">Deadline Year</label>
             <input
               type="number"
               value={editingSchool?.deadlineYear || ""}
@@ -379,7 +379,7 @@ const AdminDashboard: React.FC = () => {
                     : null,
                 )
               }
-              className="input input-bordered w-full"
+              className="input-bordered w-full input"
               min={new Date().getFullYear()}
               max={new Date().getFullYear() + 50}
             />
@@ -411,7 +411,7 @@ const AdminDashboard: React.FC = () => {
         {/* Tab Content */}
         {activeTab === "schools" && (
           <>
-            <div className="mb-4 flex justify-end gap-2">
+            <div className="flex justify-end gap-2 mb-4">
               <button
                 onClick={() => {
                   const modal = document.getElementById(
@@ -419,7 +419,7 @@ const AdminDashboard: React.FC = () => {
                   ) as HTMLDialogElement;
                   if (modal) modal.showModal();
                 }}
-                className="btn btn-primary flex items-center gap-2"
+                className="flex items-center gap-2 btn btn-primary"
               >
                 <Plus size={20} />
                 Add School
@@ -428,14 +428,14 @@ const AdminDashboard: React.FC = () => {
 
             {/* Schools Table */}
             {loading ? (
-              <div className="flex items-center justify-center py-8">
+              <div className="flex justify-center items-center py-8">
                 <div className="loading loading-spinner loading-lg"></div>
               </div>
             ) : schools.length === 0 ? (
-              <div className="flex flex-col items-center justify-center py-12">
-                <div className="mb-4 text-center text-gray-500">
-                  <School className="mx-auto mb-4 h-12 w-12 text-gray-300" />
-                  <h3 className="mb-2 text-lg font-medium text-gray-900">
+              <div className="flex flex-col justify-center items-center py-12">
+                <div className="mb-4 text-gray-500 text-center">
+                  <School className="mx-auto mb-4 w-12 h-12 text-gray-300" />
+                  <h3 className="mb-2 font-medium text-gray-900 text-lg">
                     No schools found
                   </h3>
                   <p className="text-gray-600">
@@ -454,8 +454,8 @@ const AdminDashboard: React.FC = () => {
                 </button>
               </div>
             ) : (
-              <div className="overflow-hidden rounded-2xl border border-gray-200">
-                <table className="w-full bg-white">
+              <div className="border border-gray-200 rounded-2xl overflow-hidden">
+                <table className="bg-white w-full">
                   <thead>
                     <tr className="text-left">
                       <th className="p-3 font-medium text-gray-400">Name</th>
@@ -471,10 +471,10 @@ const AdminDashboard: React.FC = () => {
                   </thead>
                   <tbody>
                     {schools.map((school) => (
-                      <tr key={school.id} className="border-t border-gray-200">
+                      <tr key={school.id} className="border-gray-200 border-t">
                         <td className="p-3">
-                          <span className="flex items-center justify-start gap-2.5">
-                            <School className="text-primary h-5 w-5" />
+                          <span className="flex justify-start items-center gap-2.5">
+                            <School className="w-5 h-5 text-primary" />
                             {school.name}
                           </span>
                         </td>
@@ -484,7 +484,7 @@ const AdminDashboard: React.FC = () => {
                           {new Date(school.createdAt).toLocaleDateString()}
                         </td>
                         <td className="p-3">
-                          <span className="gap-2.5000000000000004 flex items-center justify-start">
+                          <span className="flex justify-start items-center gap-2.5000000000000004">
                             <button
                               onClick={() => {
                                 setEditingSchool(school);
@@ -493,7 +493,7 @@ const AdminDashboard: React.FC = () => {
                                 ) as HTMLDialogElement;
                                 if (modal) modal.showModal();
                               }}
-                              className="text-blue-600 hover:text-blue-800"
+                              className="text-primary hover:text-blue-800"
                               aria-label="Edit"
                             >
                               <Edit size={18} />

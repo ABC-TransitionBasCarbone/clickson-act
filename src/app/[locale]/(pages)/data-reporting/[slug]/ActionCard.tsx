@@ -101,7 +101,7 @@ const ActionCard: React.FC<Props> = ({
               </span>
             )}
             {action.timeline && (
-              <span className="text-blue-600 text-xs">
+              <span className="text-primary text-xs">
                 Timeline: {action.timeline} year
                 {action.timeline !== 1 ? "s" : ""}
               </span>

@@ -6,6 +6,10 @@ import { useTranslations } from "next-intl";
 import { useUser } from "@/context/UserContext";
 import { useRouter } from "@/i18n/navigation";
 import Project from "@/types/ProjectType";
+import Modal from "@/components/Modal";
+import LoginForm from "@/components/User/LoginForm ";
+import SignUpForm from "@/components/User/SignUpForm";
+import PassCodeForm from "@/components/User/PassCodeForm ";
 
 const DataReportingIndex: React.FC = () => {
   const t = useTranslations("DataReporting");
@@ -15,11 +19,26 @@ const DataReportingIndex: React.FC = () => {
   const [projects, setProjects] = useState<Project[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [showLoginModal, setShowLoginModal] = useState(false);
+
+  // Function to open login modal
+  const openLoginModal = () => {
+    setShowLoginModal(true);
+    const modal = document.getElementById("login") as HTMLDialogElement | null;
+    if (modal) modal.showModal();
+  };
 
   useEffect(() => {
     const fetchProjects = async () => {
+      if (user === undefined) {
+        // Still loading user state
+        return;
+      }
+
       if (!user) {
+        // User not logged in, show login prompt
         setLoading(false);
+        setShowLoginModal(true);
         return;
       }
 
@@ -50,22 +69,68 @@ const DataReportingIndex: React.FC = () => {
     fetchProjects();
   }, [user, router]);
 
-  // Redirect if not logged in
-  useEffect(() => {
-    if (user !== undefined && !user) {
-      router.push("/");
-    }
-  }, [user, router]);
-
   if (loading) {
     return (
-      <div className="bg-gray-100 min-h-screen">
+      <div className="bg-gray-100 min-h-svh">
         <div className="mx-auto px-6 py-8 container">
           <div className="text-center">
             <div className="mx-auto border-gray-900 border-b-2 rounded-full w-32 h-32 animate-spin"></div>
             <p className="mt-4 text-gray-600">{t("loadingProjects")}</p>
           </div>
         </div>
+      </div>
+    );
+  }
+
+  // Show login prompt if user is not authenticated
+  if (showLoginModal && !user) {
+    return (
+      <div className="bg-gray-100 min-h-screen">
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          transition={{ duration: 0.5 }}
+          className="mx-auto px-6 py-8 container"
+        >
+          <div className="text-center">
+            <h1 className="mb-4 font-bold text-3xl tracking-tight">
+              {t("title")}
+            </h1>
+            <p className="mb-8 text-gray-600">
+              Please login to access the data reporting features
+            </p>
+
+            <div className="flex justify-center gap-4">
+              <button onClick={openLoginModal} className="btn btn-primary">
+                Teacher Login
+              </button>
+              <button
+                onClick={() => {
+                  setShowLoginModal(true);
+                  const modal = document.getElementById(
+                    "passcode",
+                  ) as HTMLDialogElement | null;
+                  if (modal) modal.showModal();
+                }}
+                className="btn btn-secondary"
+              >
+                Student Connect
+              </button>
+            </div>
+          </div>
+
+          {/* Login/Register Modals */}
+          <Modal id="login" title="Teacher Login">
+            <LoginForm />
+          </Modal>
+          <Modal id="signup" title="Teacher Registration">
+            <SignUpForm />
+          </Modal>
+          <Modal id="passcode" title="Student Connect">
+            <PassCodeForm />
+          </Modal>
+        </motion.div>
       </div>
     );
   }
@@ -172,7 +237,7 @@ const DataReportingIndex: React.FC = () => {
           ))}
         </div>
 
-        {projects.length === 0 && (
+        {projects.length === 0 && !showLoginModal && (
           <div className="py-12 text-center">
             <h2 className="mb-2 font-semibold text-xl">
               {t("noProjectsFound")}

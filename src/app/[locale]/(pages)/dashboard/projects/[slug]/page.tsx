@@ -213,9 +213,9 @@ const ProjectDetails = () => {
 
   if (error) {
     return (
-      <div className="flex min-h-screen items-center justify-center">
+      <div className="flex justify-center items-center min-h-screen">
         <div className="text-center">
-          <h2 className="mb-2 text-2xl font-bold text-red-600">Error</h2>
+          <h2 className="mb-2 font-bold text-red-600 text-2xl">Error</h2>
           <p className="text-gray-600">{error}</p>
         </div>
       </div>
@@ -231,22 +231,22 @@ const ProjectDetails = () => {
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
         transition={{ duration: 0.5 }}
-        className="container mx-auto px-6 py-8"
+        className="mx-auto px-6 py-8 container"
       >
         {/* Simple Header */}
         <div className="mb-8">
-          <h1 className="text-3xl font-bold tracking-tight">{project?.name}</h1>
-          <p className="text-muted-foreground mt-1">
+          <h1 className="font-bold text-3xl tracking-tight">{project?.name}</h1>
+          <p className="mt-1 text-muted-foreground">
             Project Details and Progress
           </p>
         </div>
 
         {/* Project Overview Card */}
         <div className="mb-8">
-          <div className="card relative">
-            <div className="flex items-start justify-between">
+          <div className="relative card">
+            <div className="flex justify-between items-start">
               <div className="flex-1">
-                <h3 className="mb-6 text-2xl font-bold">Project Overview</h3>
+                <h3 className="mb-6 font-bold text-2xl">Project Overview</h3>
                 <div className="space-y-4">
                   <div className="flex gap-2.5">
                     <h3 className="font-medium">Project Name:</h3>
@@ -283,7 +283,7 @@ const ProjectDetails = () => {
                   )}
                 </div>
                 {/* Passcode and Buttons in horizontal flex container */}
-                <div className="mt-5 flex items-center gap-4">
+                <div className="flex items-center gap-4 mt-5">
                   {/* Passcode Display */}
                   {project?.passcode && (
                     <div className="flex flex-col items-center gap-2">
@@ -292,7 +292,7 @@ const ProjectDetails = () => {
                         className={`cursor-pointer rounded-lg border-2 border-dashed px-3 py-1 text-xl font-bold transition-colors ${
                           passcodeButtonText === "Copied!"
                             ? "border-green-300 bg-green-50 text-green-600 hover:border-green-400 hover:bg-green-100 hover:text-green-800"
-                            : "border-blue-300 bg-blue-50 text-blue-600 hover:border-blue-400 hover:bg-blue-100 hover:text-blue-800"
+                            : "text-primary border-blue-300 bg-blue-50 hover:border-blue-400 hover:bg-blue-100 hover:text-blue-800"
                         }`}
                         title="Click to copy passcode"
                       >
@@ -308,9 +308,9 @@ const ProjectDetails = () => {
                     {/* Share Button */}
                     <button
                       onClick={handleShareClick}
-                      className="btn btn-secondary flex items-center gap-2"
+                      className="flex items-center gap-2 btn btn-secondary"
                     >
-                      <Share2 className="h-4 w-4" />
+                      <Share2 className="w-4 h-4" />
                       {shareButtonText}
                     </button>
 
@@ -318,9 +318,9 @@ const ProjectDetails = () => {
                     {isAdmin && (
                       <button
                         onClick={() => setIsEditModalOpen(true)}
-                        className="btn btn-primary flex items-center gap-2"
+                        className="flex items-center gap-2 btn btn-primary"
                       >
-                        <Edit className="h-4 w-4" />
+                        <Edit className="w-4 h-4" />
                         Edit Project
                       </button>
                     )}
@@ -329,13 +329,13 @@ const ProjectDetails = () => {
               </div>
 
               {/* Total Reduction Display and Actions */}
-              <div className="flex flex-col items-end justify-start gap-5">
+              <div className="flex flex-col justify-start items-end gap-5">
                 {/* Total Reduction at the top */}
                 <div className="text-center">
-                  <div className="text-5xl font-bold text-purple-600">
+                  <div className="font-bold text-purple-600 text-5xl">
                     {totalReduction.toFixed(1)}%
                   </div>
-                  <div className="text-lg font-medium text-purple-800">
+                  <div className="font-medium text-purple-800 text-lg">
                     Total Reduction
                   </div>
                 </div>
@@ -345,7 +345,7 @@ const ProjectDetails = () => {
         </div>
 
         {/* Current and Completed Actions - same as monitoring page */}
-        <div className="mb-8 grid gap-6 md:grid-cols-2">
+        <div className="gap-6 grid md:grid-cols-2 mb-8">
           <CurrentActions
             currentActions={convertedAvailableActions}
             onEdit={(action) => handleEditClick(action)}
@@ -427,7 +427,7 @@ const ProjectDetails = () => {
       {isEditModalOpen && (
         <div className="modal modal-open">
           <div className="modal-box">
-            <h3 className="mb-4 text-lg font-bold">Edit Project</h3>
+            <h3 className="mb-4 font-bold text-lg">Edit Project</h3>
             <form
               className="space-y-4"
               onSubmit={(e) => {
@@ -436,7 +436,7 @@ const ProjectDetails = () => {
               }}
             >
               <div>
-                <label htmlFor="projectName" className="mb-1 block font-medium">
+                <label htmlFor="projectName" className="block mb-1 font-medium">
                   Project Name
                 </label>
                 <input
@@ -446,7 +446,7 @@ const ProjectDetails = () => {
                   onChange={(e) =>
                     setEditForm((prev) => ({ ...prev, name: e.target.value }))
                   }
-                  className="input-bordered input w-full"
+                  className="input-bordered w-full input"
                   placeholder="Project Name"
                   required
                 />
@@ -455,7 +455,7 @@ const ProjectDetails = () => {
               <div>
                 <label
                   htmlFor="subGoalReduction"
-                  className="mb-1 block font-medium"
+                  className="block mb-1 font-medium"
                 >
                   Sub-goal Reduction (%)
                 </label>
@@ -469,7 +469,7 @@ const ProjectDetails = () => {
                       subGoalReductionAmount: Number(e.target.value),
                     }))
                   }
-                  className="input-bordered input w-full"
+                  className="input-bordered w-full input"
                   min="0"
                   max="100"
                   required
@@ -479,7 +479,7 @@ const ProjectDetails = () => {
               <div>
                 <label
                   htmlFor="subGoalDeadline"
-                  className="mb-1 block font-medium"
+                  className="block mb-1 font-medium"
                 >
                   Sub-goal Deadline (Year)
                 </label>
@@ -493,7 +493,7 @@ const ProjectDetails = () => {
                       subGoalDeadline: e.target.value,
                     }))
                   }
-                  className="input-bordered input w-full"
+                  className="input-bordered w-full input"
                   min={new Date().getFullYear()}
                   max={new Date().getFullYear() + 50}
                   required
@@ -501,7 +501,7 @@ const ProjectDetails = () => {
               </div>
 
               <div>
-                <label htmlFor="status" className="mb-1 block font-medium">
+                <label htmlFor="status" className="block mb-1 font-medium">
                   Status
                 </label>
                 <select
@@ -516,7 +516,7 @@ const ProjectDetails = () => {
                         | "pending",
                     }))
                   }
-                  className="select-bordered select w-full"
+                  className="w-full select-bordered select"
                 >
                   <option value="active">Active</option>
                   <option value="pending">Pending</option>

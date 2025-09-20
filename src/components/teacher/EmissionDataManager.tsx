@@ -450,7 +450,7 @@ const EmissionDataManager: React.FC<EmissionDataManagerProps> = ({
                           <div className="text-gray-500 text-xs">
                             % of category
                           </div>
-                          <div className="font-semibold text-blue-600 text-sm">
+                          <div className="font-semibold text-primary text-sm">
                             {subcategoryPercentage}%
                           </div>
                         </div>

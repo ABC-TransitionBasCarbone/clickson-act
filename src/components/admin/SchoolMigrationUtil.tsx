@@ -56,7 +56,7 @@ export default function SchoolMigrationUtil() {
           <button
             onClick={initializeSchools}
             disabled={initLoading}
-            className="bg-blue-500 hover:bg-blue-600 disabled:opacity-50 px-4 py-2 rounded text-white"
+            className="bg-blue-500 hover:bg-primary disabled:opacity-50 px-4 py-2 rounded text-white"
           >
             {initLoading ? "Initializing..." : "Initialize Schools"}
           </button>

@@ -99,6 +99,12 @@ const StudentCalculator: React.FC = () => {
     setCurrentStep("actions");
   };
 
+  const handleBackToCategories = () => {
+    setSelectedCategory(null);
+    setSelectedSubcategories([]);
+    setCurrentStep("category");
+  };
+
   const calculateDisplayReduction = (action: CustomAction): number => {
     const actionType = action.type || "Direct";
 
@@ -295,7 +301,7 @@ const StudentCalculator: React.FC = () => {
   };
 
   return (
-    <div className="bg-gray-100">
+    <div className="bg-gray-100 min-h-screen">
       <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
@@ -376,6 +382,7 @@ const StudentCalculator: React.FC = () => {
                   selectedSubcategories={selectedSubcategories}
                   onSubcategoryToggle={handleSubcategoryToggle}
                   onProceed={handleProceedToActions}
+                  onBack={handleBackToCategories}
                   t={t}
                 />
               )}
@@ -386,14 +393,14 @@ const StudentCalculator: React.FC = () => {
                   <div className="flex items-center space-x-2 mb-6 text-gray-600 text-sm">
                     <button
                       onClick={() => setCurrentStep("category")}
-                      className="hover:text-blue-600"
+                      className="hover:text-primary"
                     >
                       Categories
                     </button>
                     <span>/</span>
                     <button
                       onClick={() => setCurrentStep("subcategory")}
-                      className="hover:text-blue-600"
+                      className="hover:text-primary"
                     >
                       {selectedCategory.name}
                     </button>

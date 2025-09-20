@@ -198,7 +198,7 @@ const ProjectMonitoring: React.FC = () => {
         {loading ? (
           <div className="flex justify-center items-center h-64">
             <div className="text-center">
-              <div className="mx-auto mb-4 border-4 border-gray-300 border-t-blue-600 rounded-full w-8 h-8 animate-spin"></div>
+              <div className="mx-auto mb-4 border-4 border-gray-300 border-t-primary rounded-full w-8 h-8 animate-spin"></div>
               <p className="text-gray-500">Loading project data...</p>
             </div>
           </div>

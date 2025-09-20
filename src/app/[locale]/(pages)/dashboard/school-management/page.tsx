@@ -287,7 +287,7 @@ const SchoolManagement: React.FC = () => {
                       <h3 className="mb-2 font-semibold text-lg">
                         Target Year
                       </h3>
-                      <p className="font-bold text-blue-600 text-3xl">
+                      <p className="font-bold text-primary text-3xl">
                         {school.deadlineYear}
                       </p>
                       <p className="mt-1 text-gray-600 text-sm">

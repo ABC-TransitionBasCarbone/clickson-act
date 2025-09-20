@@ -358,7 +358,7 @@ const ActionsManager: React.FC = () => {
                       ) as HTMLDialogElement;
                       if (modal) modal.showModal();
                     }}
-                    className="text-blue-600 hover:text-blue-800"
+                    className="text-primary hover:text-blue-800"
                   >
                     <Edit size={16} />
                   </button>

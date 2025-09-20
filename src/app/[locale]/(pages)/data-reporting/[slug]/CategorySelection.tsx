@@ -1,7 +1,5 @@
-import React, { useState } from "react";
+import React from "react";
 import { useTranslations } from "next-intl";
-import { ProcessedEmissionCategory } from "@/hooks/useEmissionCategories";
-import { ProcessedSchoolEmissionCategory } from "@/hooks/useSchoolEmissionData";
 
 // Common interface for what we actually need from categories
 interface CategoryForSelection {
@@ -9,10 +7,14 @@ interface CategoryForSelection {
   name: string;
   description?: string;
   category: string;
+  amount?: number; // Emission amount in kgCO2e
+  percentage?: number; // Percentage of total emissions
   subcategories: {
     id: string;
     name: string;
     description?: string;
+    amount?: number; // Emission amount in kgCO2e
+    percentage?: number; // Percentage of category emissions
   }[];
 }
 
@@ -51,7 +53,30 @@ const CategorySelection: React.FC<CategorySelectionProps> = ({
                 {category.description}
               </p>
             )}
-            <div className="flex items-center mt-3 text-gray-500 text-sm">
+
+            {/* Display emission values if available */}
+            {category.amount !== undefined && category.amount > 0 && (
+              <div className="space-y-1 bg-primary-50 mt-3 p-4 rounded-lg">
+                <div className="flex justify-between items-center">
+                  <span className="text-black text-sm">{t("emissions")}</span>
+                  <span className="font-medium text-sm">
+                    {category.amount.toLocaleString()} kg CO₂e
+                  </span>
+                </div>
+                {category.percentage !== undefined && (
+                  <div className="flex justify-between items-center">
+                    <span className="text-black text-sm">
+                      {t("percentageOfTotal")}
+                    </span>
+                    <span className="font-medium text-primary text-sm">
+                      {category.percentage.toFixed(1)}%
+                    </span>
+                  </div>
+                )}
+              </div>
+            )}
+
+            <div className="flex items-center mt-3 text-black text-xs">
               <span>
                 {category.subcategories.length} {t("subcategoriesAvailable")}
               </span>
