@@ -165,10 +165,10 @@ const ProjectMonitoring: React.FC = () => {
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
         transition={{ duration: 0.5 }}
-        className="container mx-auto px-6 py-8"
+        className="mx-auto px-6 py-8 container"
       >
         <div className="mb-8">
-          <h1 className="text-3xl font-bold">Project Monitoring Dashboard</h1>
+          <h1 className="font-bold text-3xl">Project Monitoring Dashboard</h1>
           <p className="mt-1 text-gray-500">
             Track progress and plan future actions
             {projectData && ` - ${projectData.name}`}
@@ -196,39 +196,33 @@ const ProjectMonitoring: React.FC = () => {
         )}
 
         {loading ? (
-          <div className="flex h-64 items-center justify-center">
+          <div className="flex justify-center items-center h-64">
             <div className="text-center">
-              <div className="mx-auto mb-4 h-8 w-8 animate-spin rounded-full border-4 border-gray-300 border-t-blue-600"></div>
+              <div className="mx-auto mb-4 border-4 border-gray-300 border-t-blue-600 rounded-full w-8 h-8 animate-spin"></div>
               <p className="text-gray-500">Loading project data...</p>
             </div>
           </div>
         ) : error ? (
-          <div className="mb-8 rounded-lg bg-red-50 p-4">
+          <div className="bg-red-50 mb-8 p-4 rounded-lg">
             <p className="text-red-700">Error: {error}</p>
             <button
               onClick={refetch}
-              className="mt-2 rounded bg-red-100 px-3 py-1 text-red-700 hover:bg-red-200"
+              className="bg-red-100 hover:bg-red-200 mt-2 px-3 py-1 rounded text-red-700"
             >
               Retry
             </button>
           </div>
         ) : (
-          <div className="mb-6 grid gap-6 md:grid-cols-2">
+          <div className="gap-6 grid md:grid-cols-2 mb-6">
             <CurrentActions
               currentActions={availableActions}
               onEdit={(action) => handleEditClick(action, "available")}
-              onViewAll={() =>
-                router.push(`/monitoring/${passcode}/available-actions`)
-              }
               onAddAction={handleAddAction}
             />
 
             <CompletedActions
               completedActions={completedActions}
               onEdit={(action) => handleEditClick(action, "completed")}
-              onViewAll={() =>
-                router.push(`/monitoring/${passcode}/completed-actions`)
-              }
             />
           </div>
         )}

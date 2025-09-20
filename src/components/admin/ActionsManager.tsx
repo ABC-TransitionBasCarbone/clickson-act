@@ -36,7 +36,7 @@ const ActionsManager: React.FC = () => {
   const [deleteLoading, setDeleteLoading] = useState<string | null>(null);
   const [newAction, setNewAction] = useState<{
     category: string;
-    type: "Fixed" | "Dynamic";
+    type: "Direct" | "Indirect";
     reduction: number;
     effort: string;
     // Optional extended fields
@@ -45,7 +45,7 @@ const ActionsManager: React.FC = () => {
     translations: { [locale: string]: ActionTranslation };
   }>({
     category: "",
-    type: "Fixed",
+    type: "Direct",
     reduction: 0,
     effort: "Medium",
     subcategory: "",
@@ -189,7 +189,7 @@ const ActionsManager: React.FC = () => {
 
     setNewAction({
       category: "",
-      type: "Fixed",
+      type: "Direct",
       reduction: 0,
       effort: "Medium",
       subcategory: "",
@@ -236,7 +236,7 @@ const ActionsManager: React.FC = () => {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center py-8">
+      <div className="flex justify-center items-center py-8">
         <div className="loading loading-spinner loading-lg"></div>
       </div>
     );
@@ -258,8 +258,8 @@ const ActionsManager: React.FC = () => {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <h2 className="text-2xl font-bold">{t("title")}</h2>
+      <div className="flex justify-between items-center">
+        <h2 className="font-bold text-2xl">{t("title")}</h2>
         <button
           onClick={() => {
             resetNewAction();
@@ -268,7 +268,7 @@ const ActionsManager: React.FC = () => {
             ) as HTMLDialogElement;
             if (modal) modal.showModal();
           }}
-          className="btn btn-primary flex items-center gap-2"
+          className="flex items-center gap-2 btn btn-primary"
         >
           <Plus size={20} />
           {t("addAction")}
@@ -282,13 +282,31 @@ const ActionsManager: React.FC = () => {
             selectedLocale,
             locales,
           );
+
+          // Debug logging for action translation issues
+          if (
+            !translatedAction.title ||
+            translatedAction.title === "Untitled Action"
+          ) {
+            console.log("Action with missing/fallback title:", {
+              actionId: action.id,
+              selectedLocale,
+              availableTranslations: action.translations
+                ? Object.keys(action.translations)
+                : "No translations",
+              translationData: action.translations,
+              resultTitle: translatedAction.title,
+            });
+          }
+
           return (
-            <div key={action.id} className="rounded-lg border p-4">
-              <div className="flex items-center justify-between">
+            <div key={action.id} className="p-4 border rounded-lg">
+              <div className="flex justify-between items-center">
                 <div className="flex-1">
-                  <div className="mb-2 flex items-center gap-2">
-                    <h3 className="text-lg font-semibold">
-                      {translatedAction.title}
+                  <div className="flex items-center gap-2 mb-2">
+                    <h3 className="font-semibold text-lg">
+                      {translatedAction.title ||
+                        `[Action ID: ${action.id.substring(0, 8)}...]`}
                     </h3>
                     <span
                       className={`badge ${
@@ -305,8 +323,8 @@ const ActionsManager: React.FC = () => {
                   <p className="mb-2 text-gray-600">
                     {translatedAction.description}
                   </p>
-                  <div className="flex flex-wrap gap-2 text-sm text-gray-500">
-                    <span className="badge badge-outline">
+                  <div className="flex flex-wrap gap-2 text-gray-500 text-sm">
+                    <span className="badge-outline badge">
                       {(() => {
                         const category = categories.find(
                           (cat) => cat.id === action.category,
@@ -323,7 +341,7 @@ const ActionsManager: React.FC = () => {
                       })()}
                     </span>
                     <span
-                      className={`badge ${action.type === "Fixed" ? "badge-info" : "badge-secondary"}`}
+                      className={`badge ${action.type === "Direct" ? "badge-info" : "badge-secondary"}`}
                     >
                       {action.type}
                     </span>
@@ -363,8 +381,8 @@ const ActionsManager: React.FC = () => {
       </div>
 
       {/* Locale Selector */}
-      <div className="fixed right-4 bottom-4">
-        <div className="dropdown dropdown-top dropdown-end">
+      <div className="right-4 bottom-4 fixed">
+        <div className="dropdown-top dropdown dropdown-end">
           <div
             tabIndex={0}
             role="button"
@@ -374,7 +392,7 @@ const ActionsManager: React.FC = () => {
           </div>
           <ul
             tabIndex={0}
-            className="dropdown-content menu bg-base-100 rounded-box z-[1] w-32 p-2 shadow"
+            className="z-[1] bg-base-100 shadow p-2 rounded-box w-32 dropdown-content menu"
           >
             {locales.map((locale) => (
               <li key={locale}>
@@ -401,11 +419,11 @@ const ActionsManager: React.FC = () => {
           if (modal) modal.close();
         }}
       >
-        <div className="max-h-96 space-y-4 overflow-y-auto">
+        <div className="space-y-4 max-h-96 overflow-y-auto">
           {/* Basic Fields */}
-          <div className="grid grid-cols-2 gap-4">
+          <div className="gap-4 grid grid-cols-2">
             <div>
-              <label className="mb-1 block">{tAction("category")}</label>
+              <label className="block mb-1">{tAction("category")}</label>
               <select
                 value={newAction.category}
                 onChange={(e) => {
@@ -415,7 +433,7 @@ const ActionsManager: React.FC = () => {
                     subcategory: "", // Reset subcategory when category changes
                   });
                 }}
-                className="select select-bordered w-full"
+                className="w-full select-bordered select"
               >
                 <option value="">{tAction("selectCategory")}</option>
                 {categoryOptions.map((cat) => (
@@ -426,13 +444,13 @@ const ActionsManager: React.FC = () => {
               </select>
             </div>
             <div>
-              <label className="mb-1 block">{tAction("subcategory")}</label>
+              <label className="block mb-1">{tAction("subcategory")}</label>
               <select
                 value={newAction.subcategory}
                 onChange={(e) =>
                   setNewAction({ ...newAction, subcategory: e.target.value })
                 }
-                className="select select-bordered w-full"
+                className="w-full select-bordered select"
                 disabled={!newAction.category}
               >
                 <option value="">{tAction("selectSubcategory")}</option>
@@ -455,31 +473,31 @@ const ActionsManager: React.FC = () => {
             </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
+          <div className="gap-4 grid grid-cols-2">
             <div>
-              <label className="mb-1 block">{t("type")}</label>
+              <label className="block mb-1">{t("typeOfImpact")}</label>
               <select
                 value={newAction.type}
                 onChange={(e) =>
                   setNewAction({
                     ...newAction,
-                    type: e.target.value as "Fixed" | "Dynamic",
+                    type: e.target.value as "Direct" | "Indirect",
                   })
                 }
-                className="select select-bordered w-full"
+                className="w-full select-bordered select"
               >
-                <option value="Fixed">{t("typeFixed")}</option>
-                <option value="Dynamic">{t("typeDynamic")}</option>
+                <option value="Direct">{t("typeDirect")}</option>
+                <option value="Indirect">{t("typeIndirect")}</option>
               </select>
             </div>
             <div>
-              <label className="mb-1 block">{tAction("effort")}</label>
+              <label className="block mb-1">{tAction("effort")}</label>
               <select
                 value={newAction.effort}
                 onChange={(e) =>
                   setNewAction({ ...newAction, effort: e.target.value })
                 }
-                className="select select-bordered w-full"
+                className="w-full select-bordered select"
               >
                 {effortOptions.map((effort) => (
                   <option key={effort} value={effort}>
@@ -490,9 +508,9 @@ const ActionsManager: React.FC = () => {
             </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
+          <div className="gap-4 grid grid-cols-2">
             <div>
-              <label className="mb-1 block">
+              <label className="block mb-1">
                 {tAction("estimatedReduction")}
               </label>
               <input
@@ -506,11 +524,11 @@ const ActionsManager: React.FC = () => {
                     reduction: parseFloat(e.target.value) || 0,
                   })
                 }
-                className="input input-bordered w-full"
+                className="input-bordered w-full input"
               />
             </div>
             <div>
-              <label className="mb-1 block">{tAction("timeline")}</label>
+              <label className="block mb-1">{tAction("timeline")}</label>
               <input
                 type="number"
                 min="1"
@@ -522,20 +540,20 @@ const ActionsManager: React.FC = () => {
                     timeline: parseInt(e.target.value) || 1,
                   })
                 }
-                className="input input-bordered w-full"
+                className="input-bordered w-full input"
                 placeholder="Number of years"
               />
             </div>
           </div>
 
           {/* Translation Fields */}
-          <div className="border-t pt-4">
-            <div className="mb-4 flex items-center gap-2">
+          <div className="pt-4 border-t">
+            <div className="flex items-center gap-2 mb-4">
               <Languages size={16} />
               <span className="font-medium">{t("translations")}</span>
             </div>
 
-            <div className="tabs tabs-bordered mb-4">
+            <div className="mb-4 tabs-bordered tabs">
               {locales.map((locale) => (
                 <button
                   key={locale}
@@ -549,7 +567,7 @@ const ActionsManager: React.FC = () => {
 
             <div className="space-y-3">
               <div>
-                <label className="mb-1 block">
+                <label className="block mb-1">
                   {tAction("actionTitle")} ({selectedLocale.toUpperCase()})
                 </label>
                 <input
@@ -562,11 +580,11 @@ const ActionsManager: React.FC = () => {
                       e.target.value,
                     )
                   }
-                  className="input input-bordered w-full"
+                  className="input-bordered w-full input"
                 />
               </div>
               <div>
-                <label className="mb-1 block">
+                <label className="block mb-1">
                   {tAction("description")} ({selectedLocale.toUpperCase()})
                 </label>
                 <textarea
@@ -580,12 +598,12 @@ const ActionsManager: React.FC = () => {
                       e.target.value,
                     )
                   }
-                  className="textarea textarea-bordered w-full"
+                  className="textarea-bordered w-full textarea"
                   rows={3}
                 />
               </div>
               <div>
-                <label className="mb-1 block">
+                <label className="block mb-1">
                   {tAction("objectives")} ({selectedLocale.toUpperCase()})
                 </label>
                 <textarea
@@ -599,12 +617,12 @@ const ActionsManager: React.FC = () => {
                       e.target.value,
                     )
                   }
-                  className="textarea textarea-bordered w-full"
+                  className="textarea-bordered w-full textarea"
                   rows={2}
                 />
               </div>
               <div>
-                <label className="mb-1 block">
+                <label className="block mb-1">
                   {tAction("steps")} ({selectedLocale.toUpperCase()})
                 </label>
                 <textarea
@@ -616,7 +634,7 @@ const ActionsManager: React.FC = () => {
                       e.target.value,
                     )
                   }
-                  className="textarea textarea-bordered w-full"
+                  className="textarea-bordered w-full textarea"
                   rows={3}
                 />
               </div>
@@ -624,7 +642,7 @@ const ActionsManager: React.FC = () => {
           </div>
         </div>
 
-        <div className="mt-6 flex justify-end gap-3">
+        <div className="flex justify-end gap-3 mt-6">
           <button
             type="button"
             className="btn btn-ghost"
@@ -668,11 +686,11 @@ const ActionsManager: React.FC = () => {
             if (modal) modal.close();
           }}
         >
-          <div className="max-h-96 space-y-4 overflow-y-auto">
+          <div className="space-y-4 max-h-96 overflow-y-auto">
             {/* Basic Fields */}
-            <div className="grid grid-cols-2 gap-4">
+            <div className="gap-4 grid grid-cols-2">
               <div>
-                <label className="mb-1 block">{tAction("category")}</label>
+                <label className="block mb-1">{tAction("category")}</label>
                 <select
                   value={editingAction.category}
                   onChange={(e) =>
@@ -682,7 +700,7 @@ const ActionsManager: React.FC = () => {
                       subcategory: "", // Reset subcategory when category changes
                     })
                   }
-                  className="select select-bordered w-full"
+                  className="w-full select-bordered select"
                 >
                   <option value="">{tAction("selectCategory")}</option>
                   {categoryOptions.map((cat) => (
@@ -693,7 +711,7 @@ const ActionsManager: React.FC = () => {
                 </select>
               </div>
               <div>
-                <label className="mb-1 block">{tAction("subcategory")}</label>
+                <label className="block mb-1">{tAction("subcategory")}</label>
                 <select
                   value={editingAction.subcategory || ""}
                   onChange={(e) =>
@@ -702,7 +720,7 @@ const ActionsManager: React.FC = () => {
                       subcategory: e.target.value,
                     })
                   }
-                  className="select select-bordered w-full"
+                  className="w-full select-bordered select"
                   disabled={!editingAction.category}
                 >
                   <option value="">{tAction("selectSubcategory")}</option>
@@ -725,25 +743,25 @@ const ActionsManager: React.FC = () => {
               </div>
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
+            <div className="gap-4 grid grid-cols-2">
               <div>
-                <label className="mb-1 block">{t("type")}</label>
+                <label className="block mb-1">{t("typeOfImpact")}</label>
                 <select
                   value={editingAction.type}
                   onChange={(e) =>
                     setEditingAction({
                       ...editingAction,
-                      type: e.target.value as "Fixed" | "Dynamic",
+                      type: e.target.value as "Direct" | "Indirect",
                     })
                   }
-                  className="select select-bordered w-full"
+                  className="w-full select-bordered select"
                 >
-                  <option value="Fixed">{t("typeFixed")}</option>
-                  <option value="Dynamic">{t("typeDynamic")}</option>
+                  <option value="Direct">{t("typeDirect")}</option>
+                  <option value="Indirect">{t("typeIndirect")}</option>
                 </select>
               </div>
               <div>
-                <label className="mb-1 block">{tAction("effort")}</label>
+                <label className="block mb-1">{tAction("effort")}</label>
                 <select
                   value={editingAction.effort}
                   onChange={(e) =>
@@ -752,7 +770,7 @@ const ActionsManager: React.FC = () => {
                       effort: e.target.value,
                     })
                   }
-                  className="select select-bordered w-full"
+                  className="w-full select-bordered select"
                 >
                   {effortOptions.map((effort) => (
                     <option key={effort} value={effort}>
@@ -763,9 +781,9 @@ const ActionsManager: React.FC = () => {
               </div>
             </div>
 
-            <div className="grid grid-cols-1 gap-4">
+            <div className="gap-4 grid grid-cols-1">
               <div>
-                <label className="mb-1 block">
+                <label className="block mb-1">
                   {tAction("estimatedReduction")}
                 </label>
                 <input
@@ -779,19 +797,19 @@ const ActionsManager: React.FC = () => {
                       reduction: parseFloat(e.target.value) || 0,
                     })
                   }
-                  className="input input-bordered w-full"
+                  className="input-bordered w-full input"
                 />
               </div>
             </div>
 
             {/* Translation Fields */}
-            <div className="border-t pt-4">
-              <div className="mb-4 flex items-center gap-2">
+            <div className="pt-4 border-t">
+              <div className="flex items-center gap-2 mb-4">
                 <Languages size={16} />
                 <span className="font-medium">{t("translations")}</span>
               </div>
 
-              <div className="tabs tabs-bordered mb-4">
+              <div className="mb-4 tabs-bordered tabs">
                 {locales.map((locale) => (
                   <button
                     key={locale}
@@ -805,7 +823,7 @@ const ActionsManager: React.FC = () => {
 
               <div className="space-y-3">
                 <div>
-                  <label className="mb-1 block">
+                  <label className="block mb-1">
                     {tAction("actionTitle")} ({selectedLocale.toUpperCase()})
                   </label>
                   <input
@@ -820,11 +838,11 @@ const ActionsManager: React.FC = () => {
                         e.target.value,
                       )
                     }
-                    className="input input-bordered w-full"
+                    className="input-bordered w-full input"
                   />
                 </div>
                 <div>
-                  <label className="mb-1 block">
+                  <label className="block mb-1">
                     {tAction("description")} ({selectedLocale.toUpperCase()})
                   </label>
                   <textarea
@@ -839,12 +857,12 @@ const ActionsManager: React.FC = () => {
                         e.target.value,
                       )
                     }
-                    className="textarea textarea-bordered w-full"
+                    className="textarea-bordered w-full textarea"
                     rows={3}
                   />
                 </div>
                 <div>
-                  <label className="mb-1 block">
+                  <label className="block mb-1">
                     {tAction("objectives")} ({selectedLocale.toUpperCase()})
                   </label>
                   <textarea
@@ -859,12 +877,12 @@ const ActionsManager: React.FC = () => {
                         e.target.value,
                       )
                     }
-                    className="textarea textarea-bordered w-full"
+                    className="textarea-bordered w-full textarea"
                     rows={2}
                   />
                 </div>
                 <div>
-                  <label className="mb-1 block">
+                  <label className="block mb-1">
                     {tAction("steps")} ({selectedLocale.toUpperCase()})
                   </label>
                   <textarea
@@ -878,7 +896,7 @@ const ActionsManager: React.FC = () => {
                         e.target.value,
                       )
                     }
-                    className="textarea textarea-bordered w-full"
+                    className="textarea-bordered w-full textarea"
                     rows={3}
                   />
                 </div>
@@ -886,7 +904,7 @@ const ActionsManager: React.FC = () => {
             </div>
           </div>
 
-          <div className="mt-6 flex justify-end gap-3">
+          <div className="flex justify-end gap-3 mt-6">
             <button
               type="button"
               className="btn btn-ghost"

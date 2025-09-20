@@ -8,7 +8,7 @@ export interface ActionTranslation {
 export interface TranslatableAction {
   id: string;
   category: string;
-  type: "Fixed" | "Dynamic";
+  type: "Direct" | "Indirect";
   reduction: number;
   effort: string;
   date: string;

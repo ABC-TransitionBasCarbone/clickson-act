@@ -13,7 +13,6 @@ export interface CategoryTranslation {
 // Translatable subcategory interface
 export interface TranslatableSubcategory {
   id: string;
-  SubcategoryTotalPercentage?: number;
   createdAt: string;
   updatedAt?: string;
   // Translatable fields for each locale
@@ -25,7 +24,6 @@ export interface TranslatableSubcategory {
 // Translatable category interface
 export interface TranslatableCategory {
   id: string;
-  totalPercentage?: number;
   subcategories: TranslatableSubcategory[];
   createdAt: string;
   updatedAt?: string;
@@ -40,7 +38,6 @@ export interface EmissionSubcategory {
   id: string;
   name: string;
   description?: string;
-  SubcategoryTotalPercentage?: number;
   createdAt: string;
   updatedAt?: string;
 }
@@ -49,7 +46,6 @@ export interface EmissionCategory {
   id: string;
   name: string;
   description?: string;
-  totalPercentage?: number;
   subcategories: EmissionSubcategory[];
   createdAt: string;
   updatedAt?: string;
@@ -233,7 +229,6 @@ export function migrateCategoryToTranslatable(
 
   return {
     id: legacyCategory.id,
-    totalPercentage: legacyCategory.totalPercentage,
     subcategories: migratedSubcategories,
     createdAt: legacyCategory.createdAt,
     updatedAt: legacyCategory.updatedAt,
@@ -256,7 +251,6 @@ export function migrateSubcategoryToTranslatable(
 
   return {
     id: legacySubcategory.id,
-    SubcategoryTotalPercentage: legacySubcategory.SubcategoryTotalPercentage,
     createdAt: legacySubcategory.createdAt,
     updatedAt: legacySubcategory.updatedAt,
     translations,

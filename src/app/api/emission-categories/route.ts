@@ -126,7 +126,7 @@ export async function POST(req: NextRequest) {
     }
 
     const body = await req.json();
-    const { translations, totalPercentage } = body;
+    const { translations } = body;
 
     // Validate required fields
     const defaultLocale = locales[0]; // Use first locale as default
@@ -184,9 +184,6 @@ export async function POST(req: NextRequest) {
     const categoryId = uuidv4();
     const categoryData: TranslatableCategory = {
       id: categoryId,
-      totalPercentage: totalPercentage
-        ? parseFloat(totalPercentage)
-        : undefined,
       subcategories: [],
       createdAt: new Date().toISOString(),
       translations: sanitizedTranslations,

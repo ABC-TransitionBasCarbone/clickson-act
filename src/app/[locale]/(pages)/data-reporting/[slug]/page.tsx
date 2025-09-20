@@ -2,20 +2,19 @@
 import React, { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { useTranslations } from "next-intl";
-import EmissionsInput from "./EmissionsInput";
 import { useUser } from "@/context/UserContext";
+import { useParams } from "next/navigation";
 import { Action } from "@/types/Action";
 
-import { SubcategoryForm } from "./SubcategoryForm";
-
+import CategorySelection from "./CategorySelection";
+import { SubcategorySelection } from "./SubcategorySelection";
 import { ActionsSection } from "./ActionsSection";
-import { SelectedActionsSummary } from "./SelectedActionsSummary";
 import { AddActionModalWrapper } from "./AddActionModalWrapper";
 
 import {
-  useEmissionCategories,
-  ProcessedEmissionCategory,
-} from "@/hooks/useEmissionCategories";
+  useSchoolEmissionData,
+  ProcessedSchoolEmissionCategory,
+} from "@/hooks/useSchoolEmissionData";
 import { useActions } from "@/hooks/useActions";
 import { useToast } from "@/context/ToastContext";
 
@@ -27,11 +26,18 @@ const StudentCalculator: React.FC = () => {
   const t = useTranslations("StudentCalculator");
   const { user } = useUser();
   const { showToast } = useToast();
+  const params = useParams();
+
+  // Get project ID from URL parameter (slug) or user passcode for students
+  const projectId = (params.slug as string) || user?.passcode || "";
+
+  // Use school emission data instead of global categories
   const {
-    categories: emissionCategories,
+    categories: schoolCategories,
     loading: categoriesLoading,
     error: categoriesError,
-  } = useEmissionCategories();
+    school,
+  } = useSchoolEmissionData(projectId);
 
   const {
     actions: actionTemplates,
@@ -39,91 +45,129 @@ const StudentCalculator: React.FC = () => {
     error: actionsError,
   } = useActions();
 
-  const schoolGoal = 70;
-
-  const [emissions, setEmissions] = useState<ProcessedEmissionCategory[]>([]);
-
+  // State management for the new flow
+  const [currentStep, setCurrentStep] = useState<
+    "category" | "subcategory" | "actions"
+  >("category");
+  const [selectedCategory, setSelectedCategory] =
+    useState<ProcessedSchoolEmissionCategory | null>(null);
+  const [selectedSubcategories, setSelectedSubcategories] = useState<string[]>(
+    [],
+  );
   const [actions, setActions] = useState<CustomAction[]>([]);
-
   const [filteredActions, setFilteredActions] = useState<Action[]>([]);
-  const [activeEmissionCategories, setActiveEmissionCategories] = useState<
-    string[]
-  >([]);
-  const [showSubcategoryForm, setShowSubcategoryForm] = useState(false);
-  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
-  const [subcategoryValues, setSubcategoryValues] = useState<string[]>([]);
-  const [selectedActions, setSelectedActions] = useState<string[]>([]);
   const [addingToMonitoring, setAddingToMonitoring] = useState<Set<string>>(
     new Set(),
   );
 
-  // Function to calculate dynamic reduction for display
-  const calculateDisplayReduction = (action: CustomAction): number => {
-    const actionType = action.type || "Fixed";
+  // Handler functions for the new flow
+  const handleCategorySelect = (categoryId: string) => {
+    const category = schoolCategories.find(
+      (cat) => cat.category === categoryId,
+    );
+    if (category) {
+      setSelectedCategory(category);
+      setSelectedSubcategories([]);
+      setCurrentStep("subcategory");
+    }
+  };
 
-    // For Fixed actions, always return original reduction
-    if (actionType === "Fixed") {
+  const handleSubcategoryToggle = (subcategoryId: string) => {
+    setSelectedSubcategories((prev) =>
+      prev.includes(subcategoryId)
+        ? prev.filter((id) => id !== subcategoryId)
+        : [...prev, subcategoryId],
+    );
+  };
+
+  const handleProceedToActions = () => {
+    if (!selectedCategory || selectedSubcategories.length === 0) return;
+
+    // Filter actions based on selected category
+    const categoryActions = actions.filter(
+      (action) =>
+        action.category === selectedCategory.category || // Database category ID match
+        action.category === selectedCategory.legacyCategory, // Legacy category match
+    );
+
+    console.log(
+      `Found ${categoryActions.length} actions for category "${selectedCategory.name}"`,
+      categoryActions.map((a) => a.title),
+    );
+
+    setFilteredActions(categoryActions);
+    setCurrentStep("actions");
+  };
+
+  const calculateDisplayReduction = (action: CustomAction): number => {
+    const actionType = action.type || "Direct";
+
+    // For Direct actions, always return original reduction
+    if (actionType === "Direct") {
       return action.reduction;
     }
 
-    // For Dynamic actions, check if we have the necessary data
+    // For Indirect actions, use school-specific category and subcategory data
     if (
-      actionType === "Dynamic" &&
+      actionType === "Indirect" &&
       selectedCategory &&
-      subcategoryValues.length > 0 &&
-      subcategoryValues.some((val) => val && val.trim() !== "")
+      selectedSubcategories.length > 0
     ) {
-      const selectedEmission = emissions.find(
-        (e) => e.category === selectedCategory,
+      // New calculation formula: y * b * a = x
+      // where:
+      // y = action reduction percentage (from admin)
+      // a = category percentage of total emissions
+      // b = average subcategory percentage of category emissions
+      // x = total emissions reduction percentage
+
+      const categoryPercentage = selectedCategory.percentage / 100; // Convert to decimal (a)
+
+      // Get selected subcategory percentages and calculate average
+      const selectedSubcategoryData = selectedCategory.subcategories.filter(
+        (sub) => selectedSubcategories.includes(sub.id),
       );
 
-      if (selectedEmission) {
-        // Get user-entered category value
-        const categoryValue = parseFloat(selectedEmission.value) || 0;
+      if (selectedSubcategoryData.length > 0 && selectedCategory.amount > 0) {
+        const avgSubcategoryPercentage =
+          selectedSubcategoryData.reduce(
+            (sum, sub) => sum + sub.percentage,
+            0,
+          ) /
+          selectedSubcategoryData.length /
+          100; // Convert to decimal (b)
 
-        // Calculate total of user-entered subcategory values
-        const filledSubcategoryValues = subcategoryValues
-          .map((val) => {
-            if (val && val.trim() !== "") {
-              return parseFloat(val) || 0;
-            }
-            return 0;
-          })
-          .filter((val) => val > 0);
+        const actionReductionPercentage = action.reduction / 100; // Convert to decimal (y)
 
-        const totalSubcategoryValue = filledSubcategoryValues.reduce(
-          (sum, val) => sum + val,
-          0,
-        );
+        // Formula: x = y * b * a
+        const totalEmissionReduction =
+          actionReductionPercentage *
+          avgSubcategoryPercentage *
+          categoryPercentage;
+        const calculatedValue = totalEmissionReduction * 100; // Convert back to percentage
 
-        // Calculate using the correct formula: action × subcategory_percentage × category_percentage
-        let calculatedValue = action.reduction;
-
-        if (categoryValue > 0 && totalSubcategoryValue > 0) {
-          // Use the actual percentages as decimals directly
-          const subcategoryPercentage = totalSubcategoryValue / 100; // e.g., 80/100 = 0.8 for 80%
-          const categoryPercentage = categoryValue / 100; // e.g., 20/100 = 0.2 for 20%
-
-          calculatedValue =
-            action.reduction * subcategoryPercentage * categoryPercentage;
-        }
-
-        // Debug: Dynamic calculation with user values
         console.log(
-          `Dynamic calculation for "${action.title}" using CORRECT FORMULA:`,
+          `Dynamic calculation for "${action.title}" using formula y*b*a=x:`,
           {
-            originalReduction: action.reduction,
-            categoryValue: categoryValue,
-            subcategoryValues: filledSubcategoryValues,
-            totalSubcategoryValue: totalSubcategoryValue,
-            subcategoryPercentage: totalSubcategoryValue / 100,
-            categoryPercentage: categoryValue / 100,
-            calculatedValue: calculatedValue,
-            formula: `${action.reduction} × (${totalSubcategoryValue}/100) × (${categoryValue}/100) = ${calculatedValue}`,
+            actionReduction_y: action.reduction + "%",
+            categoryPercentage_a: selectedCategory.percentage + "%",
+            avgSubcategoryPercentage_b:
+              (avgSubcategoryPercentage * 100).toFixed(2) + "%",
+            calculatedTotalReduction_x: calculatedValue.toFixed(4) + "%",
+            formula: `${action.reduction}% × ${(avgSubcategoryPercentage * 100).toFixed(2)}% × ${selectedCategory.percentage}% = ${calculatedValue.toFixed(4)}%`,
+            categoryAmount: selectedCategory.amount + " kgCO2e",
+            selectedSubcategories: selectedSubcategoryData.map(
+              (s) =>
+                `${s.name}: ${s.amount} kgCO2e (${s.percentage.toFixed(1)}%)`,
+            ),
           },
         );
 
         return calculatedValue;
+      } else {
+        // Show warning if calculation can't be performed
+        console.warn(
+          `Cannot calculate dynamic reduction for "${action.title}": missing emission amounts. Category amount: ${selectedCategory.amount}, Selected subcategories: ${selectedSubcategoryData.length}`,
+        );
       }
     }
 
@@ -131,14 +175,8 @@ const StudentCalculator: React.FC = () => {
     return action.reduction;
   };
 
-  const totalSelectedReduction = selectedActions.reduce((sum, id) => {
-    const action = actions.find((a) => a.id === id);
-    return sum + (action ? calculateDisplayReduction(action) : 0);
-  }, 0);
-
   // Set actions from the hook when action templates are loaded
   useEffect(() => {
-    // Always set actions, even if empty array
     console.log("Loaded action templates:", actionTemplates.length, "actions");
     // Convert Action[] to CustomAction[] by adding selected property
     const customActions: CustomAction[] = actionTemplates.map((action) => ({
@@ -148,243 +186,37 @@ const StudentCalculator: React.FC = () => {
     setActions(customActions);
   }, [actionTemplates]);
 
-  // Set emissions from the hook when categories are loaded
-  useEffect(() => {
-    if (emissionCategories.length > 0) {
-      // console.log("Loaded emission categories:", emissionCategories.map(cat => ({id: cat.id, name: cat.name, legacyCategory: cat.legacyCategory})));
-      setEmissions(emissionCategories);
-    }
-  }, [emissionCategories]);
-
-  const handleEmissionChange = (idx: number, val: string) => {
-    setEmissions((prev) => {
-      const copy = [...prev];
-      copy[idx].value = val;
-      return copy;
-    });
-  };
-
-  const handleCalculateEmissions = () => {
-    const cats: string[] = [];
-    const legacyCats: string[] = [];
-
-    emissions.forEach((e) => {
-      const n = parseFloat(e.value);
-      if (!isNaN(n) && n > 0) {
-        if (!cats.includes(e.category)) {
-          cats.push(e.category);
-        }
-        // Also collect legacy categories for action filtering
-        if (e.legacyCategory && !legacyCats.includes(e.legacyCategory)) {
-          legacyCats.push(e.legacyCategory);
-        }
-      }
-    });
-
-    setActiveEmissionCategories(cats);
-
-    // Filter actions by both database category IDs and legacy categories
-    const categoryActions = actions.filter(
-      (a) =>
-        cats.includes(a.category) || // Database category ID match
-        legacyCats.includes(a.category), // Legacy category match
-    );
-
-    // Debug: Selected categories and actions
-    console.log("Selected database category IDs:", cats);
-    console.log("Selected legacy categories:", legacyCats);
-    console.log("Available action categories:", [
-      ...new Set(actions.map((a) => a.category)),
-    ]);
-    console.log(
-      `Found ${categoryActions.length} actions for selected categories:`,
-      categoryActions.map((a) => a.title),
-    );
-
-    // If no actions found with category matching, show all actions as fallback
-    if (categoryActions.length === 0) {
-      if (actions.length > 0) {
-        console.log(
-          `No actions found for categories, showing all ${actions.length} actions as fallback`,
-        );
-        setFilteredActions(actions);
-      } else {
-        console.log("No action templates available in database");
-        setFilteredActions([]);
-      }
-    } else {
-      setFilteredActions(categoryActions);
-    }
-    setShowSubcategoryForm(true);
-    setSelectedCategory(null);
-    setSubcategoryValues([]);
-  };
-
-  const handleCalculateSubcategories = () => {
-    if (selectedCategory) {
-      // Find the selected emission category
-      const selectedEmission = emissions.find(
-        (e) => e.category === selectedCategory,
-      );
-      if (selectedEmission) {
-        // Get subcategories that have values entered
-        const filledSubcategories = selectedEmission.subcategories.filter(
-          (_, index) =>
-            subcategoryValues[index] && subcategoryValues[index].trim() !== "",
-        );
-
-        console.log("Selected category ID:", selectedCategory);
-        console.log("Selected emission:", selectedEmission.name);
-        console.log("Legacy category:", selectedEmission.legacyCategory);
-        console.log(
-          "Filled subcategories:",
-          filledSubcategories.map((s) => s.name),
-        );
-
-        if (filledSubcategories.length > 0) {
-          // Show ALL actions for the category, but prioritize those matching subcategories
-          const categoryActions = actions.filter(
-            (a) =>
-              a.category === selectedCategory || // Database category ID match
-              a.category === selectedEmission.legacyCategory, // Legacy category match
-          );
-
-          console.log(
-            `Found ${categoryActions.length} total actions for category "${selectedEmission.name}"`,
-          );
-
-          // Log details about each action for debugging
-          categoryActions.forEach((action) => {
-            const hasSubcategory = (action as Action & { subcategory?: string })
-              .subcategory;
-            console.log(`Action "${action.title}":`, {
-              category: action.category,
-              hasSubcategory,
-              subcategory: (action as Action & { subcategory?: string })
-                .subcategory,
-            });
-          });
-
-          setFilteredActions(categoryActions);
-        } else {
-          // No subcategories filled, show all category actions
-          const categoryActions = actions.filter(
-            (a) =>
-              a.category === selectedCategory || // Database category ID match
-              a.category === selectedEmission.legacyCategory, // Legacy category match
-          );
-          console.log(
-            `No subcategories filled, showing ${categoryActions.length} category actions`,
-          );
-          setFilteredActions(categoryActions);
-        }
-      }
-    }
-  };
-
-  const handleActionSelect = (actionId: string) => {
-    setSelectedActions((prev) =>
-      prev.includes(actionId)
-        ? prev.filter((id) => id !== actionId)
-        : [...prev, actionId],
-    );
-  };
-
   const handleAddToMonitoring = async (actionId: string) => {
-    // Only allow users who are logged in (either with token or passcode)
+    // Allow both students (with passcode) and teachers (without passcode) to add actions
     if (!user || !user.username) {
-      console.warn("Add to monitoring is only available for logged-in users");
+      console.warn("User must be logged in to add actions to monitoring");
       return;
     }
 
-    // Check if we have a project context (for students with passcode)
-    const projectId = user.passcode;
-    if (!projectId) {
-      console.warn("No project context found for adding to monitoring");
-      return;
-    }
-
-    // Require subcategory selection
-    if (
-      !selectedCategory ||
-      subcategoryValues.length === 0 ||
-      subcategoryValues.every((val) => !val || val.trim() === "")
-    ) {
+    // Require category and subcategory selection
+    if (!selectedCategory || selectedSubcategories.length === 0) {
       showToast(
         "warning",
-        "Subcategory Required",
-        "Please select a category and enter subcategory data before adding actions to monitoring.",
+        "Selection Required",
+        "Please select a category and at least one subcategory before adding actions to monitoring.",
         5000,
       );
       return;
     }
 
-    // Find the action and selected emission category
+    // Find the action
     const action = actions.find((a) => a.id === actionId);
-    const selectedEmission = emissions.find(
-      (e) => e.category === selectedCategory,
-    );
-
-    if (!action || !selectedEmission) {
-      console.error("Action or emission category not found");
+    if (!action) {
+      console.error("Action not found");
       return;
     }
 
-    // Calculate the emission reduction based on action type
-    let calculatedReduction = action.reduction;
-
-    // Check if action has type field (from action template)
-    const actionType = action.type || "Fixed"; // Default to Fixed if not specified
-
-    if (actionType === "Dynamic") {
-      // Dynamic calculation using USER-ENTERED VALUES
-      // Get user-entered category value
-      const categoryValue = parseFloat(selectedEmission.value) || 0;
-
-      // Calculate total of user-entered subcategory values
-      const filledSubcategoryValues = subcategoryValues
-        .map((val) => {
-          if (val && val.trim() !== "") {
-            return parseFloat(val) || 0;
-          }
-          return 0;
-        })
-        .filter((val) => val > 0);
-
-      const totalSubcategoryValue = filledSubcategoryValues.reduce(
-        (sum, val) => sum + val,
-        0,
-      );
-
-      // Calculate using the correct formula: action × subcategory_percentage × category_percentage
-      if (categoryValue > 0 && totalSubcategoryValue > 0) {
-        // Use the actual percentages as decimals directly
-        const subcategoryPercentage = totalSubcategoryValue / 100; // e.g., 80/100 = 0.8 for 80%
-        const categoryPercentage = categoryValue / 100; // e.g., 20/100 = 0.2 for 20%
-
-        calculatedReduction =
-          action.reduction * subcategoryPercentage * categoryPercentage;
-      }
-
-      console.log(
-        `handleAddToMonitoring calculation for action "${action.title}" using CORRECT FORMULA:`,
-        {
-          originalReduction: action.reduction,
-          categoryValue: categoryValue,
-          subcategoryValues: filledSubcategoryValues,
-          totalSubcategoryValue: totalSubcategoryValue,
-          subcategoryPercentage: totalSubcategoryValue / 100,
-          categoryPercentage: categoryValue / 100,
-          calculatedReduction: calculatedReduction,
-          formula: `${action.reduction} × (${totalSubcategoryValue}/100) × (${categoryValue}/100) = ${calculatedReduction}`,
-        },
-      );
-    } else {
-      console.log(
-        `Fixed reduction for action "${action.title}":`,
-        calculatedReduction,
-      );
-    }
+    // Calculate the emission reduction using school data
+    const calculatedReduction = calculateDisplayReduction({
+      ...action,
+      selected: false,
+    });
+    const actionType = action.type || "Direct";
 
     try {
       setAddingToMonitoring((prev) => new Set(prev).add(actionId));
@@ -398,58 +230,59 @@ const StudentCalculator: React.FC = () => {
           actionIds: [actionId],
           studentName: user.username,
           studentId: user.studentId,
-          calculatedReduction: Math.round(calculatedReduction * 100) / 100, // Round to 2 decimal places
+          calculatedReduction: Math.round(calculatedReduction * 100) / 100,
           actionType,
           categoryData: {
-            categoryId: selectedCategory,
-            categoryName: selectedEmission.name,
-            categoryPercentage: selectedEmission.totalPercentage,
-            subcategoryData: selectedEmission.subcategories
-              .filter(
-                (_, index) =>
-                  subcategoryValues[index] &&
-                  subcategoryValues[index].trim() !== "",
-              )
-              .map((sub) => ({
-                id: sub.id,
-                name: sub.name,
-                value:
-                  subcategoryValues[
-                    selectedEmission.subcategories.indexOf(sub)
-                  ],
-                percentage: sub.SubcategoryTotalPercentage,
-              })),
+            categoryId: selectedCategory.category,
+            categoryName: selectedCategory.name,
+            subcategoryData: selectedSubcategories
+              .map((subId) => {
+                const subcategory = selectedCategory.subcategories.find(
+                  (sub) => sub.id === subId,
+                );
+                return subcategory
+                  ? {
+                      subcategoryId: subcategory.id,
+                      subcategoryName: subcategory.name,
+                      value: subcategory.amount.toString(),
+                    }
+                  : null;
+              })
+              .filter(Boolean),
           },
+          // For teachers, mark as approved directly since they don't need approval
+          isTeacherAction: !user.passcode,
         }),
       });
 
       if (!response.ok) {
         const errorData = await response.json();
         throw new Error(
-          errorData.error || "Failed to add action to monitoring",
+          errorData.error || "Failed to submit action for approval",
         );
       }
 
       const result = await response.json();
-      console.log("Successfully added action to monitoring:", result);
+      console.log("Successfully submitted action for approval:", result);
 
       // Show success toast notification
-      const actionTitle =
-        actions.find((a) => a.id === actionId)?.title || "Action";
+      const isTeacher = !user.passcode;
       showToast(
         "success",
-        "Action Added Successfully!",
-        `"${actionTitle}" has been added to your monitoring screen.`,
+        isTeacher ? "Action Added!" : "Action Submitted!",
+        isTeacher
+          ? `"${action.title}" has been added to monitoring.`
+          : `"${action.title}" has been submitted for teacher approval.`,
         4000,
       );
     } catch (error) {
-      console.error("Error adding action to monitoring:", error);
+      console.error("Error submitting action:", error);
       const errorMessage =
         error instanceof Error ? error.message : "Unknown error";
       showToast(
         "error",
-        "Failed to Add Action",
-        `Could not add action to monitoring: ${errorMessage}`,
+        "Failed to Submit Action",
+        `Could not submit action for approval: ${errorMessage}`,
         6000,
       );
     } finally {
@@ -468,38 +301,39 @@ const StudentCalculator: React.FC = () => {
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
         transition={{ duration: 0.5 }}
-        className="container mx-auto px-6 py-8"
+        className="mx-auto px-6 py-8 container"
       >
         <div className="mx-auto max-w-3xl">
           <div className="mb-8 text-center">
-            <h1 className="mb-2 text-3xl font-bold">{t("title")}</h1>
+            <h1 className="mb-2 font-bold text-3xl">{t("title")}</h1>
             <p className="text-gray-400">
               {t("hello")} {user?.username}, {t("subtitle")}
             </p>
+            {school && (
+              <p className="mt-2 text-gray-500 text-sm">
+                School: {school.name} | Goal: {school.goal}% by{" "}
+                {school.deadlineYear}
+              </p>
+            )}
           </div>
 
+          {/* Loading State */}
           {categoriesLoading || actionsLoading ? (
-            <div className="card mb-8">
-              <h3 className="text-2xl font-bold">
-                {t("currentEmissionsTitle")}
-              </h3>
-              <div className="flex items-center justify-center py-8">
+            <div className="mb-8 card">
+              <div className="flex justify-center items-center py-8">
                 <div className="loading loading-spinner loading-lg"></div>
                 <span className="ml-2">
                   {categoriesLoading && actionsLoading
-                    ? "Loading categories and actions..."
+                    ? "Loading school data and actions..."
                     : categoriesLoading
-                      ? t("loadingCategories") ||
-                        "Loading emission categories..."
+                      ? "Loading school emission data..."
                       : "Loading action templates..."}
                 </span>
               </div>
             </div>
           ) : categoriesError || actionsError ? (
-            <div className="card mb-8">
-              <h3 className="text-2xl font-bold">
-                {t("currentEmissionsTitle")}
-              </h3>
+            /* Error State */
+            <div className="mb-8 card">
               <div className="alert alert-error">
                 <span>
                   {categoriesError ||
@@ -509,95 +343,92 @@ const StudentCalculator: React.FC = () => {
               </div>
             </div>
           ) : (
-            <EmissionsInput
-              emissions={emissions}
-              setEmissions={handleEmissionChange}
-              handleCalculateEmissions={handleCalculateEmissions}
-            />
-          )}
-
-          {showSubcategoryForm && (
-            <SubcategoryForm
-              emissions={emissions}
-              activeEmissionCategories={activeEmissionCategories}
-              selectedCategory={selectedCategory}
-              subcategoryValues={subcategoryValues}
-              onSelectCategory={(cat) => {
-                setSelectedCategory(cat);
-                // Initialize subcategory values based on the selected category's subcategories
-                const selectedEmission = emissions.find(
-                  (e) => e.category === cat,
-                );
-                if (selectedEmission) {
-                  setSubcategoryValues(
-                    new Array(selectedEmission.subcategories.length).fill(""),
-                  );
-
-                  // Show actions for the selected category immediately
-                  // Filter actions by both database category ID and legacy category
-                  const categoryActions = actions.filter(
-                    (a) =>
-                      a.category === cat || // Database category ID match
-                      a.category === selectedEmission.legacyCategory, // Legacy category match
-                  );
-                  console.log(
-                    `Category "${selectedEmission.name}" selected, showing ${categoryActions.length} actions`,
-                  );
-                  console.log(
-                    "Action categories found:",
-                    categoryActions.map((a) => a.category),
-                  );
-                  setFilteredActions(categoryActions);
-                }
-              }}
-              onSubcategoryChange={(i, v) => {
-                const copy = [...subcategoryValues];
-                copy[i] = v;
-                setSubcategoryValues(copy);
-              }}
-              onCalculate={handleCalculateSubcategories}
-              t={t}
-            />
-          )}
-
-          {showSubcategoryForm && (
+            /* Main Content based on current step */
             <>
-              {/* Debug: Rendering ActionsSection */}
-              <ActionsSection
-                filteredActions={filteredActions}
-                schoolGoal={schoolGoal}
-                selectedActions={selectedActions}
-                onActionSelect={handleActionSelect}
-                onAddActionClick={() =>
-                  (
-                    document.getElementById(
-                      "custom_action",
-                    ) as HTMLDialogElement
-                  )?.showModal()
-                }
-                showAddButton={!!user && !user.passcode} // Show custom action button for teachers/admins
-                onAddToMonitoring={handleAddToMonitoring}
-                showMonitoringButton={!!user && !!user.passcode} // Show monitoring button for students with passcode
-                addingToMonitoring={addingToMonitoring}
-                calculateDisplayReduction={(action: Action) => {
-                  // Convert Action to CustomAction for the calculation
-                  const customAction: CustomAction = {
-                    ...action,
-                    selected: selectedActions.includes(action.id),
-                  };
-                  return calculateDisplayReduction(customAction);
-                }}
-                t={t}
-              />
-            </>
-          )}
+              {/* Validation Message */}
+              {schoolCategories.length > 0 &&
+                schoolCategories.every((cat) => cat.amount === 0) && (
+                  <div className="bg-amber-50 mb-6 p-4 border border-amber-200 rounded-lg">
+                    <h3 className="mb-2 font-semibold text-amber-800">
+                      Emission Data Required
+                    </h3>
+                    <p className="text-amber-700 text-sm">
+                      Your teacher needs to set up emission amounts for your
+                      school before you can calculate action impacts. You can
+                      still select categories and actions, but precise
+                      calculations won&apos;t be available until emission data
+                      is provided.
+                    </p>
+                  </div>
+                )}
 
-          {selectedActions.length > 0 && (
-            <SelectedActionsSummary
-              selectedActionsCount={selectedActions.length}
-              totalReductionPercent={totalSelectedReduction}
-              t={t}
-            />
+              {currentStep === "category" && (
+                <CategorySelection
+                  categories={schoolCategories}
+                  onCategorySelect={handleCategorySelect}
+                  selectedCategory={selectedCategory?.category || null}
+                />
+              )}
+
+              {currentStep === "subcategory" && selectedCategory && (
+                <SubcategorySelection
+                  category={selectedCategory}
+                  selectedSubcategories={selectedSubcategories}
+                  onSubcategoryToggle={handleSubcategoryToggle}
+                  onProceed={handleProceedToActions}
+                  t={t}
+                />
+              )}
+
+              {currentStep === "actions" && selectedCategory && (
+                <>
+                  {/* Breadcrumb */}
+                  <div className="flex items-center space-x-2 mb-6 text-gray-600 text-sm">
+                    <button
+                      onClick={() => setCurrentStep("category")}
+                      className="hover:text-blue-600"
+                    >
+                      Categories
+                    </button>
+                    <span>/</span>
+                    <button
+                      onClick={() => setCurrentStep("subcategory")}
+                      className="hover:text-blue-600"
+                    >
+                      {selectedCategory.name}
+                    </button>
+                    <span>/</span>
+                    <span className="text-gray-900">Actions</span>
+                  </div>
+
+                  <ActionsSection
+                    filteredActions={filteredActions}
+                    schoolGoal={school?.goal || 50}
+                    selectedActions={[]} // Remove selection feature for new flow
+                    onActionSelect={() => {}} // No action selection in new flow
+                    onAddActionClick={() =>
+                      (
+                        document.getElementById(
+                          "custom_action",
+                        ) as HTMLDialogElement
+                      )?.showModal()
+                    }
+                    showAddButton={!!user} // Show custom action button for both teachers and students
+                    onAddToMonitoring={handleAddToMonitoring}
+                    showMonitoringButton={!!user} // Show monitoring button for both teachers and students
+                    addingToMonitoring={addingToMonitoring}
+                    calculateDisplayReduction={(action: Action) => {
+                      const customAction: CustomAction = {
+                        ...action,
+                        selected: false,
+                      };
+                      return calculateDisplayReduction(customAction);
+                    }}
+                    t={t}
+                  />
+                </>
+              )}
+            </>
           )}
         </div>
       </motion.div>

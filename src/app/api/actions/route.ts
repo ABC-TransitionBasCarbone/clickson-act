@@ -51,10 +51,50 @@ export async function GET(req: NextRequest) {
     const actionsSnapshot = await adminDb
       .collection("admin-action-templates")
       .get();
-    const actions = actionsSnapshot.docs.map((doc) => ({
-      id: doc.id,
-      ...doc.data(),
-    })) as TranslatableAction[];
+    const actions = actionsSnapshot.docs.map((doc) => {
+      const data = doc.data();
+      const actionData = {
+        id: doc.id,
+        ...data,
+      } as TranslatableAction;
+
+      // Ensure translations exist and have proper structure
+      if (
+        !actionData.translations ||
+        typeof actionData.translations !== "object"
+      ) {
+        console.warn(
+          `Action ${doc.id} has missing or invalid translations, creating fallback`,
+        );
+        actionData.translations = {
+          en: {
+            title: data.title || "Untitled Action",
+            description: data.description || "",
+            objectives: data.objectives || "",
+            steps: data.steps || "",
+          },
+        };
+      }
+
+      // Ensure each translation has required fields
+      Object.keys(actionData.translations).forEach((locale) => {
+        const translation = actionData.translations[locale];
+        if (!translation.title) {
+          translation.title = data.title || "Untitled Action";
+        }
+        if (!translation.description) {
+          translation.description = data.description || "";
+        }
+        if (!translation.objectives) {
+          translation.objectives = data.objectives || "";
+        }
+        if (!translation.steps) {
+          translation.steps = data.steps || "";
+        }
+      });
+
+      return actionData;
+    });
 
     return NextResponse.json({ success: true, actions });
   } catch (error) {
@@ -130,9 +170,9 @@ export async function POST(req: NextRequest) {
     }
 
     // Validate type
-    if (!["Fixed", "Dynamic"].includes(actionData.type)) {
+    if (!["Direct", "Indirect"].includes(actionData.type)) {
       return NextResponse.json(
-        { success: false, error: "Type must be either 'Fixed' or 'Dynamic'" },
+        { success: false, error: "Type must be either 'Direct' or 'Indirect'" },
         { status: 400 },
       );
     }

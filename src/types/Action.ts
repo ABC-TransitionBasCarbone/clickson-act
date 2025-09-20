@@ -15,6 +15,6 @@ export interface Action {
   monitoring: string;
   performance: string;
   date: string;
-  type?: "Fixed" | "Dynamic"; // Type from action template
+  type?: "Direct" | "Indirect"; // Type of impact from action template
   timeline?: number; // Number of years the action will take place
 }

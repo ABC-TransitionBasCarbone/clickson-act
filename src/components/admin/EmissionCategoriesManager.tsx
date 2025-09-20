@@ -47,17 +47,13 @@ const EmissionCategoriesManager: React.FC = () => {
   const [selectedCategoryId, setSelectedCategoryId] = useState<string>("");
   const [selectedLocale, setSelectedLocale] = useState<string>(locales[0]);
   const [newCategory, setNewCategory] = useState<{
-    totalPercentage: number;
     translations: { [locale: string]: CategoryTranslation };
   }>({
-    totalPercentage: 0,
     translations: {},
   });
   const [newSubcategory, setNewSubcategory] = useState<{
-    SubcategoryTotalPercentage: number;
     translations: { [locale: string]: SubcategoryTranslation };
   }>({
-    SubcategoryTotalPercentage: 0,
     translations: {},
   });
   const [validationError, setValidationError] = useState<string>("");
@@ -188,7 +184,6 @@ const EmissionCategoriesManager: React.FC = () => {
               "translations" in editingCategory
                 ? editingCategory.translations
                 : undefined,
-            totalPercentage: editingCategory.totalPercentage,
           }),
         },
       );
@@ -297,8 +292,6 @@ const EmissionCategoriesManager: React.FC = () => {
               "translations" in editingSubcategory.subcategory
                 ? editingSubcategory.subcategory.translations
                 : undefined,
-            SubcategoryTotalPercentage:
-              editingSubcategory.subcategory.SubcategoryTotalPercentage,
           }),
         },
       );
@@ -388,7 +381,6 @@ const EmissionCategoriesManager: React.FC = () => {
   const resetNewCategory = () => {
     const initialTranslations = createEmptyCategoryTranslations(locales);
     setNewCategory({
-      totalPercentage: 0,
       translations: initialTranslations,
     });
   };
@@ -396,7 +388,6 @@ const EmissionCategoriesManager: React.FC = () => {
   const resetNewSubcategory = () => {
     const initialTranslations = createEmptySubcategoryTranslations(locales);
     setNewSubcategory({
-      SubcategoryTotalPercentage: 0,
       translations: initialTranslations,
     });
   };
@@ -488,7 +479,7 @@ const EmissionCategoriesManager: React.FC = () => {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center py-8">
+      <div className="flex justify-center items-center py-8">
         <div className="loading loading-spinner loading-lg"></div>
       </div>
     );
@@ -496,8 +487,8 @@ const EmissionCategoriesManager: React.FC = () => {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <h2 className="text-2xl font-bold">{t("title")}</h2>
+      <div className="flex justify-between items-center">
+        <h2 className="font-bold text-2xl">{t("title")}</h2>
         <button
           onClick={() => {
             setValidationError("");
@@ -506,7 +497,7 @@ const EmissionCategoriesManager: React.FC = () => {
             ) as HTMLDialogElement;
             if (modal) modal.showModal();
           }}
-          className="btn btn-primary flex items-center gap-2"
+          className="flex items-center gap-2 btn btn-primary"
         >
           <Plus size={20} />
           {t("addCategory")}
@@ -515,7 +506,7 @@ const EmissionCategoriesManager: React.FC = () => {
 
       <div className="space-y-4">
         {categories.length === 0 ? (
-          <div className="py-8 text-center text-gray-500">
+          <div className="py-8 text-gray-500 text-center">
             {t("noCategories")}
           </div>
         ) : (
@@ -526,8 +517,8 @@ const EmissionCategoriesManager: React.FC = () => {
               locales,
             );
             return (
-              <div key={category.id} className="rounded-lg border p-4">
-                <div className="flex items-center justify-between">
+              <div key={category.id} className="p-4 border rounded-lg">
+                <div className="flex justify-between items-center">
                   <div className="flex items-center gap-2">
                     <button
                       onClick={() => toggleCategoryExpansion(category.id)}
@@ -539,10 +530,10 @@ const EmissionCategoriesManager: React.FC = () => {
                         <ChevronRight size={16} />
                       )}
                     </button>
-                    <h3 className="text-lg font-semibold">
+                    <h3 className="font-semibold text-lg">
                       {translatedCategory.name}
                     </h3>
-                    <span className="text-sm text-gray-500">
+                    <span className="text-gray-500 text-sm">
                       ({category.subcategories?.length || 0}{" "}
                       {t("subcategories")})
                     </span>
@@ -563,7 +554,7 @@ const EmissionCategoriesManager: React.FC = () => {
                     </button>
                     <button
                       onClick={() => handleDeleteCategory(category.id)}
-                      className="cursor-pointer text-red-600 hover:text-red-800"
+                      className="text-red-600 hover:text-red-800 cursor-pointer"
                     >
                       <Trash2 size={16} />
                     </button>
@@ -575,15 +566,10 @@ const EmissionCategoriesManager: React.FC = () => {
                     {translatedCategory.description}
                   </p>
                 )}
-                {category.totalPercentage !== undefined && (
-                  <p className="mt-1 ml-6 text-sm text-blue-600">
-                    {t("totalPercentage")}: {category.totalPercentage}%
-                  </p>
-                )}
 
                 {expandedCategories.has(category.id) && (
-                  <div className="mt-4 ml-6 space-y-2">
-                    <div className="flex items-center justify-between">
+                  <div className="space-y-2 mt-4 ml-6">
+                    <div className="flex justify-between items-center">
                       <h4 className="font-medium">Subcategories</h4>
                       <button
                         onClick={() => {
@@ -594,7 +580,7 @@ const EmissionCategoriesManager: React.FC = () => {
                           ) as HTMLDialogElement;
                           if (modal) modal.showModal();
                         }}
-                        className="btn btn-sm btn-outline flex items-center gap-1"
+                        className="flex items-center gap-1 btn-outline btn btn-sm"
                       >
                         <Plus size={14} />
                         {t("addSubcategory")}
@@ -604,7 +590,7 @@ const EmissionCategoriesManager: React.FC = () => {
                     <div className="space-y-2">
                       {!category.subcategories ||
                       category.subcategories.length === 0 ? (
-                        <div className="py-4 text-center text-sm text-gray-500">
+                        <div className="py-4 text-gray-500 text-sm text-center">
                           {t("noSubcategories")}
                         </div>
                       ) : (
@@ -618,22 +604,15 @@ const EmissionCategoriesManager: React.FC = () => {
                           return (
                             <div
                               key={subcategory.id}
-                              className="flex items-center justify-between rounded bg-gray-50 p-2"
+                              className="flex justify-between items-center bg-gray-50 p-2 rounded"
                             >
                               <div>
                                 <span className="font-medium">
                                   {translatedSubcategory.name}
                                 </span>
                                 {translatedSubcategory.description && (
-                                  <p className="text-sm text-gray-600">
+                                  <p className="text-gray-600 text-sm">
                                     {translatedSubcategory.description}
-                                  </p>
-                                )}
-                                {subcategory.SubcategoryTotalPercentage !==
-                                  undefined && (
-                                  <p className="text-sm text-green-600">
-                                    {t("subcategoryPercentage")}:{" "}
-                                    {subcategory.SubcategoryTotalPercentage}%
                                   </p>
                                 )}
                               </div>
@@ -661,7 +640,7 @@ const EmissionCategoriesManager: React.FC = () => {
                                       subcategory.id,
                                     )
                                   }
-                                  className="cursor-pointer text-red-600 hover:text-red-800"
+                                  className="text-red-600 hover:text-red-800 cursor-pointer"
                                 >
                                   <Trash2 size={14} />
                                 </button>
@@ -680,8 +659,8 @@ const EmissionCategoriesManager: React.FC = () => {
       </div>
 
       {/* Locale Selector (fixed bottom right) */}
-      <div className="fixed right-4 bottom-4">
-        <div className="dropdown dropdown-top dropdown-end">
+      <div className="right-4 bottom-4 fixed">
+        <div className="dropdown-top dropdown dropdown-end">
           <div
             tabIndex={0}
             role="button"
@@ -691,7 +670,7 @@ const EmissionCategoriesManager: React.FC = () => {
           </div>
           <ul
             tabIndex={0}
-            className="dropdown-content menu bg-base-100 rounded-box z-[1] w-32 p-2 shadow"
+            className="z-[1] bg-base-100 shadow p-2 rounded-box w-32 dropdown-content menu"
           >
             {locales.map((locale) => (
               <li key={locale}>
@@ -718,35 +697,15 @@ const EmissionCategoriesManager: React.FC = () => {
           if (modal) modal.close();
         }}
       >
-        <div className="max-h-96 space-y-4 overflow-y-auto">
-          {/* Basic Fields */}
-          <div className="mb-4">
-            <label className="mb-1 block">{t("totalPercentage")}</label>
-            <input
-              type="number"
-              step="0.01"
-              min="0"
-              max="100"
-              value={newCategory.totalPercentage}
-              onChange={(e) =>
-                setNewCategory({
-                  ...newCategory,
-                  totalPercentage: parseFloat(e.target.value) || 0,
-                })
-              }
-              className="input input-bordered w-full"
-              placeholder="0-100"
-            />
-          </div>
-
+        <div className="space-y-4 max-h-96 overflow-y-auto">
           {/* Translation Fields */}
-          <div className="border-t pt-4">
-            <div className="mb-4 flex items-center gap-2">
+          <div className="pt-4">
+            <div className="flex items-center gap-2 mb-4">
               <Languages size={16} />
               <span className="font-medium">{t("translations")}</span>
             </div>
 
-            <div className="tabs tabs-bordered mb-4">
+            <div className="mb-4 tabs-bordered tabs">
               {locales.map((locale) => (
                 <button
                   key={locale}
@@ -760,7 +719,7 @@ const EmissionCategoriesManager: React.FC = () => {
 
             <div className="space-y-3">
               <div>
-                <label className="mb-1 block">
+                <label className="block mb-1">
                   {t("categoryName")} ({selectedLocale.toUpperCase()})
                 </label>
                 <input
@@ -773,12 +732,12 @@ const EmissionCategoriesManager: React.FC = () => {
                       e.target.value,
                     )
                   }
-                  className="input input-bordered w-full"
+                  className="input-bordered w-full input"
                   placeholder={`${t("categoryName")} in ${selectedLocale.toUpperCase()}`}
                 />
               </div>
               <div>
-                <label className="mb-1 block">
+                <label className="block mb-1">
                   {t("categoryDescription")} ({selectedLocale.toUpperCase()})
                 </label>
                 <textarea
@@ -792,7 +751,7 @@ const EmissionCategoriesManager: React.FC = () => {
                       e.target.value,
                     )
                   }
-                  className="textarea textarea-bordered w-full"
+                  className="textarea-bordered w-full textarea"
                   placeholder={`${t("categoryDescription")} in ${selectedLocale.toUpperCase()}`}
                   rows={3}
                 />
@@ -808,7 +767,7 @@ const EmissionCategoriesManager: React.FC = () => {
           )}
         </div>
 
-        <div className="mt-6 flex justify-end gap-3">
+        <div className="flex justify-end gap-3 mt-6">
           <button
             type="button"
             className="btn btn-ghost"
@@ -851,40 +810,16 @@ const EmissionCategoriesManager: React.FC = () => {
             setValidationError("");
           }}
         >
-          <div className="max-h-96 space-y-4 overflow-y-auto">
-            {/* Basic Fields */}
-            <div className="mb-4">
-              <label className="mb-1 block">{t("totalPercentage")}</label>
-              <input
-                type="number"
-                step="0.01"
-                min="0"
-                max="100"
-                value={editingCategory?.totalPercentage || 0}
-                onChange={(e) =>
-                  setEditingCategory(
-                    editingCategory
-                      ? {
-                          ...editingCategory,
-                          totalPercentage: parseFloat(e.target.value) || 0,
-                        }
-                      : null,
-                  )
-                }
-                className="input input-bordered w-full"
-                placeholder="0-100"
-              />
-            </div>
-
+          <div className="space-y-4 max-h-96 overflow-y-auto">
             {/* Translation Fields - Only show if category has translations */}
             {"translations" in editingCategory && (
-              <div className="border-t pt-4">
-                <div className="mb-4 flex items-center gap-2">
+              <div className="pt-4">
+                <div className="flex items-center gap-2 mb-4">
                   <Languages size={16} />
                   <span className="font-medium">{t("translations")}</span>
                 </div>
 
-                <div className="tabs tabs-bordered mb-4">
+                <div className="mb-4 tabs-bordered tabs">
                   {locales.map((locale) => (
                     <button
                       key={locale}
@@ -898,7 +833,7 @@ const EmissionCategoriesManager: React.FC = () => {
 
                 <div className="space-y-3">
                   <div>
-                    <label className="mb-1 block">
+                    <label className="block mb-1">
                       {t("categoryName")} ({selectedLocale.toUpperCase()})
                     </label>
                     <input
@@ -913,12 +848,12 @@ const EmissionCategoriesManager: React.FC = () => {
                           e.target.value,
                         )
                       }
-                      className="input input-bordered w-full"
+                      className="input-bordered w-full input"
                       placeholder={`${t("categoryName")} in ${selectedLocale.toUpperCase()}`}
                     />
                   </div>
                   <div>
-                    <label className="mb-1 block">
+                    <label className="block mb-1">
                       {t("categoryDescription")} ({selectedLocale.toUpperCase()}
                       )
                     </label>
@@ -934,7 +869,7 @@ const EmissionCategoriesManager: React.FC = () => {
                           e.target.value,
                         )
                       }
-                      className="textarea textarea-bordered w-full"
+                      className="textarea-bordered w-full textarea"
                       placeholder={`${t("categoryDescription")} in ${selectedLocale.toUpperCase()}`}
                       rows={3}
                     />
@@ -945,8 +880,8 @@ const EmissionCategoriesManager: React.FC = () => {
 
             {/* Legacy category without translations */}
             {"name" in editingCategory && (
-              <div className="border-t pt-4">
-                <div className="alert alert-info mb-4">
+              <div className="pt-4">
+                <div className="mb-4 alert alert-info">
                   <span>
                     This is a legacy category. Edit will convert it to use
                     translations.
@@ -954,7 +889,7 @@ const EmissionCategoriesManager: React.FC = () => {
                 </div>
                 <div className="space-y-3">
                   <div>
-                    <label className="mb-1 block">Category Name</label>
+                    <label className="block mb-1">Category Name</label>
                     <input
                       type="text"
                       value={(editingCategory as EmissionCategory).name || ""}
@@ -965,12 +900,12 @@ const EmissionCategoriesManager: React.FC = () => {
                             : null,
                         )
                       }
-                      className="input input-bordered w-full"
+                      className="input-bordered w-full input"
                       placeholder="Enter category name"
                     />
                   </div>
                   <div>
-                    <label className="mb-1 block">Description</label>
+                    <label className="block mb-1">Description</label>
                     <textarea
                       value={
                         (editingCategory as EmissionCategory).description || ""
@@ -985,7 +920,7 @@ const EmissionCategoriesManager: React.FC = () => {
                             : null,
                         )
                       }
-                      className="textarea textarea-bordered w-full"
+                      className="textarea-bordered w-full textarea"
                       placeholder="Enter description"
                       rows={3}
                     />
@@ -1002,7 +937,7 @@ const EmissionCategoriesManager: React.FC = () => {
             )}
           </div>
 
-          <div className="mt-6 flex justify-end gap-3">
+          <div className="flex justify-end gap-3 mt-6">
             <button
               type="button"
               className="btn btn-ghost"
@@ -1043,35 +978,15 @@ const EmissionCategoriesManager: React.FC = () => {
           setValidationError("");
         }}
       >
-        <div className="max-h-96 space-y-4 overflow-y-auto">
-          {/* Basic Fields */}
-          <div className="mb-4">
-            <label className="mb-1 block">{t("subcategoryPercentage")}</label>
-            <input
-              type="number"
-              step="0.01"
-              min="0"
-              max="100"
-              value={newSubcategory.SubcategoryTotalPercentage}
-              onChange={(e) =>
-                setNewSubcategory({
-                  ...newSubcategory,
-                  SubcategoryTotalPercentage: parseFloat(e.target.value) || 0,
-                })
-              }
-              className="input input-bordered w-full"
-              placeholder="0-100"
-            />
-          </div>
-
+        <div className="space-y-4 max-h-96 overflow-y-auto">
           {/* Translation Fields */}
-          <div className="border-t pt-4">
-            <div className="mb-4 flex items-center gap-2">
+          <div className="pt-4">
+            <div className="flex items-center gap-2 mb-4">
               <Languages size={16} />
               <span className="font-medium">{t("translations")}</span>
             </div>
 
-            <div className="tabs tabs-bordered mb-4">
+            <div className="mb-4 tabs-bordered tabs">
               {locales.map((locale) => (
                 <button
                   key={locale}
@@ -1085,7 +1000,7 @@ const EmissionCategoriesManager: React.FC = () => {
 
             <div className="space-y-3">
               <div>
-                <label className="mb-1 block">
+                <label className="block mb-1">
                   {t("subcategoryName")} ({selectedLocale.toUpperCase()})
                 </label>
                 <input
@@ -1100,12 +1015,12 @@ const EmissionCategoriesManager: React.FC = () => {
                       e.target.value,
                     )
                   }
-                  className="input input-bordered w-full"
+                  className="input-bordered w-full input"
                   placeholder={`${t("subcategoryName")} in ${selectedLocale.toUpperCase()}`}
                 />
               </div>
               <div>
-                <label className="mb-1 block">
+                <label className="block mb-1">
                   {t("subcategoryDescription")} ({selectedLocale.toUpperCase()})
                 </label>
                 <textarea
@@ -1120,7 +1035,7 @@ const EmissionCategoriesManager: React.FC = () => {
                       e.target.value,
                     )
                   }
-                  className="textarea textarea-bordered w-full"
+                  className="textarea-bordered w-full textarea"
                   placeholder={`${t("subcategoryDescription")} in ${selectedLocale.toUpperCase()}`}
                   rows={3}
                 />
@@ -1136,7 +1051,7 @@ const EmissionCategoriesManager: React.FC = () => {
           )}
         </div>
 
-        <div className="mt-6 flex justify-end gap-3">
+        <div className="flex justify-end gap-3 mt-6">
           <button
             type="button"
             className="btn btn-ghost"
@@ -1179,47 +1094,16 @@ const EmissionCategoriesManager: React.FC = () => {
             setValidationError("");
           }}
         >
-          <div className="max-h-96 space-y-4 overflow-y-auto">
-            {/* Basic Fields */}
-            <div className="mb-4">
-              <label className="mb-1 block">{t("subcategoryPercentage")}</label>
-              <input
-                type="number"
-                step="0.01"
-                min="0"
-                max="100"
-                value={
-                  editingSubcategory?.subcategory.SubcategoryTotalPercentage ||
-                  0
-                }
-                onChange={(e) =>
-                  setEditingSubcategory(
-                    editingSubcategory
-                      ? {
-                          ...editingSubcategory,
-                          subcategory: {
-                            ...editingSubcategory.subcategory,
-                            SubcategoryTotalPercentage:
-                              parseFloat(e.target.value) || 0,
-                          },
-                        }
-                      : null,
-                  )
-                }
-                className="input input-bordered w-full"
-                placeholder="0-100"
-              />
-            </div>
-
+          <div className="space-y-4 max-h-96 overflow-y-auto">
             {/* Translation Fields - Only show if subcategory has translations */}
             {"translations" in editingSubcategory.subcategory && (
-              <div className="border-t pt-4">
-                <div className="mb-4 flex items-center gap-2">
+              <div className="pt-4">
+                <div className="flex items-center gap-2 mb-4">
                   <Languages size={16} />
                   <span className="font-medium">{t("translations")}</span>
                 </div>
 
-                <div className="tabs tabs-bordered mb-4">
+                <div className="mb-4 tabs-bordered tabs">
                   {locales.map((locale) => (
                     <button
                       key={locale}
@@ -1233,7 +1117,7 @@ const EmissionCategoriesManager: React.FC = () => {
 
                 <div className="space-y-3">
                   <div>
-                    <label className="mb-1 block">
+                    <label className="block mb-1">
                       {t("subcategoryName")} ({selectedLocale.toUpperCase()})
                     </label>
                     <input
@@ -1250,12 +1134,12 @@ const EmissionCategoriesManager: React.FC = () => {
                           e.target.value,
                         )
                       }
-                      className="input input-bordered w-full"
+                      className="input-bordered w-full input"
                       placeholder={`${t("subcategoryName")} in ${selectedLocale.toUpperCase()}`}
                     />
                   </div>
                   <div>
-                    <label className="mb-1 block">
+                    <label className="block mb-1">
                       {t("subcategoryDescription")} (
                       {selectedLocale.toUpperCase()})
                     </label>
@@ -1272,7 +1156,7 @@ const EmissionCategoriesManager: React.FC = () => {
                           e.target.value,
                         )
                       }
-                      className="textarea textarea-bordered w-full"
+                      className="textarea-bordered w-full textarea"
                       placeholder={`${t("subcategoryDescription")} in ${selectedLocale.toUpperCase()}`}
                       rows={3}
                     />
@@ -1283,8 +1167,8 @@ const EmissionCategoriesManager: React.FC = () => {
 
             {/* Legacy subcategory without translations */}
             {"name" in editingSubcategory.subcategory && (
-              <div className="border-t pt-4">
-                <div className="alert alert-info mb-4">
+              <div className="pt-4">
+                <div className="mb-4 alert alert-info">
                   <span>
                     This is a legacy subcategory. Edit will convert it to use
                     translations.
@@ -1292,7 +1176,7 @@ const EmissionCategoriesManager: React.FC = () => {
                 </div>
                 <div className="space-y-3">
                   <div>
-                    <label className="mb-1 block">Subcategory Name</label>
+                    <label className="block mb-1">Subcategory Name</label>
                     <input
                       type="text"
                       value={
@@ -1312,12 +1196,12 @@ const EmissionCategoriesManager: React.FC = () => {
                             : null,
                         )
                       }
-                      className="input input-bordered w-full"
+                      className="input-bordered w-full input"
                       placeholder="Enter subcategory name"
                     />
                   </div>
                   <div>
-                    <label className="mb-1 block">Description</label>
+                    <label className="block mb-1">Description</label>
                     <textarea
                       value={
                         (editingSubcategory.subcategory as EmissionSubcategory)
@@ -1336,7 +1220,7 @@ const EmissionCategoriesManager: React.FC = () => {
                             : null,
                         )
                       }
-                      className="textarea textarea-bordered w-full"
+                      className="textarea-bordered w-full textarea"
                       placeholder="Enter description"
                       rows={3}
                     />
@@ -1353,7 +1237,7 @@ const EmissionCategoriesManager: React.FC = () => {
             )}
           </div>
 
-          <div className="mt-6 flex justify-end gap-3">
+          <div className="flex justify-end gap-3 mt-6">
             <button
               type="button"
               className="btn btn-ghost"

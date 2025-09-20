@@ -13,14 +13,12 @@ interface CustomAction extends Action {
 interface CurrentActionsProps {
   currentActions: CustomAction[];
   onEdit: (action: CustomAction) => void;
-  onViewAll: () => void;
   onAddAction: () => void;
 }
 
 const CurrentActions: React.FC<CurrentActionsProps> = ({
   currentActions,
   onEdit,
-  onViewAll,
   onAddAction,
 }) => {
   const t = useTranslations();
@@ -30,22 +28,22 @@ const CurrentActions: React.FC<CurrentActionsProps> = ({
   const isTeacher = user?.role === "teacher" || user?.role === "admin";
 
   return (
-    <div className="card p-6">
-      <div className="flex items-center justify-between pb-2">
+    <div className="p-6 card">
+      <div className="flex justify-between items-center pb-2">
         <div className="flex items-center gap-2">
-          <Star className="h-5 w-5 text-yellow-500" />
-          <h2 className="text-xl font-bold">{t("currentActions.title")}</h2>
+          <Star className="w-5 h-5 text-yellow-500" />
+          <h2 className="font-bold text-xl">{t("currentActions.title")}</h2>
         </div>
-        <span className="bg-primary-100 text-primary-800 rounded-full px-2 py-1 text-xs">
+        <span className="bg-primary-100 px-2 py-1 rounded-full text-primary-800 text-xs">
           {currentActions.length} {t("currentActions.actions")}
         </span>
       </div>
       <p className="text-gray-600">{t("currentActions.description")}</p>
-      <div className="mt-4 space-y-4">
+      <div className="space-y-4 mt-4">
         {currentActions.map((action) => (
           <div
             key={action.id}
-            className="flex cursor-pointer justify-between border-b border-gray-100 pb-3 last:border-0"
+            className="flex justify-between pb-3 border-gray-100 last:border-0 border-b cursor-pointer"
             onClick={() => onEdit(action)}
           >
             <div>
@@ -72,34 +70,22 @@ const CurrentActions: React.FC<CurrentActionsProps> = ({
               <span className="font-medium text-green-600">
                 -{action.reduction}%
               </span>
-              <ChevronRight className="h-4 w-4 cursor-pointer text-gray-600" />
+              <ChevronRight className="w-4 h-4 text-gray-600 cursor-pointer" />
             </div>
           </div>
         ))}
       </div>
-      <div className="flex flex-wrap justify-center gap-2.5">
-        <button
-          className="btn btn-soft mt-auto w-fit self-center bg-white"
-          onClick={onViewAll}
-        >
-          {t("currentActions.viewAll")}
-        </button>
-        <button
-          className="btn btn-soft mt-auto w-fit self-center bg-white"
-          onClick={onViewAll}
-        >
-          {t("currentActions.viewAllAvailable")}
-        </button>
-        {isTeacher && (
+      {isTeacher && (
+        <div className="flex justify-center mt-4">
           <button
-            className="btn btn-soft mt-auto flex w-fit items-center gap-2 self-center bg-white"
+            className="flex items-center gap-2 bg-white w-fit btn btn-soft"
             onClick={onAddAction}
           >
-            <PlusCircle className="h-4 w-4" />
+            <PlusCircle className="w-4 h-4" />
             {t("StudentCalculator.addActionButton")}
           </button>
-        )}
-      </div>
+        </div>
+      )}
     </div>
   );
 };

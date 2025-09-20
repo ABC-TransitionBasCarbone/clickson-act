@@ -61,7 +61,7 @@ export async function POST(
 
     const { id } = await params;
     const body = await req.json();
-    const { translations, SubcategoryTotalPercentage } = body;
+    const { translations } = body;
 
     // Validate required fields
     const defaultLocale = locales[0]; // Use first locale as default
@@ -131,9 +131,6 @@ export async function POST(
     const subcategoryId = uuidv4();
     const subcategoryData: TranslatableSubcategory = {
       id: subcategoryId,
-      SubcategoryTotalPercentage: SubcategoryTotalPercentage
-        ? parseFloat(SubcategoryTotalPercentage)
-        : undefined,
       createdAt: new Date().toISOString(),
       translations: sanitizedTranslations,
     };

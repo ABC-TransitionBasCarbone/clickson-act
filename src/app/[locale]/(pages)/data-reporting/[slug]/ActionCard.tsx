@@ -83,20 +83,34 @@ const ActionCard: React.FC<Props> = ({
               : "bg-gray-100 text-gray-600"
           }`}
         >
-          <Icon className="h-5 w-5" />
+          <Icon className="w-5 h-5" />
         </div>
         <div className="flex-grow">
           <h3 className="font-medium">{action.title}</h3>
-          <p className="text-sm text-gray-500">{action.description}</p>
-          {action.timeline && (
-            <p className="mt-1 text-xs text-blue-600">
-              Timeline: {action.timeline} year{action.timeline !== 1 ? "s" : ""}
-            </p>
-          )}
+          <p className="text-gray-500 text-sm">{action.description}</p>
+          <div className="flex items-center gap-2 mt-2">
+            {action.type && (
+              <span
+                className={`inline-flex items-center rounded-full px-2 py-1 text-xs font-medium ${
+                  action.type === "Direct"
+                    ? "bg-blue-100 text-blue-800"
+                    : "bg-purple-100 text-purple-800"
+                }`}
+              >
+                {action.type}
+              </span>
+            )}
+            {action.timeline && (
+              <span className="text-blue-600 text-xs">
+                Timeline: {action.timeline} year
+                {action.timeline !== 1 ? "s" : ""}
+              </span>
+            )}
+          </div>
         </div>
         <div className="flex items-center gap-3 text-right">
           <div className="flex flex-col items-end">
-            <span className="text-lg font-bold text-green-600">
+            <span className="font-bold text-green-600 text-lg">
               -
               {Math.round(
                 (calculatedReduction !== undefined
@@ -107,7 +121,7 @@ const ActionCard: React.FC<Props> = ({
             </span>
             {calculatedReduction !== undefined &&
               calculatedReduction !== action.reduction && (
-                <span className="text-xs text-gray-400">
+                <span className="text-gray-400 text-xs">
                   (base: -{action.reduction}%)
                 </span>
               )}
@@ -123,7 +137,7 @@ const ActionCard: React.FC<Props> = ({
               {isAddingToMonitoring ? (
                 <span className="loading loading-spinner loading-xs"></span>
               ) : (
-                <Plus className="h-4 w-4" />
+                <Plus className="w-4 h-4" />
               )}
             </button>
           )}

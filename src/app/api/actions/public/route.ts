@@ -80,7 +80,7 @@ export async function GET(req: NextRequest) {
         monitoring: translation.monitoring || "",
         performance: translation.performance || "",
         date: actionData.date || new Date().toISOString().split("T")[0],
-        type: actionData.type || "Fixed", // Include type from action template
+        type: actionData.type || "Direct", // Include type from action template
         subcategory: actionData.subcategory || undefined, // Optional subcategory field
         timeline: Number(actionData.timeline) || 1, // Number of years the action will take place
       };

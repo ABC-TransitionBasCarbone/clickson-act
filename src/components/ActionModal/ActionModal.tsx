@@ -119,9 +119,9 @@ const ActionModal: React.FC<ActionModalProps> = ({
       title={mode === "edit" ? t("editAction") : t("addCustomAction")}
     >
       <div className="sm:max-w-md">
-        <div className="grid grid-cols-2 gap-4">
+        <div className="gap-4 grid grid-cols-2">
           {/* Status */}
-          <div className="grid gap-2">
+          <div className="gap-2 grid">
             <label htmlFor="status">{t("status")}</label>
             <select
               id="status"
@@ -135,7 +135,7 @@ const ActionModal: React.FC<ActionModalProps> = ({
                     | "Available",
                 })
               }
-              className="input w-full"
+              className="w-full input"
               disabled={fieldDisabled}
             >
               <option value="Available">{t("available")}</option>
@@ -145,7 +145,7 @@ const ActionModal: React.FC<ActionModalProps> = ({
           </div>
 
           {/* Assigned To */}
-          <div className="grid gap-2">
+          <div className="gap-2 grid">
             <label htmlFor="assignedTo">{t("assignedTo")}</label>
             <input
               id="assignedTo"
@@ -153,13 +153,13 @@ const ActionModal: React.FC<ActionModalProps> = ({
               onChange={(e) =>
                 setNewAction({ ...newAction, assignedTo: e.target.value })
               }
-              className="input w-full"
+              className="w-full input"
               disabled={fieldDisabled}
             />
           </div>
 
           {/* Category */}
-          <div className="grid gap-2">
+          <div className="gap-2 grid">
             <label htmlFor="category">{t("category")}</label>
             <select
               id="category"
@@ -171,7 +171,7 @@ const ActionModal: React.FC<ActionModalProps> = ({
                   subcategory: "",
                 })
               }
-              className="input w-full"
+              className="w-full input"
               disabled={fieldDisabled}
             >
               <option value="">{t("selectCategory")}</option>
@@ -184,7 +184,7 @@ const ActionModal: React.FC<ActionModalProps> = ({
           </div>
 
           {/* Subcategory */}
-          <div className="grid gap-2">
+          <div className="gap-2 grid">
             <label htmlFor="subcategory">{t("subcategory")}</label>
             <select
               id="subcategory"
@@ -192,7 +192,7 @@ const ActionModal: React.FC<ActionModalProps> = ({
               onChange={(e) =>
                 setNewAction({ ...newAction, subcategory: e.target.value })
               }
-              className="input w-full"
+              className="w-full input"
               disabled={fieldDisabled || !newAction.category}
             >
               <option value="">{t("selectCategory")}</option>
@@ -211,7 +211,7 @@ const ActionModal: React.FC<ActionModalProps> = ({
           </div>
 
           {/* Timeline */}
-          <div className="grid gap-2">
+          <div className="gap-2 grid">
             <label htmlFor="timeline">{t("timeline")}</label>
             <input
               id="timeline"
@@ -223,13 +223,13 @@ const ActionModal: React.FC<ActionModalProps> = ({
               min={1}
               max={50}
               placeholder="Number of years"
-              className="input w-full"
+              className="w-full input"
               disabled={fieldDisabled}
             />
           </div>
 
           {/* Title */}
-          <div className="grid gap-2">
+          <div className="gap-2 grid">
             <label htmlFor="title">{t("actionTitle")}</label>
             <input
               id="title"
@@ -237,13 +237,13 @@ const ActionModal: React.FC<ActionModalProps> = ({
               onChange={(e) =>
                 setNewAction({ ...newAction, title: e.target.value })
               }
-              className="input w-full"
+              className="w-full input"
               disabled={fieldDisabled}
             />
           </div>
 
           {/* Description */}
-          <div className="grid gap-2">
+          <div className="gap-2 grid">
             <label htmlFor="description">{t("description")}</label>
             <input
               id="description"
@@ -251,13 +251,13 @@ const ActionModal: React.FC<ActionModalProps> = ({
               onChange={(e) =>
                 setNewAction({ ...newAction, description: e.target.value })
               }
-              className="input w-full"
+              className="w-full input"
               disabled={fieldDisabled}
             />
           </div>
 
           {/* Effort */}
-          <div className="grid gap-2">
+          <div className="gap-2 grid">
             <label htmlFor="effort">{t("effort")}</label>
             <select
               id="effort"
@@ -265,7 +265,7 @@ const ActionModal: React.FC<ActionModalProps> = ({
               onChange={(e) =>
                 setNewAction({ ...newAction, effort: e.target.value })
               }
-              className="input w-full"
+              className="w-full input"
               disabled={fieldDisabled}
             >
               <option value="">{t("selectEffort")}</option>
@@ -278,7 +278,7 @@ const ActionModal: React.FC<ActionModalProps> = ({
           </div>
 
           {/* Reduction */}
-          <div className="grid gap-2">
+          <div className="gap-2 grid">
             <label htmlFor="reduction">{t("estimatedReduction")}</label>
             <input
               id="reduction"
@@ -292,13 +292,13 @@ const ActionModal: React.FC<ActionModalProps> = ({
               }
               min={1}
               max={100}
-              className="input w-full"
+              className="w-full input"
               disabled={fieldDisabled}
             />
           </div>
 
           {/* Manager */}
-          <div className="grid gap-2">
+          <div className="gap-2 grid">
             <label htmlFor="manager">{t("manager")}</label>
             <input
               id="manager"
@@ -306,13 +306,13 @@ const ActionModal: React.FC<ActionModalProps> = ({
               onChange={(e) =>
                 setNewAction({ ...newAction, manager: e.target.value })
               }
-              className="input w-full"
+              className="w-full input"
               disabled={fieldDisabled}
             />
           </div>
 
           {/* Nature */}
-          <div className="grid gap-2">
+          <div className="gap-2 grid">
             <label htmlFor="nature">{t("nature")}</label>
             <input
               id="nature"
@@ -320,13 +320,13 @@ const ActionModal: React.FC<ActionModalProps> = ({
               onChange={(e) =>
                 setNewAction({ ...newAction, nature: e.target.value })
               }
-              className="input w-full"
+              className="w-full input"
               disabled={fieldDisabled}
             />
           </div>
 
           {/* Objectives */}
-          <div className="grid gap-2">
+          <div className="gap-2 grid">
             <label htmlFor="objectives">{t("objectives")}</label>
             <textarea
               rows={3}
@@ -335,13 +335,13 @@ const ActionModal: React.FC<ActionModalProps> = ({
               onChange={(e) =>
                 setNewAction({ ...newAction, objectives: e.target.value })
               }
-              className="textarea w-full"
+              className="w-full textarea"
               disabled={fieldDisabled}
             />
           </div>
 
           {/* Key Contacts */}
-          <div className="grid gap-2">
+          <div className="gap-2 grid">
             <label htmlFor="keyContacts">{t("keyContacts")}</label>
             <textarea
               rows={3}
@@ -350,13 +350,13 @@ const ActionModal: React.FC<ActionModalProps> = ({
               onChange={(e) =>
                 setNewAction({ ...newAction, keyContacts: e.target.value })
               }
-              className="textarea w-full"
+              className="w-full textarea"
               disabled={fieldDisabled}
             />
           </div>
 
           {/* Steps */}
-          <div className="grid gap-2">
+          <div className="gap-2 grid">
             <label htmlFor="steps">{t("steps")}</label>
             <textarea
               rows={3}
@@ -365,13 +365,13 @@ const ActionModal: React.FC<ActionModalProps> = ({
               onChange={(e) =>
                 setNewAction({ ...newAction, steps: e.target.value })
               }
-              className="textarea w-full"
+              className="w-full textarea"
               disabled={fieldDisabled}
             />
           </div>
 
           {/* Calendar */}
-          <div className="grid gap-2">
+          <div className="gap-2 grid">
             <label htmlFor="calendar">{t("calendar")}</label>
             <textarea
               rows={3}
@@ -380,13 +380,13 @@ const ActionModal: React.FC<ActionModalProps> = ({
               onChange={(e) =>
                 setNewAction({ ...newAction, calendar: e.target.value })
               }
-              className="textarea w-full"
+              className="w-full textarea"
               disabled={fieldDisabled}
             />
           </div>
 
           {/* Monitoring */}
-          <div className="grid gap-2">
+          <div className="gap-2 grid">
             <label htmlFor="monitoring">{t("monitoring")}</label>
             <textarea
               rows={3}
@@ -395,13 +395,13 @@ const ActionModal: React.FC<ActionModalProps> = ({
               onChange={(e) =>
                 setNewAction({ ...newAction, monitoring: e.target.value })
               }
-              className="textarea w-full"
+              className="w-full textarea"
               disabled={fieldDisabled}
             />
           </div>
 
           {/* Performance */}
-          <div className="grid gap-2">
+          <div className="gap-2 grid">
             <label htmlFor="performance">{t("performance")}</label>
             <textarea
               rows={3}
@@ -410,13 +410,13 @@ const ActionModal: React.FC<ActionModalProps> = ({
               onChange={(e) =>
                 setNewAction({ ...newAction, performance: e.target.value })
               }
-              className="textarea w-full"
+              className="w-full textarea"
               disabled={fieldDisabled}
             />
           </div>
         </div>
 
-        <div className="mt-6 flex justify-end gap-3">
+        <div className="flex justify-end gap-3 mt-6">
           {/* Delete button in edit mode - only for teachers */}
           {mode === "edit" && !isEditing && isTeacher && onDelete && (
             <button

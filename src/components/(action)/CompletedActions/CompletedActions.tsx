@@ -9,40 +9,38 @@ interface CustomAction extends Action {
 interface CompletedActionsProps {
   completedActions: CustomAction[];
   onEdit: (action: CustomAction) => void;
-  onViewAll: () => void;
 }
 
 const CompletedActions: React.FC<CompletedActionsProps> = ({
   completedActions,
   onEdit,
-  onViewAll,
 }) => {
   return (
-    <div className="card p-6">
-      <div className="flex items-center justify-between pb-2">
+    <div className="p-6 card">
+      <div className="flex justify-between items-center pb-2">
         <div className="flex items-center gap-2">
-          <Check className="h-5 w-5 text-green-600" />
-          <h2 className="text-xl font-bold">Completed Actions</h2>
+          <Check className="w-5 h-5 text-green-600" />
+          <h2 className="font-bold text-xl">Completed Actions</h2>
         </div>
-        <span className="bg-primary-100 text-primary-800 rounded-full px-2 py-1 text-xs">
+        <span className="bg-primary-100 px-2 py-1 rounded-full text-primary-800 text-xs">
           {completedActions.length} actions
         </span>
       </div>
       <p className="text-gray-600">
         Actions completed since the project started
       </p>
-      <div className="mt-4 space-y-4">
+      <div className="space-y-4 mt-4">
         {completedActions.map((action) => (
           <div
             key={action.id}
-            className="flex cursor-pointer justify-between border-b border-gray-100 pb-3 last:border-0"
+            className="flex justify-between pb-3 border-gray-100 last:border-0 border-b cursor-pointer"
             onClick={() => onEdit(action)}
           >
             <div className="flex items-center gap-2">
-              <Check className="h-5 w-5 text-green-600" />
+              <Check className="w-5 h-5 text-green-600" />
               <div>
                 <p className="font-medium">{action.title}</p>
-                <p className="text-xs text-gray-500">
+                <p className="text-gray-500 text-xs">
                   {new Date(action.date).toLocaleDateString()}
                 </p>
               </div>
@@ -51,17 +49,11 @@ const CompletedActions: React.FC<CompletedActionsProps> = ({
               <span className="font-medium text-green-600">
                 -{action.reduction}%
               </span>
-              <ChevronRight className="h-4 w-4 cursor-pointer text-gray-600" />
+              <ChevronRight className="w-4 h-4 text-gray-600 cursor-pointer" />
             </div>
           </div>
         ))}
       </div>
-      <button
-        className="btn btn-soft mt-auto w-fit self-center bg-white"
-        onClick={onViewAll}
-      >
-        View All Actions
-      </button>
     </div>
   );
 };

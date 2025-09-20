@@ -73,14 +73,12 @@ export interface ProcessedEmissionCategory {
   description: string;
   category: string; // Using id as category identifier
   legacyCategory?: string; // For mapping to existing actions (energy, waste, transport, nature)
-  totalPercentage?: number;
   subcategories: {
     id: string;
     subcategoryTitle: string;
     name: string;
     description: string;
     value: string;
-    SubcategoryTotalPercentage?: number;
   }[];
   value: string;
   label: string; // For compatibility with existing EmissionType
@@ -267,8 +265,6 @@ export const useEmissionCategories = () => {
                     name: translatedSubcategory.name,
                     description: translatedSubcategory.description,
                     value: "", // Initialize empty value for user input
-                    SubcategoryTotalPercentage:
-                      subcategory.SubcategoryTotalPercentage,
                   };
                 },
               );
@@ -279,7 +275,6 @@ export const useEmissionCategories = () => {
                 description: translatedCategory.description,
                 category: category.id, // Use the database ID as category identifier
                 legacyCategory: mapToLegacyCategory(translatedCategory.name),
-                totalPercentage: category.totalPercentage,
                 subcategories: processedSubcategories,
                 value: "", // Initialize empty value for user input
                 label: translatedCategory.name, // For compatibility with existing EmissionType

@@ -52,13 +52,35 @@
     "button1": "I am a Student",
     "button2": "I am a Teacher",
     "joinClassroom": "Join Classroom",
-    "joinPasscode": "Join with Passcode"
+    "joinPasscode": "Join with Passcode",
+    "title": "Data Reporting",
+    "selectProject": "Select a project to view its emission data and actions",
+    "loadingProjects": "Loading projects...",
+    "error": "Error",
+    "backToDashboard": "Back to Dashboard",
+    "startDate": "Start Date",
+    "subGoal": "Sub Goal",
+    "reductionGoal": "Reduction Goal",
+    "passcode": "Passcode",
+    "viewDataReporting": "View Data Reporting",
+    "viewProjectDetails": "View Project Details",
+    "noProjectsFound": "No Projects Found",
+    "noProjectsDescription": "You haven't created any projects yet.",
+    "createProject": "Create Project"
   },
 
   "StudentCalculator": {
     "title": "Student Calculator",
     "hello": "Hello",
     "subtitle": "enter your school's current emissions and discover actions to reduce them",
+
+    "selectCategoryTitle": "Select Category",
+    "selectCategoryDescription": "Choose a category to explore available actions",
+    "selectSubcategoriesTitle": "Select Subcategories",
+    "selectSubcategoriesDescription": "Choose one or more subcategories from {categoryName} to explore actions",
+    "proceedToActionsButton": "Proceed to Actions",
+    "subcategoriesAvailable": "subcategories available",
+    "noCategoriesAvailable": "No categories available. Please contact your teacher.",
 
     "currentEmissionsTitle": "Current Emissions",
     "currentEmissionsDescription": "Enter your school's estimated CO₂ emissions in kg CO₂e",
@@ -323,8 +345,9 @@
     "confirmDelete": "Are you sure you want to delete this action? This action cannot be undone.",
     "translations": "Translations",
     "type": "Type",
-    "typeFixed": "Fixed",
-    "typeDynamic": "Dynamic"
+    "typeOfImpact": "Type of impact",
+    "typeDirect": "Direct",
+    "typeIndirect": "Indirect"
   },
 
   "CategoriesManager": {
@@ -344,8 +367,6 @@
     "categoryDescription": "Category Description",
     "subcategoryName": "Subcategory Name",
     "subcategoryDescription": "Subcategory Description",
-    "totalPercentage": "Total Percentage",
-    "subcategoryPercentage": "Subcategory Percentage",
     "noCategories": "No categories available",
     "noSubcategories": "No subcategories",
     "subcategories": "subcategories",

@@ -95,7 +95,6 @@ export async function GET(req: NextRequest) {
             name: translatedSubcategory.name,
             description: translatedSubcategory.description,
             value: "", // Initialize empty value for user input
-            SubcategoryTotalPercentage: subcategory.SubcategoryTotalPercentage,
           };
         },
       );
@@ -106,7 +105,6 @@ export async function GET(req: NextRequest) {
         description: translatedCategory.description,
         category: categoryData.id, // Use the database ID as category identifier
         legacyCategory: mapToLegacyCategory(translatedCategory.name),
-        totalPercentage: categoryData.totalPercentage,
         subcategories: processedSubcategories,
         value: "", // Initialize empty value for user input
         label: translatedCategory.name, // For compatibility with existing EmissionType

@@ -1,15 +1,33 @@
 {
   "Header": {
     "home": "Αρχική",
-    "calculator": "Αριθμομηχανή"
+    "dataReporting": "Αναφορά Δεδομένων",
+    "monitoring": "Παρακολούθηση"
   },
 
   "User": {
     "username": "Όνομα χρήστη",
     "password": "Κωδικός πρόσβασης",
-    "passcode": "Κωδικός",
+    "email": "Email",
+    "passcode": "Κωδικός (π.χ. AUXCUVAO)",
     "login": "Σύνδεση",
-    "signup": "Εγγραφή"
+    "signup": "Εγγραφή",
+    "logout": "Αποσύνδεση",
+    "logoutConfirm": "Είστε σίγουροι ότι θέλετε να αποσυνδεθείτε;",
+    "cancel": "Άκυρο",
+    "teacherLoggedIn": "Είστε συνδεδεμένοι ως δάσκαλος",
+    "studentLoggedIn": "Είστε συνδεδεμένοι ως μαθητής",
+    "logoutToSwitch": "Παρακαλώ αποσυνδεθείτε πρώτα για να αλλάξετε ρόλους",
+    "goToDashboard": "Πήγαινε στον Πίνακα Ελέγχου",
+    "firstName": "Όνομα",
+    "lastName": "Επώνυμο",
+    "country": "Χώρα",
+    "city": "Πόλη",
+    "postalCode": "Ταχυδρομικός Κώδικας",
+    "selectSchool": "Επιλέξτε Σχολείο",
+    "enterSchool": "Εισάγετε Σχολείο",
+    "schoolGoal": "Στόχος Σχολείου",
+    "deadlineYear": "Έτος Παράδοσης"
   },
 
   "HomePage": {
@@ -20,6 +38,37 @@
     "button1": "Ξεκινήστε",
     "button2": "Μάθετε περισσότερα"
   },
+  "DataReporting": {
+    "titleText1": "ΑΝΑΦΟΡΑ ΔΕΔΟΜΕΝΩΝ",
+    "titleText2": "Ας μετρήσουμε τις εκπομπές αερίων θερμοκηπίου του ιδρύματός σας!",
+    "heroText1": "Χρησιμοποιήστε τη φόρμα σύνδεσης για πρόσβαση στον πίνακα ελέγχου σας ή ζητήστε από τον δάσκαλό σας να σας προσκαλέσει.",
+    "howItWorksTitle": "Πώς λειτουργεί",
+    "howItWorksBox1Title": "Εισαγωγή Δεδομένων",
+    "howItWorksBox2Title": "Λήψη Πληροφοριών",
+    "howItWorksBox3Title": "Παρακολούθηση Προόδου",
+    "howItWorksBox1Text": "Εισάγετε τα τρέχοντα δεδομένα εκπομπών του σχολείου σας",
+    "howItWorksBox2Text": "Λάβετε εξατομικευμένες στρατηγικές μείωσης",
+    "howItWorksBox3Text": "Παρακολουθήστε τον αντίκτυπό σας με την πάροδο του χρόνου",
+    "button1": "Για Μαθητές",
+    "button2": "Για Δασκάλους",
+    "joinClassroom": "Συμμετοχή στην Τάξη",
+    "joinPasscode": "Συμμετοχή με Κωδικό",
+    "title": "Αναφορά Δεδομένων",
+    "selectProject": "Επιλέξτε ένα έργο για να δείτε τα δεδομένα εκπομπών και ενεργειών του",
+    "loadingProjects": "Φόρτωση έργων...",
+    "error": "Σφάλμα",
+    "backToDashboard": "Επιστροφή στον Πίνακα Ελέγχου",
+    "startDate": "Ημερομηνία Έναρξης",
+    "subGoal": "Ενδιάμεσος Στόχος",
+    "reductionGoal": "Στόχος Μείωσης",
+    "passcode": "Κωδικός",
+    "viewDataReporting": "Προβολή Αναφοράς Δεδομένων",
+    "viewProjectDetails": "Προβολή Λεπτομερειών Έργου",
+    "noProjectsFound": "Δεν βρέθηκαν Έργα",
+    "noProjectsDescription": "Δεν έχετε δημιουργήσει ακόμη κανένα έργο.",
+    "createProject": "Δημιουργία Έργου"
+  },
+
   "Calculator": {
     "titleText1": "ΑΡΙΘΜΟΜΗΧΑΝΗ",
     "titleText2": "Ας μετρήσουμε τις εκπομπές αερίων του θερμοκηπίου του οργανισμού σας!",
@@ -39,7 +88,17 @@
 
   "StudentCalculator": {
     "title": "Υπολογιστής Μαθητών",
+    "hello": "Γεια",
     "subtitle": "Εισαγάγετε τις τρέχουσες εκπομπές του σχολείου σας και ανακαλύψτε ενέργειες για τη μείωσή τους",
+
+    "selectCategoryTitle": "Επιλογή Κατηγορίας",
+    "selectCategoryDescription": "Επιλέξτε μια κατηγορία για να εξερευνήσετε διαθέσιμες ενέργειες",
+    "selectSubcategoriesTitle": "Επιλογή Υποκατηγοριών",
+    "selectSubcategoriesDescription": "Επιλέξτε μία ή περισσότερες υποκατηγορίες από {categoryName} για να εξερευνήσετε ενέργειες",
+    "proceedToActionsButton": "Συνέχεια στις Ενέργειες",
+    "subcategoriesAvailable": "διαθέσιμες υποκατηγορίες",
+    "noCategoriesAvailable": "Δεν υπάρχουν διαθέσιμες κατηγορίες. Παρακαλώ επικοινωνήστε με τον δάσκαλό σας.",
+
     "currentEmissionsTitle": "Τρέχουσες Εκπομπές",
     "currentEmissionsDescription": "Εισαγάγετε τις εκτιμώμενες εκπομπές CO2 του σχολείου σας σε kg CO2e",
     "currentEmissionsPlaceholder": "Εισαγάγετε εκπομπές σε kg CO2e",
@@ -88,6 +147,57 @@
       "active": "Ενεργό",
       "completed": "Ολοκληρωμένο",
       "pending": "Σε αναμονή"
+    }
+  },
+
+  "MonitoringPage": {
+    "title": "Πίνακας Παρακολούθησης",
+    "subtitle": "Παρακολουθήστε την πρόοδό σας και σχεδιάστε μελλοντικές ενέργειες",
+    "completedActionsTitle": "Ολοκληρωμένες Ενέργειες",
+    "completedActionsCount": "{count} ενέργειες",
+    "completedActionsDescription": "Ενέργειες που ολοκληρώθηκαν από την έναρξη του έργου",
+    "completedActionsViewAll": "Προβολή Όλων των Ενεργειών",
+    "availableActionsTitle": "Διαθέσιμες Ενέργειες",
+    "availableActionsCount": "{count} επιλογές",
+    "availableActionsDescription": "Συνιστώμενες ενέργειες για μείωση εκπομπών",
+    "availableActionsViewAll": "Προβολή Όλων των Διαθέσιμων Ενεργειών",
+    "viewAll": "Προβολή Όλων",
+    "effortLow": "Χαμηλή προσπάθεια",
+    "effortMedium": "Μέτρια προσπάθεια",
+    "effortHigh": "Υψηλή προσπάθεια"
+  },
+
+  "ProjectDetails": {
+    "back": "Επιστροφή",
+    "loading": "Φόρτωση λεπτομερειών έργου...",
+    "projectId": "ID Έργου",
+    "projectIdHint": "Χρησιμοποιήστε αυτόν τον κωδικό για να συμμετάσχετε στο έργο",
+    "students": "Μαθητές",
+    "studentsHint": "Συμμετέχοντες σε αυτό το έργο",
+    "reduction": "Συνολική Μείωση",
+    "reductionHint": "Συνολική μείωση εκπομπών",
+    "notFound": {
+      "title": "Δεν βρέθηκε το έργο",
+      "description": "Δεν βρέθηκε έργο με ID: {id}",
+      "returnButton": "Επιστροφή στον πίνακα ελέγχου"
+    },
+    "overview": {
+      "title": "Επισκόπηση Έργου",
+      "startDate": "Ημερομηνία Έναρξης",
+      "status": "Κατάσταση",
+      "shareButtonText": "Κοινοποίηση",
+      "shareButtonTextCopied": "Ο Σύνδεσμος Αντιγράφηκε",
+      "editProject": "Επεξεργασία Έργου"
+    },
+    "status": {
+      "active": "Ενεργό",
+      "completed": "Ολοκληρωμένο",
+      "pending": "Σε αναμονή"
+    },
+    "actions": {
+      "completedActions": "Ολοκληρωμένες Ενέργειες",
+      "recentActionsDescription": "Πρόσφατες ενέργειες που αναλήφθηκαν για μείωση εκπομπών",
+      "viewAllActions": "Προβολή Όλων των Ενεργειών"
     }
   },
 
@@ -165,8 +275,9 @@
     "confirmDelete": "Είστε σίγουροι ότι θέλετε να διαγράψετε αυτή την ενέργεια; Αυτή η ενέργεια δεν μπορεί να αναιρεθεί.",
     "translations": "Μεταφράσεις",
     "type": "Τύπος",
-    "typeFixed": "Σταθερός",
-    "typeDynamic": "Δυναμικός"
+    "typeOfImpact": "Τύπος επίδρασης",
+    "typeDirect": "Άμεσος",
+    "typeIndirect": "Έμμεσος"
   },
 
   "CategoriesManager": {
@@ -186,12 +297,29 @@
     "categoryDescription": "Περιγραφή Κατηγορίας",
     "subcategoryName": "Όνομα Υποκατηγορίας",
     "subcategoryDescription": "Περιγραφή Υποκατηγορίας",
-    "totalPercentage": "Συνολικό Ποσοστό",
-    "subcategoryPercentage": "Ποσοστό Υποκατηγορίας",
     "noCategories": "Δεν υπάρχουν κατηγορίες",
     "noSubcategories": "Δεν υπάρχουν υποκατηγορίες",
     "subcategories": "υποκατηγορίες",
     "expand": "Ανάπτυξη",
     "collapse": "Σύμπτυξη"
+  },
+
+  "currentActions": {
+    "title": "Τρέχουσες Ενέργειες",
+    "actions": "ενέργειες",
+    "description": "Συνιστώμενες ενέργειες για μείωση εκπομπών",
+    "effort": "προσπάθεια",
+    "viewAll": "Προβολή Όλων των Τρεχουσών Ενεργειών",
+    "viewAllAvailable": "Προβολή Όλων των Διαθέσιμων Ενεργειών"
+  },
+  "effort": {
+    "low": "Χαμηλή",
+    "medium": "Μέτρια",
+    "high": "Υψηλή"
+  },
+
+  "Common": {
+    "cancel": "Άκυρο",
+    "save": "Αποθήκευση"
   }
 }
