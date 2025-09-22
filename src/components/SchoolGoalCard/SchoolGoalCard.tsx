@@ -68,7 +68,6 @@ const generateChartDataFromActions = (
   allActions.forEach((action) => {
     const actionStartYear = new Date(action.dateAdded).getFullYear();
     const timeline = action.timeline || 1; // Default to 1 year if not specified
-    const actionEndYear = actionStartYear + timeline - 1; // End year is inclusive
 
     // Calculate yearly reduction percentage for this action
     const yearlyReductionPercentage = action.calculatedReduction / timeline;
@@ -237,7 +236,7 @@ const SchoolGoalCard: React.FC<SchoolGoalCardProps> = ({
               tickFormatter={(val) => `${Math.round(val)} kgCO₂`}
             />
             <Tooltip
-              formatter={(val: number, name: string, props: any) => {
+              formatter={(val: number, name: string) => {
                 if (name.includes("Emissions")) {
                   const percentage = (
                     ((totalEmissions - val) / totalEmissions) *

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { adminDb } from "../../../../../firebaseAdmin";
 import { v4 as uuidv4 } from "uuid";
 import { PendingAction } from "../../../../../types/PendingAction";
+import { ActionTranslation } from "../../../../../types/TranslatableAction";
 
 // Get pending actions for a project (for teachers)
 export async function GET(
@@ -148,9 +149,12 @@ export async function PATCH(
           console.log(
             `Approving action template for ${pendingAction.actionId}:`,
             {
-              title: (translation as any).title || actionTemplate?.title,
+              title:
+                (translation as ActionTranslation).title ||
+                actionTemplate?.title,
               description:
-                (translation as any).description || actionTemplate?.description,
+                (translation as ActionTranslation).description ||
+                actionTemplate?.description,
               hasTranslations: !!actionTemplate?.translations,
               availableLocales: actionTemplate?.translations
                 ? Object.keys(actionTemplate.translations)
@@ -174,12 +178,12 @@ export async function PATCH(
         // Core action fields (from Action type)
         title:
           pendingAction.actionTitle ||
-          (translation as any).title ||
+          (translation as ActionTranslation).title ||
           actionTemplate?.title ||
           "Untitled Action",
         description:
           pendingAction.actionDescription ||
-          (translation as any).description ||
+          (translation as ActionTranslation).description ||
           actionTemplate?.description ||
           "",
         category: pendingAction.categoryData.categoryId,
@@ -197,13 +201,13 @@ export async function PATCH(
         objectives:
           pendingAction.actionType === "Custom"
             ? pendingAction.actionDescription
-            : (translation as any).objectives || "",
-        keyContacts: (translation as any).keyContacts || "",
-        steps: (translation as any).steps || "",
-        calendar: (translation as any).calendar || "",
-        indicators: (translation as any).indicators || "",
-        monitoring: (translation as any).monitoring || "",
-        performance: (translation as any).performance || "",
+            : (translation as ActionTranslation).objectives || "",
+        keyContacts: "",
+        steps: (translation as ActionTranslation).steps || "",
+        calendar: "",
+        indicators: "",
+        monitoring: "",
+        performance: "",
         date: currentDate.split("T")[0], // Date in YYYY-MM-DD format
         timeline:
           pendingAction.actionType === "Custom"

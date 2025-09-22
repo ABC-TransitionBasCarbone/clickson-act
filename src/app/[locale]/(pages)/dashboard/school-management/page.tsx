@@ -2,7 +2,6 @@
 
 import React, { useState, useEffect, useCallback } from "react";
 import { motion } from "framer-motion";
-import { useTranslations } from "next-intl";
 import { useRouter } from "@/i18n/navigation";
 import { useUser } from "@/context/UserContext";
 import { School } from "@/types/School";
@@ -12,7 +11,6 @@ import PendingActionsManager from "@/components/teacher/PendingActionsManager";
 import Project from "@/types/ProjectType";
 
 const SchoolManagement: React.FC = () => {
-  const t = useTranslations("TeacherDashboard");
   const { user } = useUser();
   const router = useRouter();
 

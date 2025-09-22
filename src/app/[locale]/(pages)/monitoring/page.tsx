@@ -596,14 +596,12 @@ const Monitoring: React.FC = () => {
             <CurrentActions
               currentActions={availableActions}
               onEdit={(action) => handleEditClick(action, "available")}
-              onViewAll={() => router.push("/monitoring/available-actions")}
               onAddAction={handleAddAction}
             />
 
             <CompletedActions
               completedActions={completedActions}
               onEdit={(action) => handleEditClick(action, "completed")}
-              onViewAll={() => router.push("/monitoring/completed-actions")}
             />
           </div>
         )}

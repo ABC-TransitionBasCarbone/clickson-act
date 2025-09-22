@@ -1,5 +1,3 @@
-import { TranslatableCategory } from "./EmissionCategory";
-
 // School document structure in the "schools" collection
 // Each school is a document with a random ID containing name, goal, deadline, and emission data
 export interface School {

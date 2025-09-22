@@ -222,12 +222,7 @@ const ProjectDetails = () => {
   };
 
   // Handle completing an action
-  const handleCompleteAction = (action: CustomAction) => {
-    const updatedAction = {
-      ...action,
-      status: "Completed" as const,
-    };
-
+  const handleCompleteAction = () => {
     setEditingAction(null);
     refetch();
   };
@@ -489,13 +484,11 @@ const ProjectDetails = () => {
           <CurrentActions
             currentActions={convertedAvailableActions}
             onEdit={(action) => handleEditClick(action)}
-            onViewAll={() => {}} // Could add navigation to full actions page
             onAddAction={handleAddAction}
           />
           <CompletedActions
             completedActions={convertedCompletedActions}
             onEdit={(action) => handleEditClick(action)}
-            onViewAll={() => {}} // Could add navigation to full actions page
           />
         </div>
 

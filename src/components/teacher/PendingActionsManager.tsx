@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from "react";
-import { useTranslations } from "next-intl";
 import { PendingAction } from "@/types/PendingAction";
 import { useToast } from "@/context/ToastContext";
 
@@ -14,7 +13,6 @@ const PendingActionsManager: React.FC<PendingActionsManagerProps> = ({
   teacherId,
   onActionReviewed,
 }) => {
-  const t = useTranslations("TeacherDashboard");
   const { showToast } = useToast();
 
   const [pendingActions, setPendingActions] = useState<PendingAction[]>([]);

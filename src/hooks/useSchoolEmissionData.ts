@@ -1,10 +1,28 @@
 import { useState, useEffect } from "react";
-import { School, SchoolEmissionCategory } from "@/types/School";
+import {
+  School,
+  SchoolEmissionCategory,
+  SchoolEmissionSubcategory,
+} from "@/types/School";
 import {
   TranslatableCategory,
   getTranslatedCategory,
   getTranslatedSubcategory,
 } from "@/types/EmissionCategory";
+
+// Interface for the translated category data returned by the public API
+interface TranslatedCategory {
+  id: string;
+  name: string;
+  description: string;
+  subcategories: TranslatedSubcategory[];
+}
+
+interface TranslatedSubcategory {
+  id: string;
+  name: string;
+  description: string;
+}
 
 export interface ProcessedSchoolEmissionCategory {
   id: string;
@@ -118,7 +136,7 @@ export function useSchoolEmissionData(
         const globalResponse = await fetch(
           "/api/emission-categories/public?locale=" + locale,
         );
-        let globalCategories: TranslatableCategory[] = [];
+        let globalCategories: TranslatedCategory[] = [];
 
         if (globalResponse.ok) {
           const globalData = await globalResponse.json();
@@ -126,21 +144,26 @@ export function useSchoolEmissionData(
           globalCategories = globalData.categories;
           console.log(
             "Loaded global categories for translation:",
-            globalCategories.map((cat: any) => ({
+            globalCategories.map((cat: TranslatedCategory) => ({
               id: cat.id,
               name: cat.name,
               subcategoriesCount: cat.subcategories?.length || 0,
               subcategoryNames:
-                cat.subcategories?.map((sub: any) => sub.name) || [],
+                cat.subcategories?.map(
+                  (sub: TranslatedSubcategory) => sub.name,
+                ) || [],
             })),
           );
         }
 
         // Calculate total emissions for percentage calculations (handle backward compatibility)
         const totalEmissions = schoolEmissionCategories.reduce(
-          (total, cat) =>
+          (total: number, cat: SchoolEmissionCategory) =>
             total +
-            (cat.amount !== undefined ? cat.amount : (cat as any).value || 0),
+            (cat.amount !== undefined
+              ? cat.amount
+              : (cat as SchoolEmissionCategory & { value?: number }).value ||
+                0),
           0,
         );
 
@@ -150,11 +173,12 @@ export function useSchoolEmissionData(
             const categoryAmount =
               schoolCat.amount !== undefined
                 ? schoolCat.amount
-                : (schoolCat as any).value || 0;
+                : (schoolCat as SchoolEmissionCategory & { value?: number })
+                    .value || 0;
 
             // Find matching global category for translations
             const globalCategory = globalCategories.find(
-              (gc: any) => gc.id === schoolCat.categoryId,
+              (gc: TranslatedCategory) => gc.id === schoolCat.categoryId,
             );
             // Since globalCategories is already translated, use it directly
             const translatedCategory = globalCategory
@@ -180,11 +204,16 @@ export function useSchoolEmissionData(
                 const subcategoryAmount =
                   schoolSub.amount !== undefined
                     ? schoolSub.amount
-                    : (schoolSub as any).value || 0;
+                    : (
+                        schoolSub as SchoolEmissionSubcategory & {
+                          value?: number;
+                        }
+                      ).value || 0;
 
                 // Find matching global subcategory for additional data
                 const globalSub = globalCategory?.subcategories?.find(
-                  (gs: any) => gs.id === schoolSub.subcategoryId,
+                  (gs: TranslatedSubcategory) =>
+                    gs.id === schoolSub.subcategoryId,
                 );
 
                 // Since globalCategories is already translated, use it directly

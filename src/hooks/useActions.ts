@@ -1,7 +1,6 @@
 import { useState, useEffect } from "react";
 import { useLocale } from "next-intl";
 import { Action } from "@/types/Action";
-import { authenticatedFetch } from "@/lib/auth-utils";
 import { useUser } from "@/context/UserContext";
 
 export const useActions = () => {
