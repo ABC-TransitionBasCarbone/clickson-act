@@ -381,6 +381,7 @@ const ProjectDetails = () => {
                 )
               : "2023"
           }
+          totalEmissions={currentEmissions || 1000} // Use current emissions as total
           availableActions={availableActions}
           completedActions={completedActions}
         />

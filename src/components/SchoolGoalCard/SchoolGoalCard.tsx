@@ -35,6 +35,7 @@ type SchoolGoalCardProps = {
   selectedActionReductionPerYear?: number;
   startYear: string;
   currentEmissions?: number;
+  totalEmissions?: number; // Total school emissions in kgCO2
   totalReduction?: number;
   availableActions?: ProjectAction[];
   completedActions?: ProjectAction[];
@@ -49,72 +50,83 @@ const generateChartDataFromActions = (
   subGoalYear: number = 0,
   finalGoal: number = 0,
   finalGoalYear: number = 0,
+  totalEmissions: number = 0,
 ) => {
   const data = [];
 
-  // Create a map to track yearly reduction progress for each action
-  const yearlyReductions = new Map<number, number>();
+  // Create a map to track cumulative reduction achieved by each year
+  const cumulativeReductions = new Map<number, number>();
 
   // Initialize all years with zero reductions
   for (let year = startYear; year <= endYear; year++) {
-    yearlyReductions.set(year, 0);
+    cumulativeReductions.set(year, 0);
   }
 
-  // Process all actions (both completed and available) to show their yearly progress
+  // Process all actions (both completed and available) to show their cumulative impact
   const allActions = [...completedActions, ...availableActions];
 
   allActions.forEach((action) => {
     const actionStartYear = new Date(action.dateAdded).getFullYear();
     const timeline = action.timeline || 1; // Default to 1 year if not specified
-    const actionEndYear = actionStartYear + timeline;
+    const actionEndYear = actionStartYear + timeline - 1; // End year is inclusive
 
     // Calculate yearly reduction percentage for this action
     const yearlyReductionPercentage = action.calculatedReduction / timeline;
 
-    // Distribute the reduction over the action's timeline
-    for (
-      let year = actionStartYear;
-      year < Math.min(actionEndYear, endYear + 1);
-      year++
-    ) {
-      const currentYearReduction = yearlyReductions.get(year) || 0;
-      yearlyReductions.set(
-        year,
-        currentYearReduction + yearlyReductionPercentage,
-      );
+    // For each year, add the cumulative reduction from this action
+    for (let year = startYear; year <= endYear; year++) {
+      let actionContribution = 0;
+
+      if (year >= actionStartYear) {
+        // Calculate how much this action contributes by this year
+        const yearsElapsed = Math.min(year - actionStartYear + 1, timeline);
+        actionContribution = yearlyReductionPercentage * yearsElapsed;
+      }
+
+      const currentReduction = cumulativeReductions.get(year) || 0;
+      cumulativeReductions.set(year, currentReduction + actionContribution);
     }
   });
 
-  // Generate yearly progress data for chart (non-cumulative)
+  // Generate yearly progress data for chart (emissions-based with cumulative reductions)
   for (let year = startYear; year <= endYear; year++) {
-    const yearReduction = yearlyReductions.get(year) || 0;
+    const cumulativeReductionPercentage = cumulativeReductions.get(year) || 0;
+
+    // Calculate current emissions after cumulative reduction
+    const currentEmissions =
+      totalEmissions * (1 - cumulativeReductionPercentage / 100);
 
     // Calculate expected progress line (linear progression to goals)
-    let expectedProgress = 0;
+    let expectedReductionPercentage = 0;
     if (year <= subGoalYear && subGoalYear > startYear) {
       // Linear progression to sub-goal
-      expectedProgress =
+      expectedReductionPercentage =
         (subGoal * (year - startYear)) / (subGoalYear - startYear);
     } else if (year > subGoalYear && finalGoalYear > subGoalYear) {
       // Linear progression from sub-goal to final goal
       const progressFromSubGoal =
         ((finalGoal - subGoal) * (year - subGoalYear)) /
         (finalGoalYear - subGoalYear);
-      expectedProgress = subGoal + progressFromSubGoal;
+      expectedReductionPercentage = subGoal + progressFromSubGoal;
     } else if (
       year <= finalGoalYear &&
       finalGoalYear > startYear &&
       subGoalYear === 0
     ) {
       // Direct linear progression to final goal if no sub-goal
-      expectedProgress =
+      expectedReductionPercentage =
         (finalGoal * (year - startYear)) / (finalGoalYear - startYear);
     }
 
+    const expectedEmissions =
+      totalEmissions * (1 - expectedReductionPercentage / 100);
+
     data.push({
       date: `${year}`,
-      currentReduction: Math.min(yearReduction, 100), // Use yearly reduction, not cumulative
-      expectedProgress: Math.min(Math.max(expectedProgress, 0), 100),
+      currentEmissions: Math.max(currentEmissions, 0),
+      expectedEmissions: Math.max(expectedEmissions, 0),
+      currentReduction: Math.min(cumulativeReductionPercentage, 100),
+      expectedProgress: Math.min(Math.max(expectedReductionPercentage, 0), 100),
     });
   }
 
@@ -127,6 +139,7 @@ const generateChartData = (
   end: number,
   baseRate: number,
   selectedRate?: number,
+  totalEmissions: number = 1000, // Default total emissions if not provided
 ) => {
   const data = [];
   let current = 0;
@@ -134,13 +147,20 @@ const generateChartData = (
   for (let year = start; year <= end; year++) {
     current += baseRate;
     currentAlt += selectedRate ? selectedRate + baseRate : 0;
+
+    const currentReductionPercentage = selectedRate
+      ? Math.min(currentAlt, 100)
+      : Math.min(current, 100);
+
+    const currentEmissions =
+      totalEmissions * (1 - currentReductionPercentage / 100);
+
     data.push({
       date: `${year}`,
       baseReduction: Math.min(current, 100),
       selectedReduction: selectedRate ? Math.min(currentAlt, 100) : undefined,
-      currentReduction: selectedRate
-        ? Math.min(currentAlt, 100)
-        : Math.min(current, 100),
+      currentReduction: currentReductionPercentage,
+      currentEmissions: Math.max(currentEmissions, 0),
     });
   }
   return data;
@@ -154,6 +174,7 @@ const SchoolGoalCard: React.FC<SchoolGoalCardProps> = ({
   baseReductionPerYear,
   selectedActionReductionPerYear,
   startYear,
+  totalEmissions = 1000, // Default total emissions if not provided
   availableActions,
   completedActions,
 }) => {
@@ -173,6 +194,7 @@ const SchoolGoalCard: React.FC<SchoolGoalCardProps> = ({
     subGoalYearNum,
     schoolGoal,
     finalYearNum,
+    totalEmissions,
   );
 
   // If no action data and chart data is empty, use legacy method
@@ -184,24 +206,25 @@ const SchoolGoalCard: React.FC<SchoolGoalCardProps> = ({
           finalYearNum,
           baseReductionPerYear,
           selectedActionReductionPerYear,
+          totalEmissions,
         );
 
   return (
-    <div className="bg-primary-50! border-primary-200! card mb-8">
+    <div className="bg-primary-50! mb-8 border-primary-200! card">
       <div className="pb-4">
-        <div className="mb-2.5 flex justify-between max-lg:flex-col lg:items-center">
-          <h3 className="flex items-center gap-2 text-xl font-bold lg:text-2xl">
-            <Target className="text-primary-600 h-5 w-5" />
+        <div className="flex max-lg:flex-col justify-between lg:items-center mb-2.5">
+          <h3 className="flex items-center gap-2 font-bold text-xl lg:text-2xl">
+            <Target className="w-5 h-5 text-primary-600" />
             {t("schoolGoalTitle")}
           </h3>
-          <span className="text-md text-primary font-bold lg:text-xl">
+          <span className="font-bold text-md text-primary lg:text-xl">
             {subGoal}% {t("schoolGoalReduction")} ({subGoalYear})
           </span>
         </div>
         <p>{t("schoolGoalDescription")}</p>
       </div>
 
-      <div className="mx-auto h-64 w-full">
+      <div className="mx-auto w-full h-64">
         <ResponsiveContainer width="100%" height="100%">
           <LineChart
             data={finalChartData}
@@ -209,36 +232,61 @@ const SchoolGoalCard: React.FC<SchoolGoalCardProps> = ({
           >
             <XAxis dataKey="date" />
             <YAxis
-              domain={[0, schoolGoal]}
-              reversed={true}
-              tickFormatter={(val) => `${val}%`}
+              domain={[0, totalEmissions]}
+              reversed={false}
+              tickFormatter={(val) => `${Math.round(val)} kgCO₂`}
             />
             <Tooltip
-              formatter={(val: number, name: string) => {
+              formatter={(val: number, name: string, props: any) => {
+                if (name.includes("Emissions")) {
+                  const percentage = (
+                    ((totalEmissions - val) / totalEmissions) *
+                    100
+                  ).toFixed(1);
+                  return [
+                    `${Math.round(val)} kgCO₂ (${percentage}% reduction)`,
+                    `${name}`,
+                  ];
+                }
                 return [`${val}%`, `${name}`];
               }}
+              wrapperClassName="hidden md:block"
             />
 
-            {/* Current Reduction line (shows actual action progress over time) */}
+            {/* Current Emissions line (shows actual emissions with action timeline reductions) */}
             <Line
               type="monotone"
-              dataKey="currentReduction"
+              dataKey="currentEmissions"
               stroke="#9c27b0"
               strokeWidth={3}
-              name="Current Reduction"
+              name="Current Emissions"
             />
 
-            {/* Sub-goal reference line */}
+            {/* Sub-goal emissions reference line */}
             <ReferenceLine
-              y={subGoal}
+              y={totalEmissions * (1 - subGoal / 100)}
               stroke="#f97316"
               strokeDasharray="4 4"
               strokeWidth={2}
             >
               <Label
-                value={`Sub-Goal: ${subGoal}%`}
+                value={`Sub-Goal: ${Math.round(totalEmissions * (1 - subGoal / 100))} kgCO₂`}
                 position="insideTopLeft"
                 fill="#f97316"
+              />
+            </ReferenceLine>
+
+            {/* Final goal emissions reference line */}
+            <ReferenceLine
+              y={totalEmissions * (1 - schoolGoal / 100)}
+              stroke="#10b981"
+              strokeDasharray="4 4"
+              strokeWidth={2}
+            >
+              <Label
+                value={`Final Goal: ${Math.round(totalEmissions * (1 - schoolGoal / 100))} kgCO₂`}
+                position="insideTopLeft"
+                fill="#10b981"
               />
             </ReferenceLine>
 
@@ -272,20 +320,30 @@ const SchoolGoalCard: React.FC<SchoolGoalCardProps> = ({
       </div>
 
       {/* Legend */}
-      <div className="text-muted-foreground mt-3 flex flex-wrap justify-between gap-4 text-sm">
-        {/* Always show current reduction */}
+      <div className="flex flex-wrap justify-between gap-4 mt-3 text-muted-foreground text-sm">
+        {/* Current emissions line */}
         <div className="flex items-center gap-2">
-          <span className="inline-block h-3 w-3 rounded-full bg-blue-500" />
+          <span className="inline-block bg-purple-500 rounded-full w-3 h-3" />
           <span>
-            Current Reduction (
+            Current Emissions (
             {(completedActions?.length || 0) + (availableActions?.length || 0)}{" "}
             actions)
           </span>
         </div>
+
+        {/* Sub-goal line */}
         <div className="flex items-center gap-2">
-          <span className="inline-block h-3 w-3 rounded-full bg-orange-500" />
+          <span className="inline-block bg-orange-500 rounded-full w-3 h-3" />
           <span>
             Sub-Goal ({subGoal}% by {subGoalYearNum})
+          </span>
+        </div>
+
+        {/* Final goal line */}
+        <div className="flex items-center gap-2">
+          <span className="inline-block bg-green-500 rounded-full w-3 h-3" />
+          <span>
+            Final Goal ({schoolGoal}% by {finalYearNum})
           </span>
         </div>
 
@@ -294,12 +352,12 @@ const SchoolGoalCard: React.FC<SchoolGoalCardProps> = ({
           <>
             {/* Legacy legend */}
             <div className="flex items-center gap-2">
-              <span className="inline-block h-3 w-3 rounded-full bg-blue-500" />
+              <span className="inline-block bg-purple-500 rounded-full w-3 h-3" />
               <span>{t("schoolGoalLegendProgress")}</span>
             </div>
             {selectedActionReductionPerYear && (
               <div className="flex items-center gap-2">
-                <span className="inline-block h-3 w-3 rounded-full bg-purple-500" />
+                <span className="inline-block bg-blue-500 rounded-full w-3 h-3" />
                 <span>
                   {t("schoolGoalLegendSelectedAction")}:{" "}
                   {selectedActionReductionPerYear}%

@@ -188,6 +188,7 @@ const ProjectMonitoring: React.FC = () => {
                 ? String(projectData.startDate)
                 : projectData.startDate?.split("T")[0]?.split("-")[0] || "2024"
             }
+            totalEmissions={currentEmissions || 1000} // Use current emissions as total
             currentEmissions={currentEmissions}
             totalReduction={totalReduction}
             availableActions={projectAvailableActions}
