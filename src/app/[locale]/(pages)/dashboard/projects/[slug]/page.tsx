@@ -11,6 +11,7 @@ import CustomActionFormModal from "@/components/ActionModal";
 
 import { motion } from "framer-motion";
 import { useProjectData } from "@/hooks/useProjectData";
+import { useEmissionCategories } from "@/hooks/useEmissionCategories";
 import { Edit, Share2 } from "lucide-react";
 import { useUser } from "@/context/UserContext";
 import { usePathname } from "@/i18n/navigation";
@@ -43,6 +44,9 @@ const ProjectDetails = () => {
   const pathname = usePathname();
   const locale = useLocale();
 
+  // Use emission categories hook to fetch from database
+  const { categories: emissionCategories } = useEmissionCategories();
+
   // Use the project data hook to get comprehensive data
   const {
     projectData: project,
@@ -50,6 +54,7 @@ const ProjectDetails = () => {
     availableActions,
     completedActions,
     totalReduction,
+    currentEmissions,
     loading,
     error,
     refetch,
@@ -67,6 +72,20 @@ const ProjectDetails = () => {
   // Action modal states
   const [editingAction, setEditingAction] = useState<CustomAction | null>(null);
   const [showCreateModal, setShowCreateModal] = useState(false);
+
+  // Transform emission categories for ActionModal
+  const categories = emissionCategories.map((category) => ({
+    value: category.category, // Use the database ID as value
+    label: category.name,
+  }));
+
+  // Transform subcategories for ActionModal
+  const subcategoryOptions = emissionCategories.flatMap((category) =>
+    category.subcategories.map((subcategory) => ({
+      value: `${category.category}-${subcategory.id}`, // Format: categoryId-subcategoryId
+      label: subcategory.name,
+    })),
+  );
 
   // Share and copy states
   const [shareButtonText, setShareButtonText] = useState("Share");
@@ -118,6 +137,127 @@ const ProjectDetails = () => {
   // Handle action editing
   const handleEditClick = (action: CustomAction) => {
     setEditingAction(action);
+  };
+
+  // Handle approving student changes
+  const handleApproveChanges = async (action: CustomAction) => {
+    try {
+      if (!action.pendingChanges) {
+        throw new Error("No pending changes to approve");
+      }
+
+      // Apply the pending changes to the action
+      const approvedAction = {
+        ...action,
+        steps: action.pendingChanges.steps || action.steps,
+        monitoring: action.pendingChanges.monitoring || action.monitoring,
+        performance: action.pendingChanges.performance || action.performance,
+        keyContacts: action.pendingChanges.keyContacts || action.keyContacts,
+        pendingChanges: undefined, // Clear pending changes
+        needsApproval: false, // Mark as approved
+      };
+
+      // Call the API to update the action in the database
+      const response = await fetch(`/api/project/${projectId}/actions`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(approvedAction),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || "Failed to approve changes");
+      }
+
+      // Update the editingAction state to reflect the approved changes and refresh data
+      setEditingAction(approvedAction);
+      refetch();
+    } catch (error) {
+      console.error("Error approving changes:", error);
+      alert(
+        `Failed to approve changes: ${error instanceof Error ? error.message : "Unknown error"}`,
+      );
+    }
+  };
+
+  // Handle rejecting student changes
+  const handleRejectChanges = async (action: CustomAction) => {
+    try {
+      if (!action.pendingChanges) {
+        throw new Error("No pending changes to reject");
+      }
+
+      // Remove pending changes from the action
+      const rejectedAction = {
+        ...action,
+        pendingChanges: undefined, // Clear pending changes
+        needsApproval: false, // Mark as not needing approval
+      };
+
+      // Call the API to update the action in the database
+      const response = await fetch(`/api/project/${projectId}/actions`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(rejectedAction),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || "Failed to reject changes");
+      }
+
+      // Update the editingAction state to reflect the rejected changes and refresh data
+      setEditingAction(rejectedAction);
+      refetch();
+    } catch (error) {
+      console.error("Error rejecting changes:", error);
+      alert(
+        `Failed to reject changes: ${error instanceof Error ? error.message : "Unknown error"}`,
+      );
+    }
+  };
+
+  // Handle completing an action
+  const handleCompleteAction = (action: CustomAction) => {
+    const updatedAction = {
+      ...action,
+      status: "Completed" as const,
+    };
+
+    setEditingAction(null);
+    refetch();
+  };
+
+  const handleDeleteAction = async (action: CustomAction) => {
+    try {
+      console.log("Deleting action:", action.id);
+
+      // Call the API to delete from database
+      const response = await fetch(
+        `/api/project/${projectId}/actions?actionId=${action.id}`,
+        {
+          method: "DELETE",
+        },
+      );
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || "Failed to delete action");
+      }
+
+      // Close the modal and refresh data
+      setEditingAction(null);
+      refetch();
+    } catch (error) {
+      console.error("Error deleting action:", error);
+      alert(
+        `Failed to delete action: ${error instanceof Error ? error.message : "Unknown error"}`,
+      );
+    }
   };
 
   const handleAddAction = () => {
@@ -392,14 +532,43 @@ const ProjectDetails = () => {
         <CustomActionFormModal
           mode="edit"
           initialAction={editingAction}
-          onSubmit={() => {
-            // Handle action update
-            setEditingAction(null);
-            refetch();
+          onSubmit={async (updatedAction: CustomAction) => {
+            try {
+              // Call the API to update the action in the database
+              const response = await fetch(
+                `/api/project/${projectId}/actions`,
+                {
+                  method: "PUT",
+                  headers: {
+                    "Content-Type": "application/json",
+                  },
+                  body: JSON.stringify(updatedAction),
+                },
+              );
+
+              if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.error || "Failed to update action");
+              }
+
+              // Close modal and refresh data
+              setEditingAction(null);
+              refetch();
+            } catch (error) {
+              console.error("Error updating action:", error);
+              alert(
+                `Failed to update action: ${error instanceof Error ? error.message : "Unknown error"}`,
+              );
+            }
           }}
-          categories={[]}
+          onApproveChanges={handleApproveChanges}
+          onRejectChanges={handleRejectChanges}
+          onCompleteAction={handleCompleteAction}
+          onDelete={handleDeleteAction}
+          categories={categories}
+          subcategoryOptions={subcategoryOptions}
           effortCategories={[
-            { value: "low", label: "Low" },
+            { value: "easy", label: "Easy" },
             { value: "medium", label: "Medium" },
             { value: "hard", label: "Hard" },
           ]}
@@ -415,9 +584,10 @@ const ProjectDetails = () => {
             setShowCreateModal(false);
             refetch();
           }}
-          categories={[]}
+          categories={categories}
+          subcategoryOptions={subcategoryOptions}
           effortCategories={[
-            { value: "low", label: "Low" },
+            { value: "easy", label: "Easy" },
             { value: "medium", label: "Medium" },
             { value: "hard", label: "Hard" },
           ]}

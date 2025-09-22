@@ -17,4 +17,13 @@ export interface Action {
   date: string;
   type?: "Direct" | "Indirect"; // Type of impact from action template
   timeline?: number; // Number of years the action will take place
+  pendingChanges?: {
+    steps?: string;
+    monitoring?: string;
+    performance?: string;
+    keyContacts?: string;
+    changedBy?: string;
+    changedAt?: string;
+  };
+  needsApproval?: boolean;
 }

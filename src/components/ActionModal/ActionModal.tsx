@@ -12,6 +12,15 @@ interface CustomAction extends Action {
   assignedTo?: string;
   timeline?: number;
   subcategory?: string;
+  pendingChanges?: {
+    steps?: string;
+    monitoring?: string;
+    performance?: string;
+    keyContacts?: string;
+    changedBy?: string;
+    changedAt?: string;
+  };
+  needsApproval?: boolean;
 }
 
 interface ActionModalProps {
@@ -22,6 +31,9 @@ interface ActionModalProps {
   subcategoryOptions?: { value: string; label: string }[];
   initialAction?: CustomAction;
   onDelete?: (action: CustomAction) => void;
+  onApproveChanges?: (action: CustomAction) => void;
+  onRejectChanges?: (action: CustomAction) => void;
+  onCompleteAction?: (action: CustomAction) => void;
 }
 
 const ActionModal: React.FC<ActionModalProps> = ({
@@ -32,6 +44,9 @@ const ActionModal: React.FC<ActionModalProps> = ({
   subcategoryOptions = [],
   initialAction,
   onDelete,
+  onApproveChanges,
+  onRejectChanges,
+  onCompleteAction,
 }) => {
   const t = useTranslations("Action");
   const { user } = useUser();
@@ -64,6 +79,13 @@ const ActionModal: React.FC<ActionModalProps> = ({
   });
 
   const [isEditing, setIsEditing] = useState(mode === "create");
+  const [pendingChanges, setPendingChanges] = useState<{
+    steps?: string;
+    monitoring?: string;
+    performance?: string;
+    keyContacts?: string;
+  }>({});
+  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
 
   useEffect(() => {
     if (initialAction && mode === "edit") {
@@ -80,18 +102,41 @@ const ActionModal: React.FC<ActionModalProps> = ({
   const handleSubmit = () => {
     if (!newAction.category || !newAction.title || !newAction.reduction) return;
 
-    onSubmit({
-      ...newAction,
-      id:
-        mode === "edit" && initialAction
-          ? initialAction.id
-          : Date.now().toString(),
-      selected: initialAction?.selected ?? false,
-      date:
-        mode === "edit" && initialAction
-          ? initialAction.date
-          : new Date().toISOString(),
-    });
+    if (isTeacher) {
+      // Teachers can directly submit changes
+      onSubmit({
+        ...newAction,
+        id:
+          mode === "edit" && initialAction
+            ? initialAction.id
+            : Date.now().toString(),
+        selected: initialAction?.selected ?? false,
+        date:
+          mode === "edit" && initialAction
+            ? initialAction.date
+            : new Date().toISOString(),
+      });
+    } else {
+      // Students submit pending changes for approval
+      onSubmit({
+        ...newAction,
+        id:
+          mode === "edit" && initialAction
+            ? initialAction.id
+            : Date.now().toString(),
+        selected: initialAction?.selected ?? false,
+        date:
+          mode === "edit" && initialAction
+            ? initialAction.date
+            : new Date().toISOString(),
+        pendingChanges: {
+          ...pendingChanges,
+          changedBy: user?.username || "",
+          changedAt: new Date().toISOString(),
+        },
+        needsApproval: true,
+      });
+    }
 
     const modal = document.getElementById("custom_action") as HTMLDialogElement;
     if (modal) modal.close();
@@ -105,13 +150,54 @@ const ActionModal: React.FC<ActionModalProps> = ({
 
   const fieldDisabled = mode === "edit" && !isEditing;
 
-  const isInvalid =
-    newAction.category === "" ||
-    newAction.subcategory === "" ||
-    newAction.title === "" ||
-    newAction.description === "" ||
-    newAction.reduction === 0 ||
-    newAction.effort === "";
+  // Helper function to check if a field can be edited by current user
+  const canEditField = (fieldName: string): boolean => {
+    if (isTeacher) return true; // Teachers can edit all fields
+    if (!isTeacher) {
+      // Students can only edit: steps, monitoring, performance, keyContacts
+      return ["steps", "monitoring", "performance", "keyContacts"].includes(
+        fieldName,
+      );
+    }
+    return false;
+  };
+
+  // Helper function to handle field changes
+  const handleFieldChange = (fieldName: string, value: string) => {
+    if (isTeacher) {
+      // Teachers can directly modify the action
+      setNewAction({ ...newAction, [fieldName]: value });
+    } else {
+      // Students create pending changes
+      setPendingChanges({ ...pendingChanges, [fieldName]: value });
+      setHasUnsavedChanges(true);
+    }
+  };
+
+  // Helper function to get field value (original or pending)
+  const getFieldValue = (fieldName: string): string => {
+    if (isTeacher) {
+      return (newAction[fieldName as keyof CustomAction] as string) || "";
+    } else {
+      return (
+        pendingChanges[fieldName as keyof typeof pendingChanges] ||
+        (newAction[fieldName as keyof CustomAction] as string) ||
+        ""
+      );
+    }
+  };
+
+  // Different validation for teachers vs students
+  const isInvalid = isTeacher
+    ? // Teachers: validate all required fields
+      newAction.category === "" ||
+      newAction.subcategory === "" ||
+      newAction.title === "" ||
+      newAction.description === "" ||
+      newAction.reduction === 0 ||
+      newAction.effort === ""
+    : // Students: only validate that they have made some changes
+      !hasUnsavedChanges;
 
   return (
     <Modal
@@ -136,7 +222,7 @@ const ActionModal: React.FC<ActionModalProps> = ({
                 })
               }
               className="w-full input"
-              disabled={fieldDisabled}
+              disabled={fieldDisabled || !canEditField("status")}
             >
               <option value="Available">{t("available")}</option>
               <option value="Selected">{t("selected")}</option>
@@ -154,7 +240,7 @@ const ActionModal: React.FC<ActionModalProps> = ({
                 setNewAction({ ...newAction, assignedTo: e.target.value })
               }
               className="w-full input"
-              disabled={fieldDisabled}
+              disabled={fieldDisabled || !canEditField("assignedTo")}
             />
           </div>
 
@@ -172,12 +258,12 @@ const ActionModal: React.FC<ActionModalProps> = ({
                 })
               }
               className="w-full input"
-              disabled={fieldDisabled}
+              disabled={fieldDisabled || !canEditField("category")}
             >
               <option value="">{t("selectCategory")}</option>
               {categories.map((cat) => (
                 <option key={cat.label} value={cat.value}>
-                  {t(cat.label)}
+                  {cat.label}
                 </option>
               ))}
             </select>
@@ -193,7 +279,11 @@ const ActionModal: React.FC<ActionModalProps> = ({
                 setNewAction({ ...newAction, subcategory: e.target.value })
               }
               className="w-full input"
-              disabled={fieldDisabled || !newAction.category}
+              disabled={
+                fieldDisabled ||
+                !newAction.category ||
+                !canEditField("subcategory")
+              }
             >
               <option value="">{t("selectCategory")}</option>
               {subcategoryOptions
@@ -204,7 +294,7 @@ const ActionModal: React.FC<ActionModalProps> = ({
                 )
                 .map((sub) => (
                   <option key={sub.value} value={sub.value}>
-                    {t(sub.label)}
+                    {sub.label}
                   </option>
                 ))}
             </select>
@@ -224,7 +314,7 @@ const ActionModal: React.FC<ActionModalProps> = ({
               max={50}
               placeholder="Number of years"
               className="w-full input"
-              disabled={fieldDisabled}
+              disabled={fieldDisabled || !canEditField("timeline")}
             />
           </div>
 
@@ -238,7 +328,7 @@ const ActionModal: React.FC<ActionModalProps> = ({
                 setNewAction({ ...newAction, title: e.target.value })
               }
               className="w-full input"
-              disabled={fieldDisabled}
+              disabled={fieldDisabled || !canEditField("title")}
             />
           </div>
 
@@ -252,7 +342,7 @@ const ActionModal: React.FC<ActionModalProps> = ({
                 setNewAction({ ...newAction, description: e.target.value })
               }
               className="w-full input"
-              disabled={fieldDisabled}
+              disabled={fieldDisabled || !canEditField("description")}
             />
           </div>
 
@@ -266,7 +356,7 @@ const ActionModal: React.FC<ActionModalProps> = ({
                 setNewAction({ ...newAction, effort: e.target.value })
               }
               className="w-full input"
-              disabled={fieldDisabled}
+              disabled={fieldDisabled || !canEditField("effort")}
             >
               <option value="">{t("selectEffort")}</option>
               {effortCategories.map((effort) => (
@@ -293,7 +383,7 @@ const ActionModal: React.FC<ActionModalProps> = ({
               min={1}
               max={100}
               className="w-full input"
-              disabled={fieldDisabled}
+              disabled={fieldDisabled || !canEditField("reduction")}
             />
           </div>
 
@@ -307,7 +397,7 @@ const ActionModal: React.FC<ActionModalProps> = ({
                 setNewAction({ ...newAction, manager: e.target.value })
               }
               className="w-full input"
-              disabled={fieldDisabled}
+              disabled={fieldDisabled || !canEditField("manager")}
             />
           </div>
 
@@ -321,7 +411,7 @@ const ActionModal: React.FC<ActionModalProps> = ({
                 setNewAction({ ...newAction, nature: e.target.value })
               }
               className="w-full input"
-              disabled={fieldDisabled}
+              disabled={fieldDisabled || !canEditField("nature")}
             />
           </div>
 
@@ -336,37 +426,65 @@ const ActionModal: React.FC<ActionModalProps> = ({
                 setNewAction({ ...newAction, objectives: e.target.value })
               }
               className="w-full textarea"
-              disabled={fieldDisabled}
+              disabled={fieldDisabled || !canEditField("objectives")}
             />
           </div>
 
           {/* Key Contacts */}
           <div className="gap-2 grid">
-            <label htmlFor="keyContacts">{t("keyContacts")}</label>
+            <label htmlFor="keyContacts" className="flex items-center gap-2">
+              {t("keyContacts")}
+              {isTeacher &&
+                initialAction?.pendingChanges?.keyContacts &&
+                initialAction.pendingChanges.keyContacts !==
+                  initialAction.keyContacts && (
+                  <span className="badge badge-warning badge-sm">
+                    Pending Change
+                  </span>
+                )}
+            </label>
             <textarea
               rows={3}
               id="keyContacts"
-              value={newAction.keyContacts}
-              onChange={(e) =>
-                setNewAction({ ...newAction, keyContacts: e.target.value })
-              }
-              className="w-full textarea"
-              disabled={fieldDisabled}
+              value={getFieldValue("keyContacts")}
+              onChange={(e) => handleFieldChange("keyContacts", e.target.value)}
+              className={`textarea w-full ${
+                isTeacher &&
+                initialAction?.pendingChanges?.keyContacts &&
+                initialAction.pendingChanges.keyContacts !==
+                  initialAction.keyContacts
+                  ? "border-warning bg-warning/10"
+                  : ""
+              }`}
+              disabled={fieldDisabled || !canEditField("keyContacts")}
             />
           </div>
 
           {/* Steps */}
           <div className="gap-2 grid">
-            <label htmlFor="steps">{t("steps")}</label>
+            <label htmlFor="steps" className="flex items-center gap-2">
+              {t("steps")}
+              {isTeacher &&
+                initialAction?.pendingChanges?.steps &&
+                initialAction.pendingChanges.steps !== initialAction.steps && (
+                  <span className="badge badge-warning badge-sm">
+                    Pending Change
+                  </span>
+                )}
+            </label>
             <textarea
               rows={3}
               id="steps"
-              value={newAction.steps}
-              onChange={(e) =>
-                setNewAction({ ...newAction, steps: e.target.value })
-              }
-              className="w-full textarea"
-              disabled={fieldDisabled}
+              value={getFieldValue("steps")}
+              onChange={(e) => handleFieldChange("steps", e.target.value)}
+              className={`textarea w-full ${
+                isTeacher &&
+                initialAction?.pendingChanges?.steps &&
+                initialAction.pendingChanges.steps !== initialAction.steps
+                  ? "border-warning bg-warning/10"
+                  : ""
+              }`}
+              disabled={fieldDisabled || !canEditField("steps")}
             />
           </div>
 
@@ -381,42 +499,193 @@ const ActionModal: React.FC<ActionModalProps> = ({
                 setNewAction({ ...newAction, calendar: e.target.value })
               }
               className="w-full textarea"
-              disabled={fieldDisabled}
+              disabled={fieldDisabled || !canEditField("calendar")}
             />
           </div>
 
           {/* Monitoring */}
           <div className="gap-2 grid">
-            <label htmlFor="monitoring">{t("monitoring")}</label>
+            <label htmlFor="monitoring" className="flex items-center gap-2">
+              {t("monitoring")}
+              {isTeacher &&
+                initialAction?.pendingChanges?.monitoring &&
+                initialAction.pendingChanges.monitoring !==
+                  initialAction.monitoring && (
+                  <span className="badge badge-warning badge-sm">
+                    Pending Change
+                  </span>
+                )}
+            </label>
             <textarea
               rows={3}
               id="monitoring"
-              value={newAction.monitoring}
-              onChange={(e) =>
-                setNewAction({ ...newAction, monitoring: e.target.value })
-              }
-              className="w-full textarea"
-              disabled={fieldDisabled}
+              value={getFieldValue("monitoring")}
+              onChange={(e) => handleFieldChange("monitoring", e.target.value)}
+              className={`textarea w-full ${
+                isTeacher &&
+                initialAction?.pendingChanges?.monitoring &&
+                initialAction.pendingChanges.monitoring !==
+                  initialAction.monitoring
+                  ? "border-warning bg-warning/10"
+                  : ""
+              }`}
+              disabled={fieldDisabled || !canEditField("monitoring")}
             />
           </div>
 
           {/* Performance */}
           <div className="gap-2 grid">
-            <label htmlFor="performance">{t("performance")}</label>
+            <label htmlFor="performance" className="flex items-center gap-2">
+              {t("performance")}
+              {isTeacher &&
+                initialAction?.pendingChanges?.performance &&
+                initialAction.pendingChanges.performance !==
+                  initialAction.performance && (
+                  <span className="badge badge-warning badge-sm">
+                    Pending Change
+                  </span>
+                )}
+            </label>
             <textarea
               rows={3}
               id="performance"
-              value={newAction.performance}
-              onChange={(e) =>
-                setNewAction({ ...newAction, performance: e.target.value })
-              }
-              className="w-full textarea"
-              disabled={fieldDisabled}
+              value={getFieldValue("performance")}
+              onChange={(e) => handleFieldChange("performance", e.target.value)}
+              className={`textarea w-full ${
+                isTeacher &&
+                initialAction?.pendingChanges?.performance &&
+                initialAction.pendingChanges.performance !==
+                  initialAction.performance
+                  ? "border-warning bg-warning/10"
+                  : ""
+              }`}
+              disabled={fieldDisabled || !canEditField("performance")}
             />
           </div>
         </div>
 
-        <div className="flex justify-end gap-3 mt-6">
+        {/* Pending Changes Notification for Teachers */}
+        {mode === "edit" && isTeacher && initialAction?.needsApproval && (
+          <div className="mt-4 alert alert-warning">
+            <div className="w-full">
+              <h3 className="font-bold">Pending Student Changes</h3>
+              <div className="mb-3 text-xs">
+                Changes submitted by: {initialAction.pendingChanges?.changedBy}
+                <br />
+                Submitted at:{" "}
+                {initialAction.pendingChanges?.changedAt
+                  ? new Date(
+                      initialAction.pendingChanges.changedAt,
+                    ).toLocaleString()
+                  : "Unknown"}
+              </div>
+
+              {/* Show detailed changes */}
+              <div className="space-y-2">
+                <h4 className="font-semibold text-sm">Changes Made:</h4>
+                {initialAction.pendingChanges?.steps &&
+                  initialAction.pendingChanges.steps !==
+                    initialAction.steps && (
+                    <div className="bg-white p-2 border rounded">
+                      <div className="font-medium text-gray-700 text-sm">
+                        Steps:
+                      </div>
+                      <div className="text-xs">
+                        <div className="text-red-600">
+                          Original: {initialAction.steps || "Not specified"}
+                        </div>
+                        <div className="text-green-600">
+                          Proposed: {initialAction.pendingChanges.steps}
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                {initialAction.pendingChanges?.monitoring &&
+                  initialAction.pendingChanges.monitoring !==
+                    initialAction.monitoring && (
+                    <div className="bg-white p-2 border rounded">
+                      <div className="font-medium text-gray-700 text-sm">
+                        Monitoring:
+                      </div>
+                      <div className="text-xs">
+                        <div className="text-red-600">
+                          Original:{" "}
+                          {initialAction.monitoring || "Not specified"}
+                        </div>
+                        <div className="text-green-600">
+                          Proposed: {initialAction.pendingChanges.monitoring}
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                {initialAction.pendingChanges?.performance &&
+                  initialAction.pendingChanges.performance !==
+                    initialAction.performance && (
+                    <div className="bg-white p-2 border rounded">
+                      <div className="font-medium text-gray-700 text-sm">
+                        Performance:
+                      </div>
+                      <div className="text-xs">
+                        <div className="text-red-600">
+                          Original:{" "}
+                          {initialAction.performance || "Not specified"}
+                        </div>
+                        <div className="text-green-600">
+                          Proposed: {initialAction.pendingChanges.performance}
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                {initialAction.pendingChanges?.keyContacts &&
+                  initialAction.pendingChanges.keyContacts !==
+                    initialAction.keyContacts && (
+                    <div className="bg-white p-2 border rounded">
+                      <div className="font-medium text-gray-700 text-sm">
+                        Key Contacts:
+                      </div>
+                      <div className="text-xs">
+                        <div className="text-red-600">
+                          Original:{" "}
+                          {initialAction.keyContacts || "Not specified"}
+                        </div>
+                        <div className="text-green-600">
+                          Proposed: {initialAction.pendingChanges.keyContacts}
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                {/* Show if no changes were made */}
+                {!initialAction.pendingChanges?.steps &&
+                  !initialAction.pendingChanges?.monitoring &&
+                  !initialAction.pendingChanges?.performance &&
+                  !initialAction.pendingChanges?.keyContacts && (
+                    <div className="text-gray-600 text-sm italic">
+                      No field changes detected. Student may have submitted
+                      without making changes.
+                    </div>
+                  )}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Unsaved Changes Notification for Students */}
+        {hasUnsavedChanges && !isTeacher && (
+          <div className="mt-4 alert alert-info">
+            <div>
+              <h3 className="font-bold">Unsaved Changes</h3>
+              <div className="text-xs">
+                Your changes will be submitted for teacher approval.
+              </div>
+            </div>
+          </div>
+        )}
+
+        <div className="flex flex-wrap justify-center gap-3 mt-6">
           {/* Delete button in edit mode - only for teachers */}
           {mode === "edit" && !isEditing && isTeacher && onDelete && (
             <button
@@ -426,6 +695,44 @@ const ActionModal: React.FC<ActionModalProps> = ({
               {t("delete")}
             </button>
           )}
+
+          {/* Complete Action button - only for teachers */}
+          {mode === "edit" && isTeacher && onCompleteAction && (
+            <button
+              className="btn btn-success"
+              onClick={() => onCompleteAction(newAction)}
+            >
+              Complete Action
+            </button>
+          )}
+
+          {/* Approve Changes button - only for teachers when there are pending changes */}
+          {mode === "edit" &&
+            isTeacher &&
+            initialAction?.needsApproval &&
+            onApproveChanges && (
+              <button
+                className="btn btn-success"
+                onClick={() => onApproveChanges(newAction)}
+              >
+                Approve Changes
+              </button>
+            )}
+
+          {/* Reject Changes button - only for teachers when there are pending changes */}
+          {mode === "edit" &&
+            isTeacher &&
+            initialAction?.needsApproval &&
+            onRejectChanges && (
+              <button
+                className="btn btn-error"
+                onClick={() => onRejectChanges(newAction)}
+              >
+                Reject Changes
+              </button>
+            )}
+
+          {/* Edit button - only show if user can edit */}
           {mode === "edit" && !isEditing && (
             <button
               className="btn-outline btn"
@@ -435,13 +742,18 @@ const ActionModal: React.FC<ActionModalProps> = ({
             </button>
           )}
 
+          {/* Submit button */}
           {!fieldDisabled && (
             <button
               className="btn btn-primary"
               onClick={handleSubmit}
               disabled={isInvalid}
             >
-              {mode === "edit" ? t("saveChanges") : t("addAction")}
+              {isTeacher
+                ? mode === "edit"
+                  ? t("saveChanges")
+                  : t("addAction")
+                : "Submit for Approval"}
             </button>
           )}
 

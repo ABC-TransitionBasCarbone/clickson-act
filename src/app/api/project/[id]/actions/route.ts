@@ -380,3 +380,135 @@ export async function GET(
     );
   }
 }
+
+// Update a specific action in a project
+export async function PUT(
+  req: NextRequest,
+  { params }: { params: Promise<{ id: string }> },
+) {
+  try {
+    const { id: projectId } = await params;
+    const updateData = await req.json();
+
+    if (!projectId) {
+      return NextResponse.json(
+        { error: "Project ID is required" },
+        { status: 400 },
+      );
+    }
+
+    if (!updateData.id) {
+      return NextResponse.json(
+        { error: "Action ID is required" },
+        { status: 400 },
+      );
+    }
+
+    // Verify project exists
+    const projectDoc = await adminDb
+      .collection("projects")
+      .doc(projectId)
+      .get();
+    if (!projectDoc.exists) {
+      return NextResponse.json({ error: "Project not found" }, { status: 404 });
+    }
+
+    // Check if action exists in project
+    const actionDoc = await adminDb
+      .collection("projects")
+      .doc(projectId)
+      .collection("actions")
+      .doc(updateData.id)
+      .get();
+
+    if (!actionDoc.exists) {
+      return NextResponse.json({ error: "Action not found" }, { status: 404 });
+    }
+
+    // Update the action in the project
+    await adminDb
+      .collection("projects")
+      .doc(projectId)
+      .collection("actions")
+      .doc(updateData.id)
+      .update(updateData);
+
+    return NextResponse.json({
+      success: true,
+      message: "Action updated successfully",
+      action: updateData,
+    });
+  } catch (error) {
+    console.error("Error updating project action:", error);
+    return NextResponse.json(
+      { error: "Failed to update action" },
+      { status: 500 },
+    );
+  }
+}
+
+// Delete a specific action from a project
+export async function DELETE(
+  req: NextRequest,
+  { params }: { params: Promise<{ id: string }> },
+) {
+  try {
+    const { id: projectId } = await params;
+    const { searchParams } = new URL(req.url);
+    const actionId = searchParams.get("actionId");
+
+    if (!projectId) {
+      return NextResponse.json(
+        { error: "Project ID is required" },
+        { status: 400 },
+      );
+    }
+
+    if (!actionId) {
+      return NextResponse.json(
+        { error: "Action ID is required" },
+        { status: 400 },
+      );
+    }
+
+    // Verify project exists
+    const projectDoc = await adminDb
+      .collection("projects")
+      .doc(projectId)
+      .get();
+    if (!projectDoc.exists) {
+      return NextResponse.json({ error: "Project not found" }, { status: 404 });
+    }
+
+    // Check if action exists in project
+    const actionDoc = await adminDb
+      .collection("projects")
+      .doc(projectId)
+      .collection("actions")
+      .doc(actionId)
+      .get();
+
+    if (!actionDoc.exists) {
+      return NextResponse.json({ error: "Action not found" }, { status: 404 });
+    }
+
+    // Delete the action from the project
+    await adminDb
+      .collection("projects")
+      .doc(projectId)
+      .collection("actions")
+      .doc(actionId)
+      .delete();
+
+    return NextResponse.json({
+      success: true,
+      message: "Action deleted successfully",
+    });
+  } catch (error) {
+    console.error("Error deleting project action:", error);
+    return NextResponse.json(
+      { error: "Failed to delete action" },
+      { status: 500 },
+    );
+  }
+}

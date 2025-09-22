@@ -12,6 +12,7 @@ import { Action } from "@/types/Action";
 import CurrentActions from "@/components/(action)/CurrentActions";
 import { useUser } from "@/context/UserContext";
 import { useProjectData } from "@/hooks/useProjectData";
+import { useEmissionCategories } from "@/hooks/useEmissionCategories";
 import Project from "@/types/ProjectType";
 
 // Custom action interface that extends Action
@@ -24,6 +25,9 @@ const Monitoring: React.FC = () => {
   const router = useRouter();
   const { user } = useUser();
   const t = useTranslations("TeacherDashboard");
+
+  // Use emission categories hook to fetch from database
+  const { categories: emissionCategories } = useEmissionCategories();
 
   // State for teacher's projects (when user is a teacher)
   const [projects, setProjects] = useState<Project[]>([]);
@@ -50,6 +54,20 @@ const Monitoring: React.FC = () => {
     "completed" | "available" | null
   >(null);
   const [showCreateModal, setShowCreateModal] = useState(false);
+
+  // Transform emission categories for ActionModal
+  const categories = emissionCategories.map((category) => ({
+    value: category.category, // Use the database ID as value
+    label: category.name,
+  }));
+
+  // Transform subcategories for ActionModal
+  const subcategoryOptions = emissionCategories.flatMap((category) =>
+    category.subcategories.map((subcategory) => ({
+      value: `${category.category}-${subcategory.id}`, // Format: categoryId-subcategoryId
+      label: subcategory.name,
+    })),
+  );
 
   // Memoize converted actions to prevent unnecessary re-renders (for students)
   const convertedCompletedActions = useMemo(() => {
@@ -301,22 +319,221 @@ const Monitoring: React.FC = () => {
     setShowCreateModal(false);
   };
 
-  const handleSubmitEdit = (updatedAction: CustomAction) => {
-    if (editingType === "completed") {
-      setCompletedActions((prev) =>
-        prev.map((action) =>
-          action.id === updatedAction.id ? updatedAction : action,
-        ),
-      );
-    } else if (editingType === "available") {
-      setAvailableActions((prev) =>
-        prev.map((action) =>
-          action.id === updatedAction.id ? updatedAction : action,
-        ),
+  const handleSubmitEdit = async (updatedAction: CustomAction) => {
+    try {
+      if (!user?.passcode) {
+        throw new Error("No project passcode available");
+      }
+
+      // Call the API to update the action in the database
+      const response = await fetch(`/api/project/${user.passcode}/actions`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(updatedAction),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || "Failed to update action");
+      }
+
+      // Update local state
+      if (editingType === "completed") {
+        setCompletedActions((prev) =>
+          prev.map((action) =>
+            action.id === updatedAction.id ? updatedAction : action,
+          ),
+        );
+      } else if (editingType === "available") {
+        setAvailableActions((prev) =>
+          prev.map((action) =>
+            action.id === updatedAction.id ? updatedAction : action,
+          ),
+        );
+      }
+
+      setEditingAction(null);
+      setEditingType(null);
+
+      // Refresh the data to ensure consistency
+      refetch();
+    } catch (error) {
+      console.error("Error updating action:", error);
+      alert(
+        `Failed to update action: ${error instanceof Error ? error.message : "Unknown error"}`,
       );
     }
-    setEditingAction(null);
-    setEditingType(null);
+  };
+
+  // Handle approving student changes
+  const handleApproveChanges = async (action: CustomAction) => {
+    try {
+      if (!action.pendingChanges) {
+        throw new Error("No pending changes to approve");
+      }
+
+      if (!user?.passcode) {
+        throw new Error("No project passcode available");
+      }
+
+      // Apply the pending changes to the action
+      const approvedAction = {
+        ...action,
+        steps: action.pendingChanges.steps || action.steps,
+        monitoring: action.pendingChanges.monitoring || action.monitoring,
+        performance: action.pendingChanges.performance || action.performance,
+        keyContacts: action.pendingChanges.keyContacts || action.keyContacts,
+        pendingChanges: undefined, // Clear pending changes
+        needsApproval: false, // Mark as approved
+      };
+
+      // Call the API to update the action in the database
+      const response = await fetch(`/api/project/${user.passcode}/actions`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(approvedAction),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || "Failed to approve changes");
+      }
+
+      // Update local state
+      if (editingType === "completed") {
+        setCompletedActions((prev) =>
+          prev.map((a) => (a.id === action.id ? approvedAction : a)),
+        );
+      } else if (editingType === "available") {
+        setAvailableActions((prev) =>
+          prev.map((a) => (a.id === action.id ? approvedAction : a)),
+        );
+      }
+
+      // Update the editingAction state to reflect the approved changes
+      setEditingAction(approvedAction);
+      setEditingType(null);
+
+      // Refresh the data to ensure consistency
+      refetch();
+    } catch (error) {
+      console.error("Error approving changes:", error);
+      alert(
+        `Failed to approve changes: ${error instanceof Error ? error.message : "Unknown error"}`,
+      );
+    }
+  };
+
+  // Handle rejecting student changes
+  const handleRejectChanges = async (action: CustomAction) => {
+    try {
+      if (!action.pendingChanges) {
+        throw new Error("No pending changes to reject");
+      }
+
+      if (!user?.passcode) {
+        throw new Error("No project passcode available");
+      }
+
+      // Remove pending changes from the action
+      const rejectedAction = {
+        ...action,
+        pendingChanges: undefined, // Clear pending changes
+        needsApproval: false, // Mark as not needing approval
+      };
+
+      // Call the API to update the action in the database
+      const response = await fetch(`/api/project/${user.passcode}/actions`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(rejectedAction),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || "Failed to reject changes");
+      }
+
+      // Update local state
+      if (editingType === "completed") {
+        setCompletedActions((prev) =>
+          prev.map((a) => (a.id === action.id ? rejectedAction : a)),
+        );
+      } else if (editingType === "available") {
+        setAvailableActions((prev) =>
+          prev.map((a) => (a.id === action.id ? rejectedAction : a)),
+        );
+      }
+
+      // Update the editingAction state to reflect the rejected changes
+      setEditingAction(rejectedAction);
+      setEditingType(null);
+
+      // Refresh the data to ensure consistency
+      refetch();
+    } catch (error) {
+      console.error("Error rejecting changes:", error);
+      alert(
+        `Failed to reject changes: ${error instanceof Error ? error.message : "Unknown error"}`,
+      );
+    }
+  };
+
+  // Handle completing an action
+  const handleCompleteAction = (action: CustomAction) => {
+    const updatedAction = {
+      ...action,
+      status: "Completed" as const,
+    };
+
+    handleSubmitEdit(updatedAction);
+  };
+
+  const handleDeleteAction = async (action: CustomAction) => {
+    try {
+      console.log("Deleting action:", action.id);
+
+      if (!user?.passcode) {
+        throw new Error("No project passcode available");
+      }
+
+      // Call the API to delete from database
+      const response = await fetch(
+        `/api/project/${user.passcode}/actions?actionId=${action.id}`,
+        {
+          method: "DELETE",
+        },
+      );
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || "Failed to delete action");
+      }
+
+      // Update local state
+      if (editingType === "completed") {
+        setCompletedActions((prev) => prev.filter((a) => a.id !== action.id));
+      } else if (editingType === "available") {
+        setAvailableActions((prev) => prev.filter((a) => a.id !== action.id));
+      }
+
+      setEditingAction(null);
+      setEditingType(null);
+
+      // Refresh the data to ensure consistency
+      refetch();
+    } catch (error) {
+      console.error("Error deleting action:", error);
+      alert(
+        `Failed to delete action: ${error instanceof Error ? error.message : "Unknown error"}`,
+      );
+    }
   };
 
   return (
@@ -396,12 +613,12 @@ const Monitoring: React.FC = () => {
         <CustomActionFormModal
           mode="edit"
           onSubmit={handleSubmitEdit}
-          categories={[
-            { value: "energy", label: "Energy" },
-            { value: "waste", label: "Waste" },
-            { value: "transport", label: "Transport" },
-            { value: "nature", label: "Nature" },
-          ]}
+          onApproveChanges={handleApproveChanges}
+          onRejectChanges={handleRejectChanges}
+          onCompleteAction={handleCompleteAction}
+          onDelete={handleDeleteAction}
+          categories={categories}
+          subcategoryOptions={subcategoryOptions}
           effortCategories={[
             { value: "easy", label: "Easy" },
             { value: "medium", label: "Medium" },
@@ -414,12 +631,8 @@ const Monitoring: React.FC = () => {
         <CustomActionFormModal
           mode="create"
           onSubmit={handleSubmitCreate}
-          categories={[
-            { value: "energy", label: "Energy" },
-            { value: "waste", label: "Waste" },
-            { value: "transport", label: "Transport" },
-            { value: "nature", label: "Nature" },
-          ]}
+          categories={categories}
+          subcategoryOptions={subcategoryOptions}
           effortCategories={[
             { value: "easy", label: "Easy" },
             { value: "medium", label: "Medium" },
