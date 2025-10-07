@@ -314,17 +314,44 @@ const ProjectMonitoring: React.FC = () => {
     }
   };
 
-  const handleCompleteAction = (action: CustomAction) => {
-    // Handle completing action
-    console.log("Completing action:", action.id);
-    // Move from available to completed
-    setAvailableActions((prev) => prev.filter((a) => a.id !== action.id));
-    setCompletedActions((prev) => [
-      ...prev,
-      { ...action, status: "Completed" },
-    ]);
-    setEditingAction(null);
-    setEditingType(null);
+  const handleCompleteAction = async (action: CustomAction) => {
+    try {
+      console.log("Completing action:", action.id);
+
+      // Call the API to mark the action as completed in the database
+      const completedAction = {
+        ...action,
+        status: "Completed",
+        dateCompleted: new Date().toISOString(),
+      };
+
+      const response = await fetch(`/api/project/${passcode}/actions`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(completedAction),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || "Failed to complete action");
+      }
+
+      // Update local state
+      setAvailableActions((prev) => prev.filter((a) => a.id !== action.id));
+      setCompletedActions((prev) => [...prev, completedAction]);
+      setEditingAction(null);
+      setEditingType(null);
+
+      // Refresh the data to ensure consistency and update the graph
+      refetch();
+    } catch (error) {
+      console.error("Error completing action:", error);
+      alert(
+        `Failed to complete action: ${error instanceof Error ? error.message : "Unknown error"}`,
+      );
+    }
   };
 
   const handleDeleteAction = async (action: CustomAction) => {
@@ -385,7 +412,7 @@ const ProjectMonitoring: React.FC = () => {
         {!loading && projectData && (
           <SchoolGoalCard
             schoolGoal={50} // Default goal
-            subGoal={projectData.subGoalReductionAmount || 25}
+            subGoal={projectData.subGoalReductionAmount || 25} // Keep original value for now
             subGoalYear={String(projectData.subGoalDeadline || "2025")}
             finalGoalYear="2030" // Default final goal year
             baseReductionPerYear={5} // Default base reduction
