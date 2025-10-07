@@ -10,10 +10,11 @@ type ActionsSectionProps = {
   onAddActionClick: () => void;
   showAddButton: boolean;
   t: (key: string) => string;
-  onAddToMonitoring?: (actionId: string) => void;
-  showMonitoringButton?: boolean;
-  addingToMonitoring?: Set<string>;
   calculateDisplayReduction?: (action: Action) => number;
+  projectId?: string;
+  categories?: { value: string; label: string }[];
+  effortCategories?: { value: string; label: string }[];
+  subcategoryOptions?: { value: string; label: string; categoryId?: string }[];
 };
 
 export const ActionsSection: React.FC<ActionsSectionProps> = ({
@@ -23,10 +24,15 @@ export const ActionsSection: React.FC<ActionsSectionProps> = ({
   onAddActionClick,
   showAddButton,
   t,
-  onAddToMonitoring,
-  showMonitoringButton = false,
-  addingToMonitoring = new Set(),
   calculateDisplayReduction,
+  projectId,
+  categories = [],
+  effortCategories = [
+    { value: "easy", label: "Easy" },
+    { value: "medium", label: "Medium" },
+    { value: "hard", label: "Hard" },
+  ],
+  subcategoryOptions = [],
 }) => {
   // console.log("ActionsSection rendering with:", {
   //   filteredActionsCount: filteredActions.length,
@@ -36,8 +42,8 @@ export const ActionsSection: React.FC<ActionsSectionProps> = ({
 
   return (
     <>
-      <div className="mt-6 mb-4 flex items-center justify-between">
-        <h2 className="text-xl font-semibold">{t("availableActions")}</h2>
+      <div className="flex justify-between items-center mt-6 mb-4">
+        <h2 className="font-semibold text-xl">{t("availableActions")}</h2>
         {showAddButton && (
           <button className="btn btn-soft-primary" onClick={onAddActionClick}>
             {t("addActionButton")}
@@ -45,14 +51,14 @@ export const ActionsSection: React.FC<ActionsSectionProps> = ({
         )}
       </div>
 
-      <div className="mb-8 grid gap-4">
+      <div className="gap-4 grid mb-8">
         {filteredActions.length === 0 ? (
           <div className="alert alert-info">
             <svg
               xmlns="http://www.w3.org/2000/svg"
               fill="none"
               viewBox="0 0 24 24"
-              className="h-6 w-6 shrink-0 stroke-current"
+              className="stroke-current w-6 h-6 shrink-0"
             >
               <path
                 strokeLinecap="round"
@@ -71,10 +77,11 @@ export const ActionsSection: React.FC<ActionsSectionProps> = ({
             actions={filteredActions}
             selectedActions={selectedActions}
             onActionSelect={onActionSelect}
-            onAddToMonitoring={onAddToMonitoring}
-            showMonitoringButton={showMonitoringButton}
-            addingToMonitoring={addingToMonitoring}
             calculateDisplayReduction={calculateDisplayReduction}
+            projectId={projectId}
+            categories={categories}
+            effortCategories={effortCategories}
+            subcategoryOptions={subcategoryOptions}
           />
         )}
       </div>

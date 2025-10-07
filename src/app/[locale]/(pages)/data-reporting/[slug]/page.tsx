@@ -56,9 +56,6 @@ const StudentCalculator: React.FC = () => {
   );
   const [actions, setActions] = useState<CustomAction[]>([]);
   const [filteredActions, setFilteredActions] = useState<Action[]>([]);
-  const [addingToMonitoring, setAddingToMonitoring] = useState<Set<string>>(
-    new Set(),
-  );
 
   // Handler functions for the new flow
   const handleCategorySelect = (categoryId: string) => {
@@ -192,114 +189,6 @@ const StudentCalculator: React.FC = () => {
     setActions(customActions);
   }, [actionTemplates]);
 
-  const handleAddToMonitoring = async (actionId: string) => {
-    // Allow both students (with passcode) and teachers (without passcode) to add actions
-    if (!user || !user.username) {
-      console.warn("User must be logged in to add actions to monitoring");
-      return;
-    }
-
-    // Require category and subcategory selection
-    if (!selectedCategory || selectedSubcategories.length === 0) {
-      showToast(
-        "warning",
-        "Selection Required",
-        "Please select a category and at least one subcategory before adding actions to monitoring.",
-        5000,
-      );
-      return;
-    }
-
-    // Find the action
-    const action = actions.find((a) => a.id === actionId);
-    if (!action) {
-      console.error("Action not found");
-      return;
-    }
-
-    // Calculate the emission reduction using school data
-    const calculatedReduction = calculateDisplayReduction({
-      ...action,
-      selected: false,
-    });
-    const actionType = action.type || "Direct";
-
-    try {
-      setAddingToMonitoring((prev) => new Set(prev).add(actionId));
-
-      const response = await fetch(`/api/project/${projectId}/actions`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          actionIds: [actionId],
-          studentName: user.username,
-          studentId: user.studentId,
-          calculatedReduction: Math.round(calculatedReduction * 100) / 100,
-          actionType,
-          categoryData: {
-            categoryId: selectedCategory.category,
-            categoryName: selectedCategory.name,
-            subcategoryData: selectedSubcategories
-              .map((subId) => {
-                const subcategory = selectedCategory.subcategories.find(
-                  (sub) => sub.id === subId,
-                );
-                return subcategory
-                  ? {
-                      subcategoryId: subcategory.id,
-                      subcategoryName: subcategory.name,
-                      value: subcategory.amount.toString(),
-                    }
-                  : null;
-              })
-              .filter(Boolean),
-          },
-          // For teachers, mark as approved directly since they don't need approval
-          isTeacherAction: !user.passcode,
-        }),
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(
-          errorData.error || "Failed to submit action for approval",
-        );
-      }
-
-      const result = await response.json();
-      console.log("Successfully submitted action for approval:", result);
-
-      // Show success toast notification
-      const isTeacher = !user.passcode;
-      showToast(
-        "success",
-        isTeacher ? "Action Added!" : "Action Submitted!",
-        isTeacher
-          ? `"${action.title}" has been added to monitoring.`
-          : `"${action.title}" has been submitted for teacher approval.`,
-        4000,
-      );
-    } catch (error) {
-      console.error("Error submitting action:", error);
-      const errorMessage =
-        error instanceof Error ? error.message : "Unknown error";
-      showToast(
-        "error",
-        "Failed to Submit Action",
-        `Could not submit action for approval: ${errorMessage}`,
-        6000,
-      );
-    } finally {
-      setAddingToMonitoring((prev) => {
-        const newSet = new Set(prev);
-        newSet.delete(actionId);
-        return newSet;
-      });
-    }
-  };
-
   return (
     <div className="bg-gray-100 min-h-screen">
       <motion.div
@@ -421,9 +310,6 @@ const StudentCalculator: React.FC = () => {
                       )?.showModal()
                     }
                     showAddButton={!!user} // Show custom action button for both teachers and students
-                    onAddToMonitoring={handleAddToMonitoring}
-                    showMonitoringButton={!!user} // Show monitoring button for both teachers and students
-                    addingToMonitoring={addingToMonitoring}
                     calculateDisplayReduction={(action: Action) => {
                       const customAction: CustomAction = {
                         ...action,
@@ -431,6 +317,20 @@ const StudentCalculator: React.FC = () => {
                       };
                       return calculateDisplayReduction(customAction);
                     }}
+                    projectId={projectId}
+                    // Convert schoolCategories to the format expected by the modal
+                    categories={schoolCategories.map((cat) => ({
+                      value: cat.category,
+                      label: cat.name,
+                    }))}
+                    // Convert subcategories to the format expected by the modal
+                    subcategoryOptions={schoolCategories.flatMap((cat) =>
+                      cat.subcategories.map((sub) => ({
+                        value: sub.id,
+                        label: sub.name,
+                        categoryId: cat.category, // Include category ID for filtering
+                      })),
+                    )}
                     t={t}
                   />
                 </>

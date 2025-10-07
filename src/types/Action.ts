@@ -17,6 +17,7 @@ export interface Action {
   date: string;
   type?: "Direct" | "Indirect"; // Type of impact from action template
   timeline?: number; // Number of years the action will take place
+  subcategory?: string; // Subcategory ID from the action template
   pendingChanges?: {
     steps?: string;
     monitoring?: string;

@@ -7,18 +7,24 @@ const ActionList: React.FC<{
   actions: Action[];
   selectedActions: string[];
   onActionSelect: (id: string) => void;
-  onAddToMonitoring?: (actionId: string) => void;
-  showMonitoringButton?: boolean;
-  addingToMonitoring?: Set<string>;
   calculateDisplayReduction?: (action: Action) => number;
+  projectId?: string;
+  categories?: { value: string; label: string }[];
+  effortCategories?: { value: string; label: string }[];
+  subcategoryOptions?: { value: string; label: string; categoryId?: string }[];
 }> = ({
   actions,
   selectedActions,
   onActionSelect,
-  onAddToMonitoring,
-  showMonitoringButton = false,
-  addingToMonitoring = new Set(),
   calculateDisplayReduction,
+  projectId,
+  categories = [],
+  effortCategories = [
+    { value: "easy", label: "Easy" },
+    { value: "medium", label: "Medium" },
+    { value: "hard", label: "Hard" },
+  ],
+  subcategoryOptions = [],
 }) => {
   const t = useTranslations("StudentCalculator");
 
@@ -29,7 +35,7 @@ const ActionList: React.FC<{
   // });
 
   return (
-    <div className="grid gap-4">
+    <div className="gap-4 grid">
       {actions.map((action) => {
         const calculatedReduction = calculateDisplayReduction
           ? calculateDisplayReduction(action)
@@ -48,10 +54,11 @@ const ActionList: React.FC<{
             action={action}
             isSelected={selectedActions.includes(action.id)}
             onSelect={() => onActionSelect(action.id)}
-            onAddToMonitoring={onAddToMonitoring}
-            showMonitoringButton={showMonitoringButton}
-            isAddingToMonitoring={addingToMonitoring.has(action.id)}
             calculatedReduction={calculatedReduction}
+            projectId={projectId}
+            categories={categories}
+            effortCategories={effortCategories}
+            subcategoryOptions={subcategoryOptions}
           />
         );
       })}

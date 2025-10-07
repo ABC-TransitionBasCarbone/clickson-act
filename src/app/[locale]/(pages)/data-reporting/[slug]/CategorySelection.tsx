@@ -40,7 +40,7 @@ const CategorySelection: React.FC<CategorySelectionProps> = ({
         {categories.map((category) => (
           <div
             key={category.id}
-            className={`cursor-pointer rounded-lg border-2 p-4 transition-all hover:shadow-md ${
+            className={`flex cursor-pointer flex-col rounded-lg border-2 p-4 transition-all hover:shadow-md ${
               selectedCategory === category.category
                 ? "border-blue-500 bg-blue-50"
                 : "border-gray-200 hover:border-gray-300"
@@ -76,7 +76,7 @@ const CategorySelection: React.FC<CategorySelectionProps> = ({
               </div>
             )}
 
-            <div className="flex items-center mt-3 text-black text-xs">
+            <div className="flex items-center mt-auto pt-3 text-black text-xs">
               <span>
                 {category.subcategories.length} {t("subcategoriesAvailable")}
               </span>
