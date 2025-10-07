@@ -14,8 +14,11 @@ function loadServiceAccount(): ServiceAccount {
       process.env.FIREBASE_CLIENT_EMAIL &&
       process.env.FIREBASE_PROJECT_ID
     ) {
-      // Only log during development, not during build
-      if (process.env.NODE_ENV !== "production") {
+      // Reduced logging for cleaner console output
+      if (
+        process.env.NODE_ENV === "development" &&
+        process.env.VERBOSE_LOGGING === "true"
+      ) {
         console.log("Loading service account from environment variables");
       }
 
@@ -55,8 +58,11 @@ function loadServiceAccount(): ServiceAccount {
         clientEmail: process.env.FIREBASE_CLIENT_EMAIL!,
       };
 
-      // Only log during development
-      if (process.env.NODE_ENV !== "production") {
+      // Reduced logging for cleaner console output
+      if (
+        process.env.NODE_ENV === "development" &&
+        process.env.VERBOSE_LOGGING === "true"
+      ) {
         console.log("Service account loaded from environment variables");
         console.log("Project ID:", serviceAccount.projectId);
         console.log("Client email:", serviceAccount.clientEmail);
@@ -70,10 +76,12 @@ function loadServiceAccount(): ServiceAccount {
     }
 
     // Fallback to JSON file (deprecated - only for development)
-    console.log("Environment variables not found, falling back to JSON file");
+    if (process.env.NODE_ENV === "development") {
+      console.warn(
+        "Environment variables not found, falling back to JSON file",
+      );
+    }
     const serviceAccountPath = join(process.cwd(), "serviceAccountKey.json");
-
-    console.log("Looking for service account file at:", serviceAccountPath);
 
     // Check if file exists
     if (!existsSync(serviceAccountPath)) {
@@ -109,9 +117,11 @@ function loadServiceAccount(): ServiceAccount {
       }
     }
 
-    console.log("Service account loaded from JSON file (deprecated)");
-    console.log("Project ID:", serviceAccount.project_id);
-    console.log("Client email:", serviceAccount.client_email);
+    if (process.env.NODE_ENV === "development") {
+      console.warn("Service account loaded from JSON file (deprecated)");
+      console.log("Project ID:", serviceAccount.project_id);
+      console.log("Client email:", serviceAccount.client_email);
+    }
 
     return serviceAccount;
   } catch (error) {
@@ -140,8 +150,11 @@ function initializeFirebaseAdmin(): App {
   // Check if app is already initialized globally
   const existingApps = getApps();
   if (existingApps.length > 0) {
-    // Only log during development
-    if (process.env.NODE_ENV !== "production") {
+    // Reduced logging for cleaner console output
+    if (
+      process.env.NODE_ENV === "development" &&
+      process.env.VERBOSE_LOGGING === "true"
+    ) {
       console.log("Using existing Firebase Admin app");
     }
     return existingApps[0];
@@ -150,8 +163,11 @@ function initializeFirebaseAdmin(): App {
   try {
     const serviceAccount = loadServiceAccount();
 
-    // Only log during development
-    if (process.env.NODE_ENV !== "production") {
+    // Reduced logging for cleaner console output
+    if (
+      process.env.NODE_ENV === "development" &&
+      process.env.VERBOSE_LOGGING === "true"
+    ) {
       console.log("Initializing new Firebase Admin app");
     }
 
@@ -159,8 +175,11 @@ function initializeFirebaseAdmin(): App {
       credential: cert(serviceAccount),
     });
 
-    // Only log during development
-    if (process.env.NODE_ENV !== "production") {
+    // Reduced logging for cleaner console output
+    if (
+      process.env.NODE_ENV === "development" &&
+      process.env.VERBOSE_LOGGING === "true"
+    ) {
       console.log("Firebase Admin SDK initialized successfully");
     }
 

@@ -5,6 +5,14 @@ import {
   PendingAction,
   createPendingAction,
 } from "../../../../../types/PendingAction";
+import {
+  withSecurity,
+  SecurityContext,
+  sanitizeInput,
+  validateProjectId,
+  validateStudentName,
+  validateActionIds,
+} from "../../../../../lib/security-middleware";
 
 // ProjectAction interface - actions specific to a project
 // Includes all fields from Action type with student as manager
@@ -57,13 +65,17 @@ interface ProjectAction {
 }
 
 // Submit actions to a project for teacher approval (students)
-export async function POST(
-  req: NextRequest,
-  { params }: { params: Promise<{ id: string }> },
-) {
+async function handlePost(req: NextRequest, context: SecurityContext) {
   try {
-    const { id: projectId } = await params;
+    // Extract project ID from URL since we're not using auth context
+    const url = new URL(req.url);
+    const pathParts = url.pathname.split("/");
+    const projectId = pathParts[pathParts.length - 2]; // Get the project ID from the URL
+
     const body = await req.json();
+
+    // Sanitize and validate input
+    const sanitizedBody = sanitizeInput(body);
     const {
       actionIds,
       studentName,
@@ -71,32 +83,30 @@ export async function POST(
       calculatedReduction,
       actionType,
       categoryData,
-      customActionData, // For custom actions created by students
-      isTeacherAction = false, // Flag to indicate if this is a teacher adding actions directly
-    } = body;
+      customActionData,
+      isTeacherAction = false,
+    } = sanitizedBody;
 
-    // Validate input
-    if (!projectId) {
+    // Validate project ID
+    if (!projectId || !validateProjectId(projectId)) {
       return NextResponse.json(
-        { error: "Project ID is required" },
+        { error: "Invalid project ID" },
         { status: 400 },
       );
     }
 
-    if (!studentName || studentName.trim().length === 0) {
+    // Validate student name
+    if (!studentName || !validateStudentName(studentName)) {
       return NextResponse.json(
-        { error: "Student name is required" },
+        { error: "Invalid student name" },
         { status: 400 },
       );
     }
 
-    // For custom actions, we don't need actionIds
-    if (
-      !customActionData &&
-      (!actionIds || !Array.isArray(actionIds) || actionIds.length === 0)
-    ) {
+    // Validate action IDs for non-custom actions
+    if (!customActionData && (!actionIds || !validateActionIds(actionIds))) {
       return NextResponse.json(
-        { error: "Either actionIds or customActionData is required" },
+        { error: "Invalid action IDs" },
         { status: 400 },
       );
     }
@@ -180,14 +190,21 @@ export async function POST(
             Object.values(actionTemplate?.translations || {})[0] ||
             {};
 
-          console.log(`Action template for ${actionId}:`, {
-            title: translation.title || actionTemplate?.title,
-            description: translation.description || actionTemplate?.description,
-            hasTranslations: !!actionTemplate?.translations,
-            availableLocales: actionTemplate?.translations
-              ? Object.keys(actionTemplate.translations)
-              : [],
-          });
+          // Only log in development with verbose logging enabled
+          if (
+            process.env.NODE_ENV === "development" &&
+            process.env.VERBOSE_LOGGING === "true"
+          ) {
+            console.log(`Action template for ${actionId}:`, {
+              title: translation.title || actionTemplate?.title,
+              description:
+                translation.description || actionTemplate?.description,
+              hasTranslations: !!actionTemplate?.translations,
+              availableLocales: actionTemplate?.translations
+                ? Object.keys(actionTemplate.translations)
+                : [],
+            });
+          }
 
           // Check if this action is already pending, approved, or exists in project actions
           const existingPendingQuery = await adminDb
@@ -337,19 +354,12 @@ export async function POST(
 }
 
 // Get actions for a project
-export async function GET(
-  req: NextRequest,
-  { params }: { params: Promise<{ id: string }> },
-) {
+async function handleGet(req: NextRequest, context: SecurityContext) {
   try {
-    const { id: projectId } = await params;
-
-    if (!projectId) {
-      return NextResponse.json(
-        { error: "Project ID is required" },
-        { status: 400 },
-      );
-    }
+    // Extract project ID from URL since we're not using auth context
+    const url = new URL(req.url);
+    const pathParts = url.pathname.split("/");
+    const projectId = pathParts[pathParts.length - 2]; // Get the project ID from the URL
 
     // Get all actions for this project
     const actionsSnapshot = await adminDb
@@ -382,13 +392,15 @@ export async function GET(
 }
 
 // Update a specific action in a project
-export async function PUT(
-  req: NextRequest,
-  { params }: { params: Promise<{ id: string }> },
-) {
+async function handlePut(req: NextRequest, context: SecurityContext) {
   try {
-    const { id: projectId } = await params;
+    // Extract project ID from URL since we're not using auth context
+    const url = new URL(req.url);
+    const pathParts = url.pathname.split("/");
+    const projectId = pathParts[pathParts.length - 2]; // Get the project ID from the URL
+
     const updateData = await req.json();
+    const sanitizedData = sanitizeInput(updateData);
 
     if (!projectId) {
       return NextResponse.json(
@@ -397,7 +409,7 @@ export async function PUT(
       );
     }
 
-    if (!updateData.id) {
+    if (!sanitizedData.id) {
       return NextResponse.json(
         { error: "Action ID is required" },
         { status: 400 },
@@ -511,4 +523,36 @@ export async function DELETE(
       { status: 500 },
     );
   }
+}
+
+// Export handlers with security middleware
+export async function POST(
+  req: NextRequest,
+  { params }: { params: Promise<{ id: string }> },
+) {
+  return withSecurity(handlePost, {
+    requireAuth: false, // Temporarily disabled for testing
+    rateLimit: { maxRequests: 20, windowMs: 60000 },
+  })(req, { params });
+}
+
+export async function GET(
+  req: NextRequest,
+  { params }: { params: Promise<{ id: string }> },
+) {
+  return withSecurity(handleGet, {
+    requireAuth: false, // Temporarily disabled for testing
+    rateLimit: { maxRequests: 100, windowMs: 60000 },
+  })(req, { params });
+}
+
+export async function PUT(
+  req: NextRequest,
+  { params }: { params: Promise<{ id: string }> },
+) {
+  return withSecurity(handlePut, {
+    requireAuth: false, // Temporarily disabled for testing
+    requireTeacherAccess: false,
+    rateLimit: { maxRequests: 50, windowMs: 60000 },
+  })(req, { params });
 }

@@ -8,10 +8,19 @@ interface CustomAction extends Action {
 
 type AddActionModalWrapperProps = {
   onAddAction: (action: CustomAction) => void;
+  categories?: { value: string; label: string }[];
+  subcategoryOptions?: { value: string; label: string; categoryId?: string }[];
 };
 
 export const AddActionModalWrapper: React.FC<AddActionModalWrapperProps> = ({
   onAddAction,
+  categories = [
+    { value: "energy", label: "Energy" },
+    { value: "waste", label: "Waste" },
+    { value: "transport", label: "Transport" },
+    { value: "nature", label: "Nature" },
+  ],
+  subcategoryOptions = [],
 }) => {
   return (
     <ActionModal
@@ -23,26 +32,14 @@ export const AddActionModalWrapper: React.FC<AddActionModalWrapperProps> = ({
           selected: false,
         })
       }
-      categories={[
-        { value: "energy", label: "Energy" },
-        {
-          value: "waste",
-          label: "Waste",
-        },
-        {
-          value: "transport",
-          label: "Transport",
-        },
-        {
-          value: "nature",
-          label: "Nature",
-        },
-      ]}
+      categories={categories}
+      subcategoryOptions={subcategoryOptions}
       effortCategories={[
         { value: "easy", label: "Easy" },
         { value: "medium", label: "Medium" },
         { value: "hard", label: "Hard" },
       ]}
+      allowAllFieldsEdit={true}
     />
   );
 };

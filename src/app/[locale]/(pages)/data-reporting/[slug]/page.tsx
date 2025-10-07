@@ -178,6 +178,77 @@ const StudentCalculator: React.FC = () => {
     return action.reduction;
   };
 
+  // Handle custom action submission
+  const handleAddCustomAction = async (action: CustomAction) => {
+    try {
+      // Submit as custom action to project
+      const response = await fetch(`/api/project/${projectId}/actions`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          customActionData: {
+            title: action.title,
+            description: action.description,
+            category: action.category,
+            subcategory: action.subcategory || "",
+            reduction: action.reduction,
+            effort: action.effort,
+            manager: action.manager,
+            nature: action.nature,
+            objectives: action.objectives,
+            keyContacts: action.keyContacts,
+            steps: action.steps,
+            calendar: action.calendar,
+            indicators: action.indicators,
+            monitoring: action.monitoring,
+            performance: action.performance,
+            timeline: action.timeline || 1,
+            type: action.type || "Direct",
+          },
+          studentName: user?.username || "",
+          studentId: user?.studentId || "",
+          calculatedReduction: action.reduction,
+          actionType: action.type || "Direct",
+          categoryData: {
+            categoryId: action.category,
+            categoryName: action.category,
+          },
+          isTeacherAction: user?.role === "teacher" || user?.role === "admin",
+        }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || "Failed to create custom action");
+      }
+
+      const result = await response.json();
+      console.log("Successfully created custom action:", result);
+
+      showToast(
+        "success",
+        "Action Submitted!",
+        `"${action.title}" has been submitted for teacher approval.`,
+        4000,
+      );
+
+      // Add to local state for immediate UI update
+      setActions((prev) => [...prev, action]);
+    } catch (error) {
+      console.error("Error creating custom action:", error);
+      const errorMessage =
+        error instanceof Error ? error.message : "Unknown error";
+      showToast(
+        "error",
+        "Failed to Create Custom Action",
+        `Could not create custom action: ${errorMessage}`,
+        6000,
+      );
+    }
+  };
+
   // Set actions from the hook when action templates are loaded
   useEffect(() => {
     console.log("Loaded action templates:", actionTemplates.length, "actions");
@@ -341,7 +412,18 @@ const StudentCalculator: React.FC = () => {
       </motion.div>
 
       <AddActionModalWrapper
-        onAddAction={(action) => setActions((prev) => [...prev, action])}
+        onAddAction={handleAddCustomAction}
+        categories={schoolCategories.map((cat) => ({
+          value: cat.category,
+          label: cat.name,
+        }))}
+        subcategoryOptions={schoolCategories.flatMap((cat) =>
+          cat.subcategories.map((sub) => ({
+            value: sub.id,
+            label: sub.name,
+            categoryId: cat.category,
+          })),
+        )}
       />
     </div>
   );

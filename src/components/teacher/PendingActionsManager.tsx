@@ -32,7 +32,13 @@ const PendingActionsManager: React.FC<PendingActionsManagerProps> = ({
 
         if (response.ok) {
           const data = await response.json();
-          console.log("Fetched pending actions:", data.pendingActions);
+          // Only log in development with verbose logging enabled
+          if (
+            process.env.NODE_ENV === "development" &&
+            process.env.VERBOSE_LOGGING === "true"
+          ) {
+            console.log("Fetched pending actions:", data.pendingActions);
+          }
           setPendingActions(data.pendingActions || []);
         } else {
           const errorData = await response.json();

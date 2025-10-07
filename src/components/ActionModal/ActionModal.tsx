@@ -28,12 +28,13 @@ interface ActionModalProps {
   onSubmit: (action: CustomAction) => void;
   categories: { value: string; label: string }[];
   effortCategories: { value: string; label: string }[];
-  subcategoryOptions?: { value: string; label: string }[];
+  subcategoryOptions?: { value: string; label: string; categoryId?: string }[];
   initialAction?: CustomAction;
   onDelete?: (action: CustomAction) => void;
   onApproveChanges?: (action: CustomAction) => void;
   onRejectChanges?: (action: CustomAction) => void;
   onCompleteAction?: (action: CustomAction) => void;
+  allowAllFieldsEdit?: boolean; // Allow students to edit all fields (for data reporting screen)
 }
 
 const ActionModal: React.FC<ActionModalProps> = ({
@@ -47,6 +48,7 @@ const ActionModal: React.FC<ActionModalProps> = ({
   onApproveChanges,
   onRejectChanges,
   onCompleteAction,
+  allowAllFieldsEdit = false,
 }) => {
   const t = useTranslations("Action");
   const { user } = useUser();
@@ -102,8 +104,8 @@ const ActionModal: React.FC<ActionModalProps> = ({
   const handleSubmit = () => {
     if (!newAction.category || !newAction.title || !newAction.reduction) return;
 
-    if (isTeacher) {
-      // Teachers can directly submit changes
+    if (isTeacher || allowAllFieldsEdit) {
+      // Teachers and data reporting screen can directly submit changes
       onSubmit({
         ...newAction,
         id:
@@ -153,6 +155,7 @@ const ActionModal: React.FC<ActionModalProps> = ({
   // Helper function to check if a field can be edited by current user
   const canEditField = (fieldName: string): boolean => {
     if (isTeacher) return true; // Teachers can edit all fields
+    if (allowAllFieldsEdit) return true; // Allow all fields for data reporting screen
     if (!isTeacher) {
       // Students can only edit: steps, monitoring, performance, keyContacts
       return ["steps", "monitoring", "performance", "keyContacts"].includes(
@@ -164,8 +167,8 @@ const ActionModal: React.FC<ActionModalProps> = ({
 
   // Helper function to handle field changes
   const handleFieldChange = (fieldName: string, value: string) => {
-    if (isTeacher) {
-      // Teachers can directly modify the action
+    if (isTeacher || allowAllFieldsEdit) {
+      // Teachers and data reporting screen can directly modify the action
       setNewAction({ ...newAction, [fieldName]: value });
     } else {
       // Students create pending changes
@@ -176,7 +179,7 @@ const ActionModal: React.FC<ActionModalProps> = ({
 
   // Helper function to get field value (original or pending)
   const getFieldValue = (fieldName: string): string => {
-    if (isTeacher) {
+    if (isTeacher || allowAllFieldsEdit) {
       return (newAction[fieldName as keyof CustomAction] as string) || "";
     } else {
       return (
@@ -188,16 +191,17 @@ const ActionModal: React.FC<ActionModalProps> = ({
   };
 
   // Different validation for teachers vs students
-  const isInvalid = isTeacher
-    ? // Teachers: validate all required fields
-      newAction.category === "" ||
-      newAction.subcategory === "" ||
-      newAction.title === "" ||
-      newAction.description === "" ||
-      newAction.reduction === 0 ||
-      newAction.effort === ""
-    : // Students: only validate that they have made some changes
-      !hasUnsavedChanges;
+  const isInvalid =
+    isTeacher || allowAllFieldsEdit
+      ? // Teachers and data reporting screen: validate all required fields
+        newAction.category === "" ||
+        newAction.subcategory === "" ||
+        newAction.title === "" ||
+        newAction.description === "" ||
+        newAction.reduction === 0 ||
+        newAction.effort === ""
+      : // Students: only validate that they have made some changes
+        !hasUnsavedChanges;
 
   return (
     <Modal
@@ -290,7 +294,7 @@ const ActionModal: React.FC<ActionModalProps> = ({
                 .filter(
                   (sub) =>
                     !newAction.category ||
-                    sub.value.startsWith(newAction.category),
+                    sub.categoryId === newAction.category,
                 )
                 .map((sub) => (
                   <option key={sub.value} value={sub.value}>
@@ -749,7 +753,7 @@ const ActionModal: React.FC<ActionModalProps> = ({
               onClick={handleSubmit}
               disabled={isInvalid}
             >
-              {isTeacher
+              {isTeacher || allowAllFieldsEdit
                 ? mode === "edit"
                   ? t("saveChanges")
                   : t("addAction")

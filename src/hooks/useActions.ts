@@ -30,19 +30,36 @@ export const useActions = () => {
               Array.isArray(publicData.actions) &&
               publicData.actions.length > 0
             ) {
-              console.log(
-                `Loaded ${publicData.actions.length} action templates from public API for locale ${locale}`,
-              );
+              // Only log in development with verbose logging enabled
+              if (
+                process.env.NODE_ENV === "development" &&
+                process.env.VERBOSE_LOGGING === "true"
+              ) {
+                console.log(
+                  `Loaded ${publicData.actions.length} action templates from public API for locale ${locale}`,
+                );
+              }
               setActions(publicData.actions);
               return;
             }
           }
         } catch (publicError) {
-          console.warn("Public actions API failed:", publicError);
+          // Only log in development with verbose logging enabled
+          if (
+            process.env.NODE_ENV === "development" &&
+            process.env.VERBOSE_LOGGING === "true"
+          ) {
+            console.warn("Public actions API failed:", publicError);
+          }
         }
 
         // No fallback to static file - database should be the source of truth
-        console.warn("Public actions API returned no data from database");
+        if (
+          process.env.NODE_ENV === "development" &&
+          process.env.VERBOSE_LOGGING === "true"
+        ) {
+          console.warn("Public actions API returned no data from database");
+        }
         setActions([]);
       } catch (err) {
         console.error("Error fetching actions:", err);

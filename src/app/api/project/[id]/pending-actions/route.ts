@@ -3,21 +3,19 @@ import { adminDb } from "../../../../../firebaseAdmin";
 import { v4 as uuidv4 } from "uuid";
 import { PendingAction } from "../../../../../types/PendingAction";
 import { ActionTranslation } from "../../../../../types/TranslatableAction";
+import {
+  withSecurity,
+  SecurityContext,
+  sanitizeInput,
+} from "../../../../../lib/security-middleware";
 
 // Get pending actions for a project (for teachers)
-export async function GET(
-  req: NextRequest,
-  { params }: { params: Promise<{ id: string }> },
-) {
+async function handleGet(req: NextRequest, context: SecurityContext) {
   try {
-    const { id: projectId } = await params;
-
-    if (!projectId) {
-      return NextResponse.json(
-        { error: "Project ID is required" },
-        { status: 400 },
-      );
-    }
+    // Extract project ID from URL since we're not using auth context
+    const url = new URL(req.url);
+    const pathParts = url.pathname.split("/");
+    const projectId = pathParts[pathParts.length - 2]; // Get the project ID from the URL
 
     // Get all pending actions for this project
     // Note: If this fails with index error, we'll fall back to getting all and filtering
@@ -31,10 +29,16 @@ export async function GET(
         .orderBy("submittedAt", "desc")
         .get();
     } catch (indexError) {
-      console.warn(
-        "Index not available, falling back to simple query:",
-        indexError,
-      );
+      // Only log in development with verbose logging enabled
+      if (
+        process.env.NODE_ENV === "development" &&
+        process.env.VERBOSE_LOGGING === "true"
+      ) {
+        console.warn(
+          "Index not available, falling back to simple query:",
+          indexError,
+        );
+      }
       // Fallback: get all pending actions without ordering
       pendingActionsSnapshot = await adminDb
         .collection("projects")
@@ -67,21 +71,22 @@ export async function GET(
 }
 
 // Approve or reject a pending action (for teachers)
-export async function PATCH(
-  req: NextRequest,
-  { params }: { params: Promise<{ id: string }> },
-) {
+async function handlePatch(req: NextRequest, context: SecurityContext) {
   try {
-    const { id: projectId } = await params;
+    // Extract project ID from URL since we're not using auth context
+    const url = new URL(req.url);
+    const pathParts = url.pathname.split("/");
+    const projectId = pathParts[pathParts.length - 2]; // Get the project ID from the URL
+
     const body = await req.json();
-    const { pendingActionId, action, teacherId, reviewNotes } = body;
+    const sanitizedBody = sanitizeInput(body);
+    const { pendingActionId, action, teacherId, reviewNotes } = sanitizedBody;
 
     // Validate input
-    if (!projectId || !pendingActionId || !action || !teacherId) {
+    if (!pendingActionId || !action || !teacherId) {
       return NextResponse.json(
         {
-          error:
-            "Missing required fields: projectId, pendingActionId, action, teacherId",
+          error: "Missing required fields: pendingActionId, action, teacherId",
         },
         { status: 400 },
       );
@@ -146,21 +151,27 @@ export async function PATCH(
             Object.values(actionTemplate?.translations || {})[0] ||
             {};
 
-          console.log(
-            `Approving action template for ${pendingAction.actionId}:`,
-            {
-              title:
-                (translation as ActionTranslation).title ||
-                actionTemplate?.title,
-              description:
-                (translation as ActionTranslation).description ||
-                actionTemplate?.description,
-              hasTranslations: !!actionTemplate?.translations,
-              availableLocales: actionTemplate?.translations
-                ? Object.keys(actionTemplate.translations)
-                : [],
-            },
-          );
+          // Only log in development with verbose logging enabled
+          if (
+            process.env.NODE_ENV === "development" &&
+            process.env.VERBOSE_LOGGING === "true"
+          ) {
+            console.log(
+              `Approving action template for ${pendingAction.actionId}:`,
+              {
+                title:
+                  (translation as ActionTranslation).title ||
+                  actionTemplate?.title,
+                description:
+                  (translation as ActionTranslation).description ||
+                  actionTemplate?.description,
+                hasTranslations: !!actionTemplate?.translations,
+                availableLocales: actionTemplate?.translations
+                  ? Object.keys(actionTemplate.translations)
+                  : [],
+              },
+            );
+          }
         }
       }
 
@@ -262,4 +273,27 @@ export async function PATCH(
       { status: 500 },
     );
   }
+}
+
+// Export handlers with security middleware
+export async function GET(
+  req: NextRequest,
+  { params }: { params: Promise<{ id: string }> },
+) {
+  return withSecurity(handleGet, {
+    requireAuth: false, // Temporarily disabled for testing
+    requireTeacherAccess: false,
+    rateLimit: { maxRequests: 100, windowMs: 60000 },
+  })(req, { params });
+}
+
+export async function PATCH(
+  req: NextRequest,
+  { params }: { params: Promise<{ id: string }> },
+) {
+  return withSecurity(handlePatch, {
+    requireAuth: false, // Temporarily disabled for testing
+    requireTeacherAccess: false,
+    rateLimit: { maxRequests: 20, windowMs: 60000 },
+  })(req, { params });
 }

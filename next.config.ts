@@ -2,6 +2,17 @@ import { NextConfig } from "next";
 import createNextIntlPlugin from "next-intl/plugin";
 
 const nextConfig: NextConfig = {
+  // Suppress source map warnings from node_modules
+  webpack: (config, { dev }) => {
+    if (dev) {
+      config.ignoreWarnings = [
+        /Failed to parse source map/,
+        /Invalid source map/,
+        /Only conformant source maps can be used/,
+      ];
+    }
+    return config;
+  },
   async headers() {
     return [
       {
