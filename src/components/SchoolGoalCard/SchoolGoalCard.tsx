@@ -45,7 +45,8 @@ const generateChartDataFromActions = (
   startYear: number,
   endYear: number,
   completedActions: ProjectAction[] = [],
-  availableActions: ProjectAction[] = [],
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  _availableActions: ProjectAction[] = [],
   subGoal: number = 0,
   subGoalYear: number = 0,
   finalGoal: number = 0,
@@ -202,7 +203,7 @@ const SchoolGoalCard: React.FC<SchoolGoalCardProps> = ({
   selectedActionReductionPerYear,
   startYear,
   totalEmissions = 1000, // Default total emissions if not provided
-  availableActions,
+  availableActions: _availableActions,
   completedActions,
 }) => {
   const t = useTranslations("StudentCalculator");
@@ -216,7 +217,7 @@ const SchoolGoalCard: React.FC<SchoolGoalCardProps> = ({
     startYearNum,
     finalYearNum,
     completedActions || [],
-    availableActions || [],
+    _availableActions || [],
     subGoal,
     subGoalYearNum,
     schoolGoal,
@@ -369,7 +370,7 @@ const SchoolGoalCard: React.FC<SchoolGoalCardProps> = ({
         </div>
 
         {/* Legacy legend if no action data */}
-        {!(availableActions || completedActions) && (
+        {!(_availableActions || completedActions) && (
           <>
             {/* Legacy legend */}
             <div className="flex items-center gap-2">

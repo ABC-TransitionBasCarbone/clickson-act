@@ -10,7 +10,8 @@ import {
 } from "../../../../../lib/security-middleware";
 
 // Get pending actions for a project (for teachers)
-async function handleGet(req: NextRequest, context: SecurityContext) {
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+async function handleGet(req: NextRequest, _context: SecurityContext) {
   try {
     // Extract project ID from URL since we're not using auth context
     const url = new URL(req.url);
@@ -71,7 +72,8 @@ async function handleGet(req: NextRequest, context: SecurityContext) {
 }
 
 // Approve or reject a pending action (for teachers)
-async function handlePatch(req: NextRequest, context: SecurityContext) {
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+async function handlePatch(req: NextRequest, _context: SecurityContext) {
   try {
     // Extract project ID from URL since we're not using auth context
     const url = new URL(req.url);
@@ -79,7 +81,12 @@ async function handlePatch(req: NextRequest, context: SecurityContext) {
     const projectId = pathParts[pathParts.length - 2]; // Get the project ID from the URL
 
     const body = await req.json();
-    const sanitizedBody = sanitizeInput(body);
+    const sanitizedBody = sanitizeInput(body) as {
+      pendingActionId?: string;
+      action?: string;
+      teacherId?: string;
+      reviewNotes?: string;
+    };
     const { pendingActionId, action, teacherId, reviewNotes } = sanitizedBody;
 
     // Validate input
@@ -276,24 +283,34 @@ async function handlePatch(req: NextRequest, context: SecurityContext) {
 }
 
 // Export handlers with security middleware
-export async function GET(
-  req: NextRequest,
-  { params }: { params: Promise<{ id: string }> },
-) {
-  return withSecurity(handleGet, {
+export async function GET(req: NextRequest) {
+  const securityHandler = withSecurity(handleGet, {
     requireAuth: false, // Temporarily disabled for testing
     requireTeacherAccess: false,
     rateLimit: { maxRequests: 100, windowMs: 60000 },
-  })(req, { params });
+  });
+
+  // Create a mock SecurityContext since we're not using auth
+  const mockContext: SecurityContext = {
+    uid: "mock",
+    email: "mock@example.com",
+  };
+
+  return securityHandler(req, mockContext);
 }
 
-export async function PATCH(
-  req: NextRequest,
-  { params }: { params: Promise<{ id: string }> },
-) {
-  return withSecurity(handlePatch, {
+export async function PATCH(req: NextRequest) {
+  const securityHandler = withSecurity(handlePatch, {
     requireAuth: false, // Temporarily disabled for testing
     requireTeacherAccess: false,
     rateLimit: { maxRequests: 20, windowMs: 60000 },
-  })(req, { params });
+  });
+
+  // Create a mock SecurityContext since we're not using auth
+  const mockContext: SecurityContext = {
+    uid: "mock",
+    email: "mock@example.com",
+  };
+
+  return securityHandler(req, mockContext);
 }

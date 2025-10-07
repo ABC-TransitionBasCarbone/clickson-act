@@ -9,6 +9,7 @@ export interface SecurityContext {
   role?: string;
   projectId?: string;
   teacherId?: string;
+  isTeacher?: boolean;
 }
 
 // Project access validation
@@ -61,7 +62,7 @@ export async function validateProjectAccess(
 }
 
 // Input sanitization
-export function sanitizeInput(input: any): any {
+export function sanitizeInput(input: unknown): unknown {
   if (typeof input === "string") {
     // Remove potentially dangerous characters
     return input
@@ -76,7 +77,7 @@ export function sanitizeInput(input: any): any {
   }
 
   if (input && typeof input === "object") {
-    const sanitized: any = {};
+    const sanitized: Record<string, unknown> = {};
     for (const [key, value] of Object.entries(input)) {
       sanitized[key] = sanitizeInput(value);
     }
@@ -173,7 +174,6 @@ export function withRateLimit(
     const clientId =
       req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ||
       req.headers.get("x-real-ip") ||
-      req.ip ||
       "unknown";
 
     const now = Date.now();
@@ -218,9 +218,11 @@ export function withCSRFProtection(
       return handler(req);
     }
 
-    const csrfToken = req.headers.get("x-csrf-token");
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const _csrfToken = req.headers.get("x-csrf-token");
     const origin = req.headers.get("origin");
-    const referer = req.headers.get("referer");
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const _referer = req.headers.get("referer");
 
     // Validate origin/referer for same-origin requests
     if (
@@ -273,16 +275,18 @@ export function withSecurity(
 
   // Apply CSRF protection
   if (options.csrfProtection !== false) {
-    wrappedHandler = withCSRFProtection(wrappedHandler as any) as any;
+    wrappedHandler = withCSRFProtection(
+      wrappedHandler as (req: NextRequest) => Promise<NextResponse>,
+    ) as typeof wrappedHandler;
   }
 
   // Apply rate limiting
   if (options.rateLimit) {
     wrappedHandler = withRateLimit(
-      wrappedHandler as any,
+      wrappedHandler as (req: NextRequest) => Promise<NextResponse>,
       options.rateLimit.maxRequests,
       options.rateLimit.windowMs,
-    ) as any;
+    ) as typeof wrappedHandler;
   }
 
   // Apply authentication
@@ -290,7 +294,7 @@ export function withSecurity(
     wrappedHandler = withProjectAuth(
       wrappedHandler,
       options.requireTeacherAccess,
-    ) as any;
+    ) as unknown as typeof wrappedHandler;
   }
 
   return wrappedHandler;

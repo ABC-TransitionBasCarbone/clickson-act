@@ -65,7 +65,8 @@ interface ProjectAction {
 }
 
 // Submit actions to a project for teacher approval (students)
-async function handlePost(req: NextRequest, context: SecurityContext) {
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+async function handlePost(req: NextRequest, _context: SecurityContext) {
   try {
     // Extract project ID from URL since we're not using auth context
     const url = new URL(req.url);
@@ -75,7 +76,31 @@ async function handlePost(req: NextRequest, context: SecurityContext) {
     const body = await req.json();
 
     // Sanitize and validate input
-    const sanitizedBody = sanitizeInput(body);
+    const sanitizedBody = sanitizeInput(body) as {
+      actionIds?: string[];
+      studentName?: string;
+      studentId?: string;
+      calculatedReduction?: number;
+      actionType?: string;
+      categoryData?: {
+        categoryId: string;
+        categoryName: string;
+        subcategoryData?: Array<{
+          subcategoryId: string;
+          subcategoryName: string;
+          value: string;
+        }>;
+      };
+      customActionData?: {
+        title: string;
+        description: string;
+        reduction: number;
+        category: string;
+        effort: string;
+        timeline: number;
+      };
+      isTeacherAction?: boolean;
+    };
     const {
       actionIds,
       studentName,
@@ -167,6 +192,13 @@ async function handlePost(req: NextRequest, context: SecurityContext) {
       }
     } else {
       // Handle regular action template submissions
+      if (!actionIds) {
+        return NextResponse.json(
+          { error: "Action IDs are required for template submissions" },
+          { status: 400 },
+        );
+      }
+
       for (const actionId of actionIds) {
         try {
           // Get the action template from database
@@ -277,7 +309,12 @@ async function handlePost(req: NextRequest, context: SecurityContext) {
                 ? {
                     categoryId: categoryData.categoryId,
                     categoryName: categoryData.categoryName,
-                    subcategoryData: categoryData.subcategoryData || [],
+                    subcategoryData:
+                      categoryData.subcategoryData?.map((sub) => ({
+                        id: sub.subcategoryId,
+                        name: sub.subcategoryName,
+                        value: sub.value,
+                      })) || [],
                   }
                 : undefined,
             };
@@ -304,7 +341,10 @@ async function handlePost(req: NextRequest, context: SecurityContext) {
                 translation.description || actionTemplate?.description || "",
               actionType: finalActionType,
               calculatedReduction: finalReduction,
-              categoryData,
+              categoryData: categoryData || {
+                categoryId: actionTemplate?.category || "",
+                categoryName: actionTemplate?.category || "",
+              },
             });
 
             const pendingAction: PendingAction = {
@@ -354,7 +394,8 @@ async function handlePost(req: NextRequest, context: SecurityContext) {
 }
 
 // Get actions for a project
-async function handleGet(req: NextRequest, context: SecurityContext) {
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+async function handleGet(req: NextRequest, _context: SecurityContext) {
   try {
     // Extract project ID from URL since we're not using auth context
     const url = new URL(req.url);
@@ -392,7 +433,8 @@ async function handleGet(req: NextRequest, context: SecurityContext) {
 }
 
 // Update a specific action in a project
-async function handlePut(req: NextRequest, context: SecurityContext) {
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+async function handlePut(req: NextRequest, _context: SecurityContext) {
   try {
     // Extract project ID from URL since we're not using auth context
     const url = new URL(req.url);
@@ -400,7 +442,7 @@ async function handlePut(req: NextRequest, context: SecurityContext) {
     const projectId = pathParts[pathParts.length - 2]; // Get the project ID from the URL
 
     const updateData = await req.json();
-    const sanitizedData = sanitizeInput(updateData);
+    const sanitizedData = sanitizeInput(updateData) as { id?: string };
 
     if (!projectId) {
       return NextResponse.json(
@@ -526,33 +568,48 @@ export async function DELETE(
 }
 
 // Export handlers with security middleware
-export async function POST(
-  req: NextRequest,
-  { params }: { params: Promise<{ id: string }> },
-) {
-  return withSecurity(handlePost, {
+export async function POST(req: NextRequest) {
+  const securityHandler = withSecurity(handlePost, {
     requireAuth: false, // Temporarily disabled for testing
     rateLimit: { maxRequests: 20, windowMs: 60000 },
-  })(req, { params });
+  });
+
+  // Create a mock SecurityContext since we're not using auth
+  const mockContext: SecurityContext = {
+    uid: "mock",
+    email: "mock@example.com",
+  };
+
+  return securityHandler(req, mockContext);
 }
 
-export async function GET(
-  req: NextRequest,
-  { params }: { params: Promise<{ id: string }> },
-) {
-  return withSecurity(handleGet, {
+export async function GET(req: NextRequest) {
+  const securityHandler = withSecurity(handleGet, {
     requireAuth: false, // Temporarily disabled for testing
     rateLimit: { maxRequests: 100, windowMs: 60000 },
-  })(req, { params });
+  });
+
+  // Create a mock SecurityContext since we're not using auth
+  const mockContext: SecurityContext = {
+    uid: "mock",
+    email: "mock@example.com",
+  };
+
+  return securityHandler(req, mockContext);
 }
 
-export async function PUT(
-  req: NextRequest,
-  { params }: { params: Promise<{ id: string }> },
-) {
-  return withSecurity(handlePut, {
+export async function PUT(req: NextRequest) {
+  const securityHandler = withSecurity(handlePut, {
     requireAuth: false, // Temporarily disabled for testing
     requireTeacherAccess: false,
     rateLimit: { maxRequests: 50, windowMs: 60000 },
-  })(req, { params });
+  });
+
+  // Create a mock SecurityContext since we're not using auth
+  const mockContext: SecurityContext = {
+    uid: "mock",
+    email: "mock@example.com",
+  };
+
+  return securityHandler(req, mockContext);
 }
