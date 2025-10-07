@@ -3,13 +3,24 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { motion } from "framer-motion";
 import { useTranslations } from "next-intl";
-import { PlusCircle, BarChart3, Building } from "lucide-react";
+import {
+  PlusCircle,
+  Edit,
+  Save,
+  X,
+  FolderOpen,
+  School,
+  TrendingUp,
+  Clock,
+} from "lucide-react";
 import Project from "@/types/ProjectType";
 import ProjectForm from "@/types/ProjectForm";
-import { School } from "@/types/School";
+import { School as SchoolType } from "@/types/School";
 import { ProjectFormModal } from "./ProjectFormModal";
 import { useUser } from "@/context/UserContext";
 import { Link, useRouter } from "@/i18n/navigation";
+import EmissionDataManager from "@/components/teacher/EmissionDataManager";
+import PendingActionsManager from "@/components/teacher/PendingActionsManager";
 
 const TeacherDashboard: React.FC = () => {
   const t = useTranslations("TeacherDashboard");
@@ -17,7 +28,7 @@ const TeacherDashboard: React.FC = () => {
   const router = useRouter();
 
   const [projects, setProjects] = useState<Project[]>([]);
-  const [teacherSchool, setTeacherSchool] = useState<School | null>(null);
+  const [teacherSchool, setTeacherSchool] = useState<SchoolType | null>(null);
   const [teacherInfo, setTeacherInfo] = useState<{ school?: string } | null>(
     null,
   );
@@ -33,6 +44,45 @@ const TeacherDashboard: React.FC = () => {
     goalReductionAmount: 0,
   });
 
+  // Tab management
+  const [activeTab, setActiveTab] = useState<
+    "projects" | "school" | "emissions" | "pending"
+  >("projects");
+  const [isEditing, setIsEditing] = useState(false);
+  const [editForm, setEditForm] = useState({
+    goal: 50,
+    deadlineYear: "2030",
+  });
+  const [selectedProject, setSelectedProject] = useState<string>("");
+
+  // Tab configuration
+  const tabs = [
+    {
+      id: "projects" as const,
+      label: t("activeProjectsTitle"),
+      icon: FolderOpen,
+      show: true,
+    },
+    {
+      id: "school" as const,
+      label: "School Information",
+      icon: School,
+      show: !!teacherInfo?.school,
+    },
+    {
+      id: "emissions" as const,
+      label: "Emission Data",
+      icon: TrendingUp,
+      show: !!teacherInfo?.school,
+    },
+    {
+      id: "pending" as const,
+      label: "Pending Actions",
+      icon: Clock,
+      show: !!teacherInfo?.school,
+    },
+  ];
+
   const fetchProjects = useCallback(async () => {
     if (!user) return;
 
@@ -43,6 +93,9 @@ const TeacherDashboard: React.FC = () => {
 
       if (response.ok) {
         setProjects(data.projects || []);
+        if (data.projects && data.projects.length > 0) {
+          setSelectedProject(data.projects[0].id);
+        }
       } else {
         setError(data.error || "Failed to fetch projects");
       }
@@ -72,6 +125,10 @@ const TeacherDashboard: React.FC = () => {
         // Set school if exists
         if (data.school) {
           setTeacherSchool(data.school);
+          setEditForm({
+            goal: data.school.goal,
+            deadlineYear: data.school.deadlineYear,
+          });
         }
       }
     } catch (error) {
@@ -137,10 +194,49 @@ const TeacherDashboard: React.FC = () => {
     }
   };
 
+  const handleSchoolUpdate = (updatedSchool: SchoolType) => {
+    setTeacherSchool(updatedSchool);
+  };
+
+  const handleSaveSchool = async () => {
+    if (!teacherSchool?.id) return;
+
+    try {
+      const response = await fetch(`/api/school/${teacherSchool.id}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(editForm),
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        setTeacherSchool({ ...teacherSchool, ...editForm });
+        setIsEditing(false);
+        alert("School updated successfully!");
+      } else {
+        alert(`Error updating school: ${data.error}`);
+      }
+    } catch (error) {
+      console.error("Error updating school:", error);
+      alert("Error updating school. Please try again.");
+    }
+  };
+
+  const handleCancelEdit = () => {
+    setEditForm({
+      goal: teacherSchool?.goal || 50,
+      deadlineYear: teacherSchool?.deadlineYear || "2030",
+    });
+    setIsEditing(false);
+  };
+
   // If user is a student, redirect them
   if (user && user.passcode) {
     return (
-      <div className="mx-auto px-6 py-8 container">
+      <div className="mx-auto px-6 py-8 min-h-screen container">
         <div className="text-center">
           <h1 className="mb-4 font-bold text-2xl">Access Denied</h1>
           <p className="mb-4 text-gray-600">
@@ -202,14 +298,6 @@ const TeacherDashboard: React.FC = () => {
     );
   }
 
-  const avgReduction =
-    projects.length > 0
-      ? projects.reduce(
-          (sum, project) => sum + (project.subGoalReductionAmount || 0),
-          0,
-        ) / projects.length
-      : 0;
-
   return (
     <div className="bg-gray-50">
       <motion.div
@@ -226,156 +314,346 @@ const TeacherDashboard: React.FC = () => {
             </h1>
             <p className="mt-1 text-muted-foreground">{t("manageProjects")}</p>
           </div>
-          <div className="flex gap-3 mt-4 md:mt-0">
-            <Link
-              href="/dashboard/school-management"
-              className="btn-outline btn"
-            >
-              School Management
-            </Link>
-            <button
-              className="bg-primary-600 hover:bg-primary-700 btn btn-primary"
-              onClick={openProjectModal}
-            >
-              <PlusCircle className="mr-2 w-4 h-4" />
-              {t("addNewProject")}
-            </button>
+
+          {/* Enhanced Tabbed Interface */}
+          <div className="">
+            <div className="bg-white shadow-sm px-2.5 py-1.5 border border-gray-200 rounded-xl">
+              <div className="flex flex-wrap gap-1.5">
+                {tabs
+                  .filter((tab) => tab.show)
+                  .map((tab) => {
+                    const IconComponent = tab.icon;
+                    const isActive = activeTab === tab.id;
+
+                    return (
+                      <button
+                        key={tab.id}
+                        className={`group relative flex cursor-pointer items-center gap-2.5 rounded-lg px-5 py-3.5 text-sm font-medium transition-all duration-300 ${
+                          isActive
+                            ? "bg-primary scale-105 text-white shadow-md"
+                            : "text-gray-600 hover:scale-102 hover:bg-gray-50 hover:text-gray-900"
+                        }`}
+                        onClick={() => setActiveTab(tab.id)}
+                      >
+                        <IconComponent
+                          className={`h-4 w-4 transition-transform duration-200 ${
+                            isActive ? "scale-110" : "group-hover:scale-105"
+                          }`}
+                        />
+                        <span className="whitespace-nowrap">{tab.label}</span>
+                      </button>
+                    );
+                  })}
+              </div>
+            </div>
           </div>
         </div>
 
-        <div className="gap-4 grid md:grid-cols-3 mb-8">
-          <div className="relative card">
-            <div className="flex flex-row justify-between items-center space-y-0 pb-2">
-              <h3 className="font-medium text-sm">
-                {teacherInfo?.school ? t("mySchool") : t("projects")}
-              </h3>
-              <Building className="w-4 h-4 text-muted-foreground" />
-            </div>
-            <div>
-              {teacherInfo?.school ? (
-                <>
-                  <div className="font-bold text-2xl">
-                    {teacherSchool
-                      ? `${teacherSchool.goal}% by ${teacherSchool.deadlineYear}`
-                      : t("clickToSetGoals")}
+        {/* Tab Content */}
+        <motion.div
+          className="max-w-6xl"
+          key={activeTab}
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.3 }}
+        >
+          {activeTab === "projects" && (
+            <>
+              {/* Add New Project Button */}
+              <div className="mb-6">
+                <button
+                  className="bg-primary-600 hover:bg-primary-700 btn btn-primary"
+                  onClick={openProjectModal}
+                >
+                  <PlusCircle className="mr-2 w-4 h-4" />
+                  {t("addNewProject")}
+                </button>
+              </div>
+
+              {/* Projects Grid */}
+              <div className="gap-6 grid md:grid-cols-2 lg:grid-cols-3 mb-6">
+                {projects.map((project) => (
+                  <div
+                    key={project.id}
+                    className="hover:shadow-md transition-shadow card"
+                  >
+                    <div>
+                      <div className="flex justify-between items-start mb-5 font-bold text-xl">
+                        <h3>{project.name}</h3>
+                        <span
+                          className={`rounded-full px-2 py-1 text-xs font-medium ${
+                            project.status === "active"
+                              ? "bg-green-100 text-green-800"
+                              : project.status === "completed"
+                                ? "bg-blue-100 text-blue-800"
+                                : "bg-amber-100 text-amber-800"
+                          }`}
+                        >
+                          {t(`status.${project.status}`)}
+                        </span>
+                      </div>
+                    </div>
+                    <div>
+                      <div className="gap-4 grid grid-cols-2 text-sm">
+                        <div>
+                          <p className="text-muted-foreground">
+                            {t("startDate")}
+                          </p>
+                          <p className="font-medium">
+                            {typeof project.startDate === "number"
+                              ? project.startDate
+                              : new Date(project.startDate).getFullYear()}
+                          </p>
+                        </div>
+                        <div>
+                          <p className="text-muted-foreground">
+                            {t("subGoalDate")}
+                          </p>
+                          <p className="font-medium">
+                            {typeof project.subGoalDeadline === "number"
+                              ? project.subGoalDeadline
+                              : new Date(project.subGoalDeadline).getFullYear()}
+                          </p>
+                        </div>
+                        <div>
+                          <p className="text-muted-foreground">
+                            {t("reduction")}
+                          </p>
+                          <p className="font-medium text-green-600">
+                            {project.subGoalReductionAmount}%
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                    <div className="flex justify-between mt-5 w-full">
+                      <div className="flex gap-2">
+                        {project.id && (
+                          <Link
+                            href={`/dashboard/projects/${project.id}`}
+                            className="btn-outline btn btn-primary"
+                          >
+                            {t("viewDetails")}
+                          </Link>
+                        )}
+                        <Link href="/monitoring" className="btn btn-secondary">
+                          {t("monitoring")}
+                        </Link>
+                      </div>
+                    </div>
                   </div>
-                  <p className="text-muted-foreground text-xs text-wrap">
-                    {teacherSchool?.name}
-                  </p>
-                </>
+                ))}
+              </div>
+            </>
+          )}
+
+          {activeTab === "school" && teacherSchool && (
+            <div className="card">
+              <div className="flex justify-between items-start mb-6">
+                <div>
+                  <h2 className="mb-2 font-bold text-2xl">
+                    {teacherSchool.name}
+                  </h2>
+                  <p className="text-gray-600">School Information & Goals</p>
+                </div>
+                {!isEditing ? (
+                  <button
+                    onClick={() => setIsEditing(true)}
+                    className="btn-outline btn btn-sm"
+                  >
+                    <Edit className="mr-2 w-4 h-4" />
+                    Edit Goals
+                  </button>
+                ) : (
+                  <div className="flex gap-2">
+                    <button
+                      onClick={handleSaveSchool}
+                      className="btn btn-primary btn-sm"
+                    >
+                      <Save className="mr-2 w-4 h-4" />
+                      Save
+                    </button>
+                    <button
+                      onClick={handleCancelEdit}
+                      className="btn-outline btn btn-sm"
+                    >
+                      <X className="mr-2 w-4 h-4" />
+                      Cancel
+                    </button>
+                  </div>
+                )}
+              </div>
+
+              {!isEditing ? (
+                <div className="space-y-4">
+                  <div className="gap-6 grid md:grid-cols-2">
+                    <div className="bg-gray-50 p-4 rounded-lg">
+                      <h3 className="mb-2 font-semibold text-lg">
+                        Reduction Goal
+                      </h3>
+                      <p className="font-bold text-green-600 text-3xl">
+                        {teacherSchool.goal}%
+                      </p>
+                      <p className="mt-1 text-gray-600 text-sm">
+                        Target emission reduction
+                      </p>
+                    </div>
+                    <div className="bg-gray-50 p-4 rounded-lg">
+                      <h3 className="mb-2 font-semibold text-lg">
+                        Target Year
+                      </h3>
+                      <p className="font-bold text-primary text-3xl">
+                        {teacherSchool.deadlineYear}
+                      </p>
+                      <p className="mt-1 text-gray-600 text-sm">
+                        Deadline to achieve goal
+                      </p>
+                    </div>
+                  </div>
+                  <div className="bg-blue-50 mt-6 p-4 rounded-lg">
+                    <h3 className="mb-2 font-semibold">School Goal Summary</h3>
+                    <p className="text-gray-700">
+                      <strong>{teacherSchool.name}</strong> aims to reduce
+                      emissions by <strong>{teacherSchool.goal}%</strong> by the
+                      year <strong>{teacherSchool.deadlineYear}</strong>.
+                    </p>
+                  </div>
+                </div>
               ) : (
-                <>
-                  <div className="font-bold text-2xl">{projects.length}</div>
-                  <p className="text-muted-foreground text-xs">
-                    {t("projectsCreated")}
-                  </p>
-                </>
+                <div className="space-y-6">
+                  <div className="gap-6 grid md:grid-cols-2">
+                    <div>
+                      <label htmlFor="goal" className="block mb-2 font-medium">
+                        Reduction Goal (%)
+                      </label>
+                      <input
+                        id="goal"
+                        name="goal"
+                        type="number"
+                        placeholder="Enter reduction goal"
+                        className="input-bordered w-full input"
+                        value={editForm.goal}
+                        onChange={(e) =>
+                          setEditForm((prev) => ({
+                            ...prev,
+                            goal: Number(e.target.value),
+                          }))
+                        }
+                        min={0}
+                        max={100}
+                        required
+                      />
+                      <p className="mt-1 text-gray-500 text-sm">
+                        Enter a percentage between 0 and 100
+                      </p>
+                    </div>
+
+                    <div>
+                      <label
+                        htmlFor="deadlineYear"
+                        className="block mb-2 font-medium"
+                      >
+                        Target Year
+                      </label>
+                      <input
+                        id="deadlineYear"
+                        name="deadlineYear"
+                        type="number"
+                        placeholder="Enter target year"
+                        className="input-bordered w-full input"
+                        value={editForm.deadlineYear}
+                        onChange={(e) =>
+                          setEditForm((prev) => ({
+                            ...prev,
+                            deadlineYear: e.target.value,
+                          }))
+                        }
+                        min={new Date().getFullYear()}
+                        max={new Date().getFullYear() + 50}
+                        required
+                      />
+                      <p className="mt-1 text-gray-500 text-sm">
+                        Year when the goal should be achieved
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="bg-yellow-50 p-4 rounded-lg">
+                    <h3 className="mb-2 font-semibold">Preview</h3>
+                    <p className="text-gray-700">
+                      <strong>{teacherSchool.name}</strong> will aim to reduce
+                      emissions by <strong>{editForm.goal}%</strong> by the year{" "}
+                      <strong>{editForm.deadlineYear}</strong>.
+                    </p>
+                  </div>
+                </div>
               )}
             </div>
-          </div>
+          )}
 
-          <div className="card">
-            <h3 className="flex flex-row justify-between items-center space-y-0 pb-2">
-              <div className="font-medium text-sm">{t("totalProjects")}</div>
-              <PlusCircle className="w-4 h-4 text-muted-foreground" />
-            </h3>
-            <div>
-              <div className="font-bold text-2xl">{projects.length}</div>
-              <p className="text-muted-foreground text-xs">
-                {t("projectsCreated")}
-              </p>
-            </div>
-          </div>
+          {activeTab === "emissions" && teacherSchool && (
+            <EmissionDataManager
+              school={teacherSchool}
+              onUpdate={handleSchoolUpdate}
+            />
+          )}
 
-          <div className="card">
-            <div className="flex flex-row justify-between items-center space-y-0 pb-2">
-              <div className="font-medium text-sm">
-                {t("emissionReduction")}
-              </div>
-              <BarChart3 className="w-4 h-4 text-muted-foreground" />
-            </div>
-            <div>
-              <div className="font-bold text-2xl">
-                {avgReduction.toFixed(1)}%
-              </div>
-              <p className="text-muted-foreground text-xs">
-                {t("averageReduction")}
-              </p>
-            </div>
-          </div>
-        </div>
-
-        <h2 className="mb-4 font-semibold text-xl">
-          {t("activeProjectsTitle")}
-        </h2>
-
-        <div className="gap-6 grid md:grid-cols-2 lg:grid-cols-3 mb-6">
-          {projects.map((project) => (
-            <div
-              key={project.id}
-              className="hover:shadow-md transition-shadow card"
-            >
-              <div>
-                <div className="flex justify-between items-start mb-5 font-bold text-xl">
-                  <h3>{project.name}</h3>
-                  <span
-                    className={`rounded-full px-2 py-1 text-xs font-medium ${
-                      project.status === "active"
-                        ? "bg-green-100 text-green-800"
-                        : project.status === "completed"
-                          ? "bg-blue-100 text-blue-800"
-                          : "bg-amber-100 text-amber-800"
-                    }`}
-                  >
-                    {t(`status.${project.status}`)}
-                  </span>
-                </div>
-              </div>
-              <div>
-                <div className="gap-4 grid grid-cols-2 text-sm">
-                  <div>
-                    <p className="text-muted-foreground">{t("startDate")}</p>
-                    <p className="font-medium">
-                      {typeof project.startDate === "number"
-                        ? project.startDate
-                        : new Date(project.startDate).getFullYear()}
-                    </p>
-                  </div>
-                  <div>
-                    <p className="text-muted-foreground">{t("subGoalDate")}</p>
-                    <p className="font-medium">
-                      {typeof project.subGoalDeadline === "number"
-                        ? project.subGoalDeadline
-                        : new Date(project.subGoalDeadline).getFullYear()}
-                    </p>
-                  </div>
-                  <div>
-                    <p className="text-muted-foreground">{t("reduction")}</p>
-                    <p className="font-medium text-green-600">
-                      {project.subGoalReductionAmount}%
-                    </p>
-                  </div>
-                </div>
-              </div>
-              <div className="flex justify-between mt-5 w-full">
-                {/* Assuming project.id is available and can be used for the link */}
-                <div className="flex gap-2">
-                  {project.id && (
-                    <Link
-                      href={`/dashboard/projects/${project.id}`}
-                      className="btn-outline btn btn-primary"
-                    >
-                      {t("viewDetails")}
-                    </Link>
+          {activeTab === "pending" && (
+            <>
+              {projects.length > 0 ? (
+                <>
+                  {/* Project Selector */}
+                  {projects.length > 1 && (
+                    <div className="mb-6">
+                      <label className="block mb-2 font-medium text-sm">
+                        Select Project to Review:
+                      </label>
+                      <select
+                        value={selectedProject}
+                        onChange={(e) => setSelectedProject(e.target.value)}
+                        className="w-full max-w-xs select-bordered select"
+                      >
+                        {projects.map((project) => (
+                          <option key={project.id} value={project.id}>
+                            {project.name}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
                   )}
-                  <Link href="/monitoring" className="btn btn-secondary">
-                    {t("monitoring")}
-                  </Link>
+
+                  {/* Pending Actions Manager */}
+                  {selectedProject && (
+                    <PendingActionsManager
+                      projectId={selectedProject}
+                      teacherId={user?.username || ""}
+                      onActionReviewed={() => {
+                        // Could refresh data or show notification
+                      }}
+                    />
+                  )}
+                </>
+              ) : (
+                <div className="card">
+                  <div className="py-8 text-center">
+                    <h3 className="mb-2 font-semibold text-xl">
+                      No Projects Found
+                    </h3>
+                    <p className="mb-4 text-gray-600">
+                      Create a project to start receiving student action
+                      submissions.
+                    </p>
+                    <button
+                      onClick={openProjectModal}
+                      className="btn btn-primary"
+                    >
+                      Create Project
+                    </button>
+                  </div>
                 </div>
-              </div>
-            </div>
-          ))}
-        </div>
+              )}
+            </>
+          )}
+        </motion.div>
       </motion.div>
 
       {/* Project Creation Modal */}
