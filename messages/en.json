@@ -27,7 +27,9 @@
     "selectSchool": "Select School",
     "enterSchool": "Enter School",
     "schoolGoal": "School Goal",
-    "deadlineYear": "Deadline Year"
+    "schoolGoalHelp": "Set the percentage of emission reduction your school aims to achieve (e.g., 50% means reducing emissions by half)",
+    "deadlineYear": "Deadline Year",
+    "deadlineYearHelp": "Choose the target year by which your school wants to achieve the emission reduction goal"
   },
 
   "HomePage": {

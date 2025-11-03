@@ -32,7 +32,11 @@ const EmissionDataManager: React.FC<EmissionDataManagerProps> = ({
   >(school.emissionCategories || []);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [refreshing, setRefreshing] = useState(false);
+  // Store raw input strings to preserve commas during typing
+  const [rawInputs, setRawInputs] = useState<{
+    categories: Record<string, string>;
+    subcategories: Record<string, string>;
+  }>({ categories: {}, subcategories: {} });
 
   // Load global categories for reference and update subcategory names
   useEffect(() => {
@@ -157,7 +161,32 @@ const EmissionDataManager: React.FC<EmissionDataManagerProps> = ({
     fetchGlobalCategories();
   }, [school, showToast]);
 
-  const handleCategoryAmountChange = (categoryId: string, amount: number) => {
+  // Parse input value handling commas as decimal separators
+  const parseInputValue = (value: string): number => {
+    if (!value || value.trim() === "") return 0;
+    // Remove any non-numeric characters except comma and period
+    // Replace comma with period for decimal separator (European format)
+    const cleaned = value.replace(/[^\d,.-]/g, ""); // Remove all non-numeric except comma, period, minus
+    // Handle comma as decimal separator
+    const normalizedValue = cleaned.replace(/,/g, ".");
+    // Only allow one decimal point
+    const parts = normalizedValue.split(".");
+    const finalValue =
+      parts.length > 2
+        ? parts[0] + "." + parts.slice(1).join("")
+        : normalizedValue;
+    const parsed = parseFloat(finalValue);
+    return isNaN(parsed) ? 0 : parsed;
+  };
+
+  const handleCategoryAmountChange = (categoryId: string, value: string) => {
+    // Store raw input string to preserve commas
+    setRawInputs((prev) => ({
+      ...prev,
+      categories: { ...prev.categories, [categoryId]: value },
+    }));
+    // Parse and update the amount
+    const amount = parseInputValue(value);
     setSchoolCategories((prev) =>
       prev.map((cat) =>
         cat.categoryId === categoryId
@@ -167,11 +196,35 @@ const EmissionDataManager: React.FC<EmissionDataManagerProps> = ({
     );
   };
 
+  const handleCategoryAmountBlur = (categoryId: string) => {
+    // On blur, ensure the raw input is formatted correctly with comma
+    const rawInput = rawInputs.categories[categoryId] || "";
+    const amount = parseInputValue(rawInput);
+    if (rawInput && amount > 0) {
+      // Update raw input to show comma format
+      setRawInputs((prev) => ({
+        ...prev,
+        categories: {
+          ...prev.categories,
+          [categoryId]: String(amount).replace(".", ","),
+        },
+      }));
+    }
+  };
+
   const handleSubcategoryAmountChange = (
     categoryId: string,
     subcategoryId: string,
-    amount: number,
+    value: string,
   ) => {
+    const key = `${categoryId}-${subcategoryId}`;
+    // Store raw input string to preserve commas
+    setRawInputs((prev) => ({
+      ...prev,
+      subcategories: { ...prev.subcategories, [key]: value },
+    }));
+    // Parse and update the amount
+    const amount = parseInputValue(value);
     setSchoolCategories((prev) =>
       prev.map((cat) =>
         cat.categoryId === categoryId
@@ -187,6 +240,52 @@ const EmissionDataManager: React.FC<EmissionDataManagerProps> = ({
           : cat,
       ),
     );
+  };
+
+  const handleSubcategoryAmountBlur = (
+    categoryId: string,
+    subcategoryId: string,
+  ) => {
+    // On blur, ensure the raw input is formatted correctly with comma
+    const key = `${categoryId}-${subcategoryId}`;
+    const rawInput = rawInputs.subcategories[key] || "";
+    const amount = parseInputValue(rawInput);
+    if (rawInput && amount > 0) {
+      // Update raw input to show comma format
+      setRawInputs((prev) => ({
+        ...prev,
+        subcategories: {
+          ...prev.subcategories,
+          [key]: String(amount).replace(".", ","),
+        },
+      }));
+    }
+  };
+
+  // Get display value for category input
+  const getCategoryDisplayValue = (
+    categoryId: string,
+    amount: number,
+  ): string => {
+    const rawInput = rawInputs.categories[categoryId];
+    if (rawInput !== undefined) {
+      return rawInput;
+    }
+    return amount === 0 ? "" : String(amount).replace(".", ",");
+  };
+
+  // Get display value for subcategory input
+  const getSubcategoryDisplayValue = (
+    categoryId: string,
+    subcategoryId: string,
+    amount: number,
+  ): string => {
+    const key = `${categoryId}-${subcategoryId}`;
+    const rawInput = rawInputs.subcategories[key];
+    if (rawInput !== undefined) {
+      return rawInput;
+    }
+    return amount === 0 ? "" : String(amount).replace(".", ",");
   };
 
   // Calculate total emissions and percentages
@@ -211,60 +310,6 @@ const EmissionDataManager: React.FC<EmissionDataManagerProps> = ({
         })),
       })),
     };
-  };
-
-  const refreshSubcategoryNames = async () => {
-    try {
-      setRefreshing(true);
-      const response = await fetch("/api/emission-categories/public?locale=en");
-
-      if (response.ok) {
-        const data = await response.json();
-
-        // Update subcategory names with latest translations
-        const updatedCategories: SchoolEmissionCategory[] =
-          schoolCategories.map((schoolCat) => {
-            const globalCat = data.categories.find(
-              (gc: TranslatedCategory) => gc.id === schoolCat.categoryId,
-            );
-
-            if (globalCat) {
-              return {
-                ...schoolCat,
-                categoryName: globalCat.name,
-                subcategories: schoolCat.subcategories.map((schoolSub) => {
-                  const globalSub = globalCat.subcategories?.find(
-                    (gs: TranslatedSubcategory) =>
-                      gs.id === schoolSub.subcategoryId,
-                  );
-
-                  if (globalSub) {
-                    return {
-                      ...schoolSub,
-                      subcategoryName: globalSub.name,
-                    };
-                  }
-                  return schoolSub;
-                }),
-              };
-            }
-            return schoolCat;
-          });
-
-        setSchoolCategories(updatedCategories);
-        showToast(
-          "success",
-          "Success",
-          "Subcategory names refreshed from latest translations",
-          3000,
-        );
-      }
-    } catch (error) {
-      console.error("Error refreshing subcategory names:", error);
-      showToast("error", "Error", "Failed to refresh subcategory names", 5000);
-    } finally {
-      setRefreshing(false);
-    }
   };
 
   const percentages = calculatePercentages();
@@ -315,7 +360,7 @@ const EmissionDataManager: React.FC<EmissionDataManagerProps> = ({
   if (loading) {
     return (
       <div className="card">
-        <div className="flex justify-center items-center py-8">
+        <div className="flex items-center justify-center py-8">
           <div className="loading loading-spinner loading-lg"></div>
           <span className="ml-2">Loading emission categories...</span>
         </div>
@@ -326,36 +371,22 @@ const EmissionDataManager: React.FC<EmissionDataManagerProps> = ({
   return (
     <div className="card">
       <div className="mb-6">
-        <div className="flex justify-between items-start">
+        <div className="flex items-start justify-between">
           <div>
-            <h3 className="font-bold text-2xl">School Emission Data</h3>
+            <h3 className="text-2xl font-bold">School Emission Data</h3>
             <p className="mt-2 text-gray-600">
               Enter the emission amounts (in kgCO2e) for your school. The tool
               will automatically calculate percentages for action impact
               calculations.
             </p>
           </div>
-          <button
-            onClick={refreshSubcategoryNames}
-            disabled={refreshing}
-            className="btn-outline btn btn-sm"
-          >
-            {refreshing ? (
-              <>
-                <div className="loading loading-spinner loading-xs"></div>
-                Refreshing...
-              </>
-            ) : (
-              "Refresh Names"
-            )}
-          </button>
         </div>
         {percentages.totalEmissions > 0 && (
-          <div className="bg-blue-50 mt-4 p-4 border border-blue-200 rounded-lg">
+          <div className="mt-4 rounded-lg border border-blue-200 bg-blue-50 p-4">
             <h4 className="font-semibold text-blue-900">
               Total School Emissions
             </h4>
-            <p className="font-bold text-blue-800 text-lg">
+            <p className="text-lg font-bold text-blue-800">
               {percentages.totalEmissions.toLocaleString()} kgCO2e
             </p>
           </div>
@@ -364,26 +395,36 @@ const EmissionDataManager: React.FC<EmissionDataManagerProps> = ({
 
       <div className="space-y-6">
         {schoolCategories.map((category) => (
-          <div key={category.categoryId} className="p-4 border rounded-lg">
+          <div key={category.categoryId} className="rounded-lg border p-4">
             <div className="mb-4">
-              <div className="flex justify-between items-start">
+              <div className="flex items-start justify-between">
                 <div>
-                  <label className="block mb-2 font-semibold text-lg">
+                  <label className="mb-2 block text-lg font-semibold">
                     {category.categoryName}
                   </label>
                   <div className="flex items-center space-x-2">
                     <input
-                      type="number"
-                      min="0"
-                      step="0.01"
-                      value={category.amount}
-                      onChange={(e) =>
-                        handleCategoryAmountChange(
-                          category.categoryId,
-                          parseFloat(e.target.value) || 0,
-                        )
+                      type="text"
+                      inputMode="decimal"
+                      value={getCategoryDisplayValue(
+                        category.categoryId,
+                        category.amount,
+                      )}
+                      onChange={(e) => {
+                        // Allow input with commas and periods
+                        const inputValue = e.target.value;
+                        // Only allow numbers, commas, and periods
+                        if (/^[\d,.]*$/.test(inputValue) || inputValue === "") {
+                          handleCategoryAmountChange(
+                            category.categoryId,
+                            inputValue,
+                          );
+                        }
+                      }}
+                      onBlur={() =>
+                        handleCategoryAmountBlur(category.categoryId)
                       }
-                      className="w-40 input"
+                      className="input w-40"
                       placeholder="0"
                     />
                     <span className="text-gray-500">kgCO2e</span>
@@ -391,10 +432,10 @@ const EmissionDataManager: React.FC<EmissionDataManagerProps> = ({
                 </div>
                 {percentages.totalEmissions > 0 && (
                   <div className="text-right">
-                    <div className="text-gray-500 text-sm">
+                    <div className="text-sm text-gray-500">
                       Percentage of total
                     </div>
-                    <div className="font-bold text-green-600 text-lg">
+                    <div className="text-lg font-bold text-green-600">
                       {percentages.categories.find(
                         (c) => c.categoryId === category.categoryId,
                       )?.percentage || 0}
@@ -405,7 +446,7 @@ const EmissionDataManager: React.FC<EmissionDataManagerProps> = ({
               </div>
             </div>
 
-            <div className="space-y-3 ml-4">
+            <div className="ml-4 space-y-3">
               <h4 className="font-medium text-gray-700">Subcategories:</h4>
               {category.subcategories.map((subcategory) => {
                 const categoryPercentages = percentages.categories.find(
@@ -421,36 +462,53 @@ const EmissionDataManager: React.FC<EmissionDataManagerProps> = ({
                 return (
                   <div
                     key={subcategory.subcategoryId}
-                    className="flex justify-between items-center"
+                    className="flex items-center justify-between"
                   >
-                    <label className="flex-1 font-medium text-sm">
+                    <label className="flex-1 text-sm font-medium">
                       {subcategory.subcategoryName}
                     </label>
                     <div className="flex items-center space-x-4">
                       <div className="flex items-center space-x-2">
                         <input
-                          type="number"
-                          min="0"
-                          step="0.01"
-                          value={subcategory.amount}
-                          onChange={(e) =>
-                            handleSubcategoryAmountChange(
+                          type="text"
+                          inputMode="decimal"
+                          value={getSubcategoryDisplayValue(
+                            category.categoryId,
+                            subcategory.subcategoryId,
+                            subcategory.amount,
+                          )}
+                          onChange={(e) => {
+                            // Allow input with commas and periods
+                            const inputValue = e.target.value;
+                            // Only allow numbers, commas, and periods
+                            if (
+                              /^[\d,.]*$/.test(inputValue) ||
+                              inputValue === ""
+                            ) {
+                              handleSubcategoryAmountChange(
+                                category.categoryId,
+                                subcategory.subcategoryId,
+                                inputValue,
+                              );
+                            }
+                          }}
+                          onBlur={() =>
+                            handleSubcategoryAmountBlur(
                               category.categoryId,
                               subcategory.subcategoryId,
-                              parseFloat(e.target.value) || 0,
                             )
                           }
-                          className="w-32 text-sm input"
+                          className="input w-32 text-sm"
                           placeholder="0"
                         />
-                        <span className="text-gray-500 text-sm">kgCO2e</span>
+                        <span className="text-sm text-gray-500">kgCO2e</span>
                       </div>
                       {category.amount > 0 && (
                         <div className="min-w-[60px] text-right">
-                          <div className="text-gray-500 text-xs">
+                          <div className="text-xs text-gray-500">
                             % of category
                           </div>
-                          <div className="font-semibold text-primary text-sm">
+                          <div className="text-primary text-sm font-semibold">
                             {subcategoryPercentage}%
                           </div>
                         </div>
@@ -464,7 +522,7 @@ const EmissionDataManager: React.FC<EmissionDataManagerProps> = ({
         ))}
       </div>
 
-      <div className="flex justify-end mt-6">
+      <div className="mt-6 flex justify-end">
         <button
           onClick={handleSave}
           disabled={saving}

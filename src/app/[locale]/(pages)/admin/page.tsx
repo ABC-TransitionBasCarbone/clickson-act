@@ -23,6 +23,8 @@ const AdminDashboard: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [initializing, setInitializing] = useState(false);
   const [editingSchool, setEditingSchool] = useState<SchoolData | null>(null);
+  const [schoolTeachers, setSchoolTeachers] = useState<Array<{uid: string; name: string; email: string}>>([]);
+  const [loadingTeachers, setLoadingTeachers] = useState(false);
   const [newSchool, setNewSchool] = useState({
     name: "",
     goal: 40,
@@ -96,6 +98,23 @@ const AdminDashboard: React.FC = () => {
     }
   };
 
+  const fetchSchoolTeachers = async (schoolId: string) => {
+    try {
+      setLoadingTeachers(true);
+      const response = await fetch(`/api/school/${schoolId}/teachers`);
+      const data = await response.json();
+
+      if (data.success) {
+        setSchoolTeachers(data.teachers || []);
+      }
+    } catch (error) {
+      console.error("Error fetching school teachers:", error);
+      setSchoolTeachers([]);
+    } finally {
+      setLoadingTeachers(false);
+    }
+  };
+
   const handleUpdateSchool = async () => {
     if (!editingSchool) return;
 
@@ -116,6 +135,7 @@ const AdminDashboard: React.FC = () => {
           name: editingSchool.name,
           goal: editingSchool.goal,
           deadlineYear: editingSchool.deadlineYear,
+          referentTeacherId: editingSchool.referentTeacherId || null,
         }),
       });
 
@@ -385,6 +405,38 @@ const AdminDashboard: React.FC = () => {
             />
           </div>
 
+          <div className="mb-4">
+            <label className="block mb-1">Referent Teacher</label>
+            {loadingTeachers ? (
+              <div className="flex items-center gap-2">
+                <span className="loading loading-spinner loading-xs"></span>
+                <span className="text-gray-500 text-sm">Loading teachers...</span>
+              </div>
+            ) : (
+              <select
+                value={editingSchool?.referentTeacherId || ""}
+                onChange={(e) =>
+                  setEditingSchool(
+                    editingSchool
+                      ? { ...editingSchool, referentTeacherId: e.target.value || undefined }
+                      : null,
+                  )
+                }
+                className="select-bordered w-full select"
+              >
+                <option value="">No referent teacher (select one)</option>
+                {schoolTeachers.map((teacher) => (
+                  <option key={teacher.uid} value={teacher.uid}>
+                    {teacher.name} ({teacher.email})
+                  </option>
+                ))}
+              </select>
+            )}
+            <p className="mt-1 text-gray-500 text-xs">
+              Select which teacher is the referent (can approve new teachers)
+            </p>
+          </div>
+
           <div className="flex justify-end gap-3">
             <button
               type="button"
@@ -486,8 +538,10 @@ const AdminDashboard: React.FC = () => {
                         <td className="p-3">
                           <span className="flex justify-start items-center gap-2.5000000000000004">
                             <button
-                              onClick={() => {
+                              onClick={async () => {
                                 setEditingSchool(school);
+                                // Fetch teachers for this school
+                                await fetchSchoolTeachers(school.id);
                                 const modal = document.getElementById(
                                   "edit-school-modal",
                                 ) as HTMLDialogElement;

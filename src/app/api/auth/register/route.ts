@@ -83,6 +83,20 @@ async function registerHandler(req: NextRequest) {
       return NextResponse.json({ error: "Name too long" }, { status: 400 });
     }
 
+    // Check for duplicate email in teachers/admins collections BEFORE creating user
+    const existingTeacherQuery = await adminDb
+      .collection("teachers")
+      .where("email", "==", sanitizedData.email)
+      .limit(1)
+      .get();
+
+    if (!existingTeacherQuery.empty) {
+      return NextResponse.json(
+        { error: "An account with this email already exists" },
+        { status: 409 },
+      );
+    }
+
     console.log("Creating user in Firebase Auth...");
     // Create user in Firebase Auth (Admin SDK)
     const userRecord = await adminAuth.createUser({
@@ -98,7 +112,20 @@ async function registerHandler(req: NextRequest) {
     // Handle school linking
     if (sanitizedData.school) {
       if (goal && deadlineYear) {
-        // Creating a new school
+        // Creating a new school - check if school name already exists
+        const existingSchoolByName = await adminDb
+          .collection("schools")
+          .where("name", "==", sanitizedData.school)
+          .limit(1)
+          .get();
+
+        if (!existingSchoolByName.empty) {
+          return NextResponse.json(
+            { error: "A school with this name already exists. Please select it from the list or choose a different name." },
+            { status: 409 },
+          );
+        }
+
         console.log("Creating new school entry:", sanitizedData.school);
         schoolId = uuidv4();
 
@@ -126,7 +153,34 @@ async function registerHandler(req: NextRequest) {
 
         if (!existingSchoolQuery.empty) {
           schoolId = existingSchoolQuery.docs[0].id;
+          const schoolData = existingSchoolQuery.docs[0].data();
           console.log("Found existing school with ID:", schoolId);
+          
+          // If school already has a referent teacher, mark this teacher as pending
+          if (schoolData.referentTeacherId) {
+            console.log("School has referent teacher, marking new teacher as pending");
+            
+            // Add this teacher to the pending list
+            const pendingTeacher = {
+              teacherId: userRecord.uid,
+              teacherName: sanitizedData.name,
+              teacherEmail: sanitizedData.email,
+              requestedAt: new Date().toISOString(),
+            };
+            
+            const pendingTeachers = schoolData.pendingTeachers || [];
+            pendingTeachers.push(pendingTeacher);
+            
+            await adminDb.collection("schools").doc(schoolId).update({
+              pendingTeachers: pendingTeachers,
+            });
+          } else {
+            // This is the first teacher for this school - set as referent
+            console.log("Setting teacher as referent for school");
+            await adminDb.collection("schools").doc(schoolId).update({
+              referentTeacherId: userRecord.uid,
+            });
+          }
         } else {
           console.log("School not found, creating with defaults");
           // Create school with default values if it doesn't exist
@@ -137,6 +191,7 @@ async function registerHandler(req: NextRequest) {
             goal: 40, // Default goal
             deadlineYear: "2030", // Default deadline
             createdAt: new Date().toISOString(),
+            referentTeacherId: userRecord.uid, // First teacher is referent
           });
         }
       }

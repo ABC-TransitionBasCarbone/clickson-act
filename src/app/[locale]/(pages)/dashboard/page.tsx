@@ -21,6 +21,7 @@ import { useUser } from "@/context/UserContext";
 import { Link, useRouter } from "@/i18n/navigation";
 import EmissionDataManager from "@/components/teacher/EmissionDataManager";
 import PendingActionsManager from "@/components/teacher/PendingActionsManager";
+import PendingTeachersManager from "@/components/teacher/PendingTeachersManager";
 
 const TeacherDashboard: React.FC = () => {
   const t = useTranslations("TeacherDashboard");
@@ -77,7 +78,7 @@ const TeacherDashboard: React.FC = () => {
     },
     {
       id: "pending" as const,
-      label: "Pending Actions",
+      label: "Pending",
       icon: Clock,
       show: !!teacherInfo?.school,
     },
@@ -198,14 +199,18 @@ const TeacherDashboard: React.FC = () => {
     setTeacherSchool(updatedSchool);
   };
 
-  const handleSaveSchool = async () => {
-    if (!teacherSchool?.id) return;
+  const [savingSchool, setSavingSchool] = useState(false);
 
+  const handleSaveSchool = async () => {
+    if (!teacherSchool?.id || !user?.token) return;
+
+    setSavingSchool(true);
     try {
       const response = await fetch(`/api/school/${teacherSchool.id}`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
+          Authorization: `Bearer ${user.token}`,
         },
         body: JSON.stringify(editForm),
       });
@@ -222,6 +227,8 @@ const TeacherDashboard: React.FC = () => {
     } catch (error) {
       console.error("Error updating school:", error);
       alert("Error updating school. Please try again.");
+    } finally {
+      setSavingSchool(false);
     }
   };
 
@@ -236,9 +243,9 @@ const TeacherDashboard: React.FC = () => {
   // If user is a student, redirect them
   if (user && user.passcode) {
     return (
-      <div className="mx-auto px-6 py-8 min-h-screen container">
+      <div className="container mx-auto min-h-screen px-6 py-8">
         <div className="text-center">
-          <h1 className="mb-4 font-bold text-2xl">Access Denied</h1>
+          <h1 className="mb-4 text-2xl font-bold">Access Denied</h1>
           <p className="mb-4 text-gray-600">
             You are logged in as a student. This dashboard is for teachers only.
           </p>
@@ -256,9 +263,9 @@ const TeacherDashboard: React.FC = () => {
   // If not logged in
   if (!user) {
     return (
-      <div className="mx-auto px-6 py-8 container">
+      <div className="container mx-auto px-6 py-8">
         <div className="text-center">
-          <h1 className="mb-4 font-bold text-2xl">Please Log In</h1>
+          <h1 className="mb-4 text-2xl font-bold">Please Log In</h1>
           <p className="mb-4 text-gray-600">
             You need to be logged in as a teacher to access this dashboard.
           </p>
@@ -275,9 +282,9 @@ const TeacherDashboard: React.FC = () => {
 
   if (loading) {
     return (
-      <div className="mx-auto px-6 py-8 container">
+      <div className="container mx-auto px-6 py-8">
         <div className="text-center">
-          <div className="mx-auto border-gray-900 border-b-2 rounded-full w-32 h-32 animate-spin"></div>
+          <div className="mx-auto h-32 w-32 animate-spin rounded-full border-b-2 border-gray-900"></div>
           <p className="mt-4 text-gray-600">Loading projects...</p>
         </div>
       </div>
@@ -286,9 +293,9 @@ const TeacherDashboard: React.FC = () => {
 
   if (error) {
     return (
-      <div className="mx-auto px-6 py-8 container">
+      <div className="container mx-auto px-6 py-8">
         <div className="text-center">
-          <h1 className="mb-4 font-bold text-red-600 text-2xl">Error</h1>
+          <h1 className="mb-4 text-2xl font-bold text-red-600">Error</h1>
           <p className="mb-4 text-gray-600">{error}</p>
           <button onClick={fetchProjects} className="btn btn-primary">
             Try Again
@@ -305,19 +312,19 @@ const TeacherDashboard: React.FC = () => {
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
         transition={{ duration: 0.5 }}
-        className="mx-auto px-6 py-8 container"
+        className="container mx-auto px-6 py-8"
       >
-        <div className="flex md:flex-row flex-col md:justify-between md:items-center mb-8">
+        <div className="mb-8 flex flex-col md:flex-row md:items-center md:justify-between">
           <div>
-            <h1 className="font-bold text-3xl tracking-tight">
+            <h1 className="text-3xl font-bold tracking-tight">
               {t("teacherDashboard")}
             </h1>
-            <p className="mt-1 text-muted-foreground">{t("manageProjects")}</p>
+            <p className="text-muted-foreground mt-1">{t("manageProjects")}</p>
           </div>
 
           {/* Enhanced Tabbed Interface */}
           <div className="">
-            <div className="bg-white shadow-sm px-2.5 py-1.5 border border-gray-200 rounded-xl">
+            <div className="rounded-xl border border-gray-200 bg-white px-2.5 py-1.5 shadow-sm">
               <div className="flex flex-wrap gap-1.5">
                 {tabs
                   .filter((tab) => tab.show)
@@ -351,7 +358,7 @@ const TeacherDashboard: React.FC = () => {
 
         {/* Tab Content */}
         <motion.div
-          className="max-w-6xl"
+          className="mx-auto max-w-6xl"
           key={activeTab}
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -365,20 +372,20 @@ const TeacherDashboard: React.FC = () => {
                   className="bg-primary-600 hover:bg-primary-700 btn btn-primary"
                   onClick={openProjectModal}
                 >
-                  <PlusCircle className="mr-2 w-4 h-4" />
+                  <PlusCircle className="mr-2 h-4 w-4" />
                   {t("addNewProject")}
                 </button>
               </div>
 
               {/* Projects Grid */}
-              <div className="gap-6 grid md:grid-cols-2 lg:grid-cols-3 mb-6">
+              <div className="mb-6 grid gap-6 md:grid-cols-2 lg:grid-cols-3">
                 {projects.map((project) => (
                   <div
                     key={project.id}
-                    className="hover:shadow-md transition-shadow card"
+                    className="card transition-shadow hover:shadow-md"
                   >
                     <div>
-                      <div className="flex justify-between items-start mb-5 font-bold text-xl">
+                      <div className="mb-5 flex items-start justify-between text-xl font-bold">
                         <h3>{project.name}</h3>
                         <span
                           className={`rounded-full px-2 py-1 text-xs font-medium ${
@@ -394,7 +401,7 @@ const TeacherDashboard: React.FC = () => {
                       </div>
                     </div>
                     <div>
-                      <div className="gap-4 grid grid-cols-2 text-sm">
+                      <div className="grid grid-cols-2 gap-4 text-sm">
                         <div>
                           <p className="text-muted-foreground">
                             {t("startDate")}
@@ -425,7 +432,7 @@ const TeacherDashboard: React.FC = () => {
                         </div>
                       </div>
                     </div>
-                    <div className="flex justify-between mt-5 w-full">
+                    <div className="mt-5 flex w-full justify-between">
                       <div className="flex gap-2">
                         {project.id && (
                           <Link
@@ -448,9 +455,9 @@ const TeacherDashboard: React.FC = () => {
 
           {activeTab === "school" && teacherSchool && (
             <div className="card">
-              <div className="flex justify-between items-start mb-6">
+              <div className="mb-6 flex items-start justify-between">
                 <div>
-                  <h2 className="mb-2 font-bold text-2xl">
+                  <h2 className="mb-2 text-2xl font-bold">
                     {teacherSchool.name}
                   </h2>
                   <p className="text-gray-600">School Information & Goals</p>
@@ -460,7 +467,7 @@ const TeacherDashboard: React.FC = () => {
                     onClick={() => setIsEditing(true)}
                     className="btn-outline btn btn-sm"
                   >
-                    <Edit className="mr-2 w-4 h-4" />
+                    <Edit className="mr-2 h-4 w-4" />
                     Edit Goals
                   </button>
                 ) : (
@@ -468,15 +475,25 @@ const TeacherDashboard: React.FC = () => {
                     <button
                       onClick={handleSaveSchool}
                       className="btn btn-primary btn-sm"
+                      disabled={savingSchool}
                     >
-                      <Save className="mr-2 w-4 h-4" />
-                      Save
+                      {savingSchool ? (
+                        <>
+                          <span className="loading loading-spinner loading-xs"></span>
+                          Saving...
+                        </>
+                      ) : (
+                        <>
+                          <Save className="mr-2 h-4 w-4" />
+                          Save
+                        </>
+                      )}
                     </button>
                     <button
                       onClick={handleCancelEdit}
                       className="btn-outline btn btn-sm"
                     >
-                      <X className="mr-2 w-4 h-4" />
+                      <X className="mr-2 h-4 w-4" />
                       Cancel
                     </button>
                   </div>
@@ -485,31 +502,31 @@ const TeacherDashboard: React.FC = () => {
 
               {!isEditing ? (
                 <div className="space-y-4">
-                  <div className="gap-6 grid md:grid-cols-2">
-                    <div className="bg-gray-50 p-4 rounded-lg">
-                      <h3 className="mb-2 font-semibold text-lg">
+                  <div className="grid gap-6 md:grid-cols-2">
+                    <div className="rounded-lg bg-gray-50 p-4">
+                      <h3 className="mb-2 text-lg font-semibold">
                         Reduction Goal
                       </h3>
-                      <p className="font-bold text-green-600 text-3xl">
+                      <p className="text-3xl font-bold text-green-600">
                         {teacherSchool.goal}%
                       </p>
-                      <p className="mt-1 text-gray-600 text-sm">
+                      <p className="mt-1 text-sm text-gray-600">
                         Target emission reduction
                       </p>
                     </div>
-                    <div className="bg-gray-50 p-4 rounded-lg">
-                      <h3 className="mb-2 font-semibold text-lg">
+                    <div className="rounded-lg bg-gray-50 p-4">
+                      <h3 className="mb-2 text-lg font-semibold">
                         Target Year
                       </h3>
-                      <p className="font-bold text-primary text-3xl">
+                      <p className="text-primary text-3xl font-bold">
                         {teacherSchool.deadlineYear}
                       </p>
-                      <p className="mt-1 text-gray-600 text-sm">
+                      <p className="mt-1 text-sm text-gray-600">
                         Deadline to achieve goal
                       </p>
                     </div>
                   </div>
-                  <div className="bg-blue-50 mt-6 p-4 rounded-lg">
+                  <div className="mt-6 rounded-lg bg-blue-50 p-4">
                     <h3 className="mb-2 font-semibold">School Goal Summary</h3>
                     <p className="text-gray-700">
                       <strong>{teacherSchool.name}</strong> aims to reduce
@@ -520,9 +537,9 @@ const TeacherDashboard: React.FC = () => {
                 </div>
               ) : (
                 <div className="space-y-6">
-                  <div className="gap-6 grid md:grid-cols-2">
+                  <div className="grid gap-6 md:grid-cols-2">
                     <div>
-                      <label htmlFor="goal" className="block mb-2 font-medium">
+                      <label htmlFor="goal" className="mb-2 block font-medium">
                         Reduction Goal (%)
                       </label>
                       <input
@@ -530,7 +547,7 @@ const TeacherDashboard: React.FC = () => {
                         name="goal"
                         type="number"
                         placeholder="Enter reduction goal"
-                        className="input-bordered w-full input"
+                        className="input-bordered input w-full"
                         value={editForm.goal}
                         onChange={(e) =>
                           setEditForm((prev) => ({
@@ -542,7 +559,7 @@ const TeacherDashboard: React.FC = () => {
                         max={100}
                         required
                       />
-                      <p className="mt-1 text-gray-500 text-sm">
+                      <p className="mt-1 text-sm text-gray-500">
                         Enter a percentage between 0 and 100
                       </p>
                     </div>
@@ -550,7 +567,7 @@ const TeacherDashboard: React.FC = () => {
                     <div>
                       <label
                         htmlFor="deadlineYear"
-                        className="block mb-2 font-medium"
+                        className="mb-2 block font-medium"
                       >
                         Target Year
                       </label>
@@ -559,7 +576,7 @@ const TeacherDashboard: React.FC = () => {
                         name="deadlineYear"
                         type="number"
                         placeholder="Enter target year"
-                        className="input-bordered w-full input"
+                        className="input-bordered input w-full"
                         value={editForm.deadlineYear}
                         onChange={(e) =>
                           setEditForm((prev) => ({
@@ -571,13 +588,13 @@ const TeacherDashboard: React.FC = () => {
                         max={new Date().getFullYear() + 50}
                         required
                       />
-                      <p className="mt-1 text-gray-500 text-sm">
+                      <p className="mt-1 text-sm text-gray-500">
                         Year when the goal should be achieved
                       </p>
                     </div>
                   </div>
 
-                  <div className="bg-yellow-50 p-4 rounded-lg">
+                  <div className="rounded-lg bg-yellow-50 p-4">
                     <h3 className="mb-2 font-semibold">Preview</h3>
                     <p className="text-gray-700">
                       <strong>{teacherSchool.name}</strong> will aim to reduce
@@ -599,18 +616,23 @@ const TeacherDashboard: React.FC = () => {
 
           {activeTab === "pending" && (
             <>
+              {/* Pending Teachers Manager - Shows only if user is referent teacher */}
+              <div className="mb-8">
+                <PendingTeachersManager />
+              </div>
+
               {projects.length > 0 ? (
                 <>
                   {/* Project Selector */}
                   {projects.length > 1 && (
                     <div className="mb-6">
-                      <label className="block mb-2 font-medium text-sm">
+                      <label className="mb-2 block text-sm font-medium">
                         Select Project to Review:
                       </label>
                       <select
                         value={selectedProject}
                         onChange={(e) => setSelectedProject(e.target.value)}
-                        className="w-full max-w-xs select-bordered select"
+                        className="select-bordered select w-full max-w-xs"
                       >
                         {projects.map((project) => (
                           <option key={project.id} value={project.id}>
@@ -635,7 +657,7 @@ const TeacherDashboard: React.FC = () => {
               ) : (
                 <div className="card">
                   <div className="py-8 text-center">
-                    <h3 className="mb-2 font-semibold text-xl">
+                    <h3 className="mb-2 text-xl font-semibold">
                       No Projects Found
                     </h3>
                     <p className="mb-4 text-gray-600">

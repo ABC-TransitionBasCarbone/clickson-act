@@ -105,76 +105,63 @@ const StudentCalculator: React.FC = () => {
   const calculateDisplayReduction = (action: CustomAction): number => {
     const actionType = action.type || "Direct";
 
-    // For Direct actions, always return original reduction
-    if (actionType === "Direct") {
-      return action.reduction;
+    // For Indirect actions, always return 1% (flat reduction on total emissions)
+    if (actionType === "Indirect") {
+      console.log(
+        `Indirect action "${action.title}": Fixed 1% reduction on total emissions`,
+      );
+      return 1; // Always 1% for indirect actions
     }
 
-    // For Indirect actions, use school-specific category and subcategory data
-    if (
-      actionType === "Indirect" &&
-      selectedCategory &&
-      selectedSubcategories.length > 0
-    ) {
-      // New calculation formula: y * b * a = x
-      // where:
-      // y = action reduction percentage (from admin)
-      // a = category percentage of total emissions
-      // b = average subcategory percentage of category emissions
-      // x = total emissions reduction percentage
-
-      const categoryPercentage = selectedCategory.percentage / 100; // Convert to decimal (a)
-
-      // Get selected subcategory percentages and calculate average
+    // For Direct actions, calculate based on the action's impact on the subcategory
+    // relative to total school emissions
+    if (actionType === "Direct" && selectedCategory && selectedSubcategories.length > 0) {
+      // Get selected subcategory percentages
       const selectedSubcategoryData = selectedCategory.subcategories.filter(
         (sub) => selectedSubcategories.includes(sub.id),
       );
 
       if (selectedSubcategoryData.length > 0 && selectedCategory.amount > 0) {
-        const avgSubcategoryPercentage =
-          selectedSubcategoryData.reduce(
-            (sum, sub) => sum + sub.percentage,
-            0,
-          ) /
-          selectedSubcategoryData.length /
-          100; // Convert to decimal (b)
+        // Calculate average subcategory amount (in kgCO2e)
+        const avgSubcategoryAmount =
+          selectedSubcategoryData.reduce((sum, sub) => sum + sub.amount, 0) /
+          selectedSubcategoryData.length;
 
-        const actionReductionPercentage = action.reduction / 100; // Convert to decimal (y)
-
-        // Formula: x = y * b * a
-        const totalEmissionReduction =
-          actionReductionPercentage *
-          avgSubcategoryPercentage *
-          categoryPercentage;
-        const calculatedValue = totalEmissionReduction * 100; // Convert back to percentage
-
-        console.log(
-          `Dynamic calculation for "${action.title}" using formula y*b*a=x:`,
-          {
-            actionReduction_y: action.reduction + "%",
-            categoryPercentage_a: selectedCategory.percentage + "%",
-            avgSubcategoryPercentage_b:
-              (avgSubcategoryPercentage * 100).toFixed(2) + "%",
-            calculatedTotalReduction_x: calculatedValue.toFixed(4) + "%",
-            formula: `${action.reduction}% × ${(avgSubcategoryPercentage * 100).toFixed(2)}% × ${selectedCategory.percentage}% = ${calculatedValue.toFixed(4)}%`,
-            categoryAmount: selectedCategory.amount + " kgCO2e",
-            selectedSubcategories: selectedSubcategoryData.map(
-              (s) =>
-                `${s.name}: ${s.amount} kgCO2e (${s.percentage.toFixed(1)}%)`,
-            ),
-          },
+        // Get total school emissions
+        const totalSchoolEmissions = schoolCategories.reduce(
+          (sum, cat) => sum + cat.amount,
+          0,
         );
 
-        return calculatedValue;
+        if (totalSchoolEmissions > 0) {
+          // Calculate the reduction as:
+          // (action_reduction% × subcategory_emissions) / total_emissions
+          // This gives us the % reduction relative to total school emissions
+          const reductionInKgCO2 = (action.reduction / 100) * avgSubcategoryAmount;
+          const reductionPercentageOfTotal = (reductionInKgCO2 / totalSchoolEmissions) * 100;
+
+          console.log(
+            `Direct action "${action.title}" calculation:`,
+            {
+              actionReduction: action.reduction + "%",
+              avgSubcategoryAmount: avgSubcategoryAmount.toFixed(2) + " kgCO2e",
+              reductionInKgCO2: reductionInKgCO2.toFixed(2) + " kgCO2e",
+              totalSchoolEmissions: totalSchoolEmissions.toFixed(2) + " kgCO2e",
+              reductionPercentageOfTotal: reductionPercentageOfTotal.toFixed(4) + "%",
+              formula: `(${action.reduction}% × ${avgSubcategoryAmount.toFixed(2)}) / ${totalSchoolEmissions.toFixed(2)} = ${reductionPercentageOfTotal.toFixed(4)}%`,
+            },
+          );
+
+          return reductionPercentageOfTotal;
+        }
       } else {
-        // Show warning if calculation can't be performed
         console.warn(
-          `Cannot calculate dynamic reduction for "${action.title}": missing emission amounts. Category amount: ${selectedCategory.amount}, Selected subcategories: ${selectedSubcategoryData.length}`,
+          `Cannot calculate reduction for "${action.title}": missing emission amounts.`,
         );
       }
     }
 
-    // Return original reduction if no dynamic calculation is possible
+    // Fallback: return original reduction if calculation not possible
     return action.reduction;
   };
 

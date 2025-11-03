@@ -98,36 +98,68 @@ const EmissionCategoriesManager: React.FC = () => {
   }, []);
 
   const validateCategoryTranslations = () => {
+    // Check if at least one language has a name
+    const hasAtLeastOneName = locales.some(
+      (locale) => newCategory.translations[locale]?.name.trim()
+    );
+    
+    if (!hasAtLeastOneName) {
+      setValidationError(
+        "Please provide a category name in at least one language.",
+      );
+      return false;
+    }
+    
+    // Warn about missing translations but don't fail
     const missingTranslations = [];
     for (const locale of locales) {
       if (!newCategory.translations[locale]?.name.trim()) {
         missingTranslations.push(locale.toUpperCase());
       }
     }
-    if (missingTranslations.length > 0) {
+    
+    if (missingTranslations.length > 0 && missingTranslations.length < locales.length) {
       setValidationError(
-        `Missing category name for: ${missingTranslations.join(", ")}. All languages are required.`,
+        `Warning: Missing translations for ${missingTranslations.join(", ")}. You can add them later.`,
       );
-      return false;
+      // Don't return false - this is just a warning
+    } else {
+      setValidationError("");
     }
-    setValidationError("");
+    
     return true;
   };
 
   const validateSubcategoryTranslations = () => {
+    // Check if at least one language has a name
+    const hasAtLeastOneName = locales.some(
+      (locale) => newSubcategory.translations[locale]?.name.trim()
+    );
+    
+    if (!hasAtLeastOneName) {
+      setValidationError(
+        "Please provide a subcategory name in at least one language.",
+      );
+      return false;
+    }
+    
+    // Warn about missing translations but don't fail
     const missingTranslations = [];
     for (const locale of locales) {
       if (!newSubcategory.translations[locale]?.name.trim()) {
         missingTranslations.push(locale.toUpperCase());
       }
     }
-    if (missingTranslations.length > 0) {
+    
+    if (missingTranslations.length > 0 && missingTranslations.length < locales.length) {
       setValidationError(
-        `Missing subcategory name for: ${missingTranslations.join(", ")}. All languages are required.`,
+        `Warning: Missing translations for ${missingTranslations.join(", ")}. You can add them later.`,
       );
-      return false;
+      // Don't return false - this is just a warning
+    } else {
+      setValidationError("");
     }
-    setValidationError("");
+    
     return true;
   };
 
@@ -786,7 +818,8 @@ const EmissionCategoriesManager: React.FC = () => {
             className="btn btn-primary"
             onClick={handleCreateCategory}
             disabled={
-              saveLoading || !newCategory.translations[locales[0]]?.name
+              saveLoading || 
+              !locales.some((locale) => newCategory.translations[locale]?.name.trim())
             }
           >
             {saveLoading && (
@@ -1070,7 +1103,8 @@ const EmissionCategoriesManager: React.FC = () => {
             className="btn btn-primary"
             onClick={handleCreateSubcategory}
             disabled={
-              saveLoading || !newSubcategory.translations[locales[0]]?.name
+              saveLoading || 
+              !locales.some((locale) => newSubcategory.translations[locale]?.name.trim())
             }
           >
             {saveLoading && (

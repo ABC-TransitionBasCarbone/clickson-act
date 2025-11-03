@@ -493,34 +493,44 @@ const SignUpForm = () => {
       {formData.school === "Other" && (
         <>
           {/* Goal Field */}
-          <label className="input validator w-full">
-            <span className="text-gray-600">%</span>
-            <input
-              type="number"
-              name="goal"
-              required
-              placeholder={t("User.schoolGoal")}
-              value={formData.goal}
-              onChange={handleChange}
-              min="0"
-              max="100"
-            />
-          </label>
+          <div className="w-full">
+            <label className="input validator w-full">
+              <span className="text-gray-600">%</span>
+              <input
+                type="number"
+                name="goal"
+                required
+                placeholder={t("User.schoolGoal")}
+                value={formData.goal}
+                onChange={handleChange}
+                min="0"
+                max="100"
+              />
+            </label>
+            <p className="mt-1 text-gray-500 text-xs">
+              {t("User.schoolGoalHelp")}
+            </p>
+          </div>
 
           {/* Deadline Year Field */}
-          <label className="input validator w-full">
-            <span className="text-gray-600">{t("User.deadlineYear")}</span>
-            <input
-              type="number"
-              name="deadlineYear"
-              required
-              placeholder={t("User.deadlineYear")}
-              value={formData.deadlineYear}
-              onChange={handleChange}
-              min={new Date().getFullYear()}
-              max={new Date().getFullYear() + 50}
-            />
-          </label>
+          <div className="w-full">
+            <label className="input validator w-full">
+              <span className="text-gray-600">{t("User.deadlineYear")}</span>
+              <input
+                type="number"
+                name="deadlineYear"
+                required
+                placeholder={t("User.deadlineYear")}
+                value={formData.deadlineYear}
+                onChange={handleChange}
+                min={new Date().getFullYear()}
+                max={new Date().getFullYear() + 50}
+              />
+            </label>
+            <p className="mt-1 text-gray-500 text-xs">
+              {t("User.deadlineYearHelp")}
+            </p>
+          </div>
         </>
       )}
 

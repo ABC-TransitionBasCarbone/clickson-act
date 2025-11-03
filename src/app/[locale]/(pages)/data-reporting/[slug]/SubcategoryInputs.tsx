@@ -13,6 +13,14 @@ const SubcategoryInputs: React.FC<SubcategoryInputsProps> = ({
   subcategoryTitles,
 }) => {
   const t = useTranslations("StudentCalculator");
+  
+  // Handle input change with comma/period conversion
+  const handleInputChange = (index: number, value: string) => {
+    // Replace comma with period for decimal separator
+    const normalizedValue = value.replace(/,/g, '.');
+    onChange(index, normalizedValue);
+  };
+  
   return (
     <div className="mt-4 grid gap-4 lg:grid-cols-1">
       {values.map((val, idx) => (
@@ -25,9 +33,12 @@ const SubcategoryInputs: React.FC<SubcategoryInputsProps> = ({
           </label>
           <input
             type="text"
+            inputMode="decimal"
             className="input w-full"
             value={val}
-            onChange={(e) => onChange(idx, e.target.value)}
+            onChange={(e) => handleInputChange(idx, e.target.value)}
+            pattern="[0-9]*[.,]?[0-9]*"
+            placeholder="0"
           />
         </div>
       ))}

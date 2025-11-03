@@ -43,7 +43,7 @@ export async function PUT(
   { params }: { params: Promise<{ id: string }> },
 ) {
   try {
-    // Verify admin authentication
+    // Verify authentication (admin or teacher)
     const authHeader = req.headers.get("authorization");
     if (!authHeader || !authHeader.startsWith("Bearer ")) {
       return NextResponse.json(
@@ -55,21 +55,41 @@ export async function PUT(
     const token = authHeader.substring(7);
     const decodedToken = await adminAuth.verifyIdToken(token);
 
-    // Check if user exists in admin collection
+    const { id } = await params;
+
+    // Check if user is admin
     const adminDoc = await adminDb
       .collection("admins")
       .doc(decodedToken.uid)
       .get();
-    if (!adminDoc.exists) {
+    const isAdmin = adminDoc.exists;
+
+    // Check if user is a teacher associated with this school
+    const teacherDoc = await adminDb
+      .collection("teachers")
+      .doc(decodedToken.uid)
+      .get();
+    const isTeacher = teacherDoc.exists;
+    
+    if (!isAdmin && !isTeacher) {
       return NextResponse.json(
-        { error: "Forbidden - Admin access required" },
+        { error: "Forbidden - Admin or teacher access required" },
         { status: 403 },
       );
     }
 
-    const { id } = await params;
+    // If teacher, verify they belong to this school
+    if (isTeacher && !isAdmin) {
+      const teacherData = teacherDoc.data();
+      if (teacherData?.schoolId !== id) {
+        return NextResponse.json(
+          { error: "Forbidden - You can only update your own school" },
+          { status: 403 },
+        );
+      }
+    }
     const body = await req.json();
-    const { goal, deadlineYear, name } = body;
+    const { goal, deadlineYear, name, referentTeacherId } = body;
 
     // Validation
     if (!goal || !deadlineYear) {
@@ -117,6 +137,7 @@ export async function PUT(
       deadlineYear: string;
       updatedAt: string;
       name?: string;
+      referentTeacherId?: string | null;
     } = {
       goal: goalAmount,
       deadlineYear: String(deadlineYear),
@@ -126,6 +147,11 @@ export async function PUT(
     // Add name to update if provided
     if (sanitizedName) {
       updateData.name = sanitizedName;
+    }
+
+    // Add referentTeacherId if provided (admin only)
+    if (isAdmin && referentTeacherId !== undefined) {
+      updateData.referentTeacherId = referentTeacherId || null;
     }
 
     await adminDb.collection("schools").doc(id).update(updateData);

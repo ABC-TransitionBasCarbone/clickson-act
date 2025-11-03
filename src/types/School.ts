@@ -7,8 +7,20 @@ export interface School {
   deadlineYear: string;
   createdAt: string;
   updatedAt?: string;
+  // Referent teacher (first teacher or admin-assigned)
+  referentTeacherId?: string;
+  // Pending teachers awaiting approval
+  pendingTeachers?: PendingTeacher[];
   // Emission categories with school-specific data
   emissionCategories?: SchoolEmissionCategory[];
+}
+
+// Pending teacher waiting for approval
+export interface PendingTeacher {
+  teacherId: string;
+  teacherName: string;
+  teacherEmail: string;
+  requestedAt: string;
 }
 
 // School-specific emission category data

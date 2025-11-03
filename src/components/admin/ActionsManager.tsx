@@ -100,12 +100,18 @@ const ActionsManager: React.FC = () => {
   const handleCreateAction = async () => {
     setSaveLoading(true);
     try {
+      // Set reduction to 1% for indirect actions
+      const actionToSave = {
+        ...newAction,
+        reduction: newAction.type === "Indirect" ? 1 : newAction.reduction,
+      };
+      
       const response = await authenticatedFetch("/api/actions", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify(newAction),
+        body: JSON.stringify(actionToSave),
       });
 
       const data = await response.json();
@@ -131,6 +137,12 @@ const ActionsManager: React.FC = () => {
 
     setSaveLoading(true);
     try {
+      // Set reduction to 1% for indirect actions
+      const actionToSave = {
+        ...editingAction,
+        reduction: editingAction.type === "Indirect" ? 1 : editingAction.reduction,
+      };
+      
       const response = await authenticatedFetch(
         `/api/actions/${editingAction.id}`,
         {
@@ -138,14 +150,14 @@ const ActionsManager: React.FC = () => {
           headers: {
             "Content-Type": "application/json",
           },
-          body: JSON.stringify(editingAction),
+          body: JSON.stringify(actionToSave),
         },
       );
 
       const data = await response.json();
       if (data.success) {
         setActions((prev) =>
-          prev.map((a) => (a.id === editingAction.id ? editingAction : a)),
+          prev.map((a) => (a.id === editingAction.id ? actionToSave : a)),
         );
         const modal = document.getElementById(
           "edit-action-modal",
@@ -509,24 +521,38 @@ const ActionsManager: React.FC = () => {
           </div>
 
           <div className="gap-4 grid grid-cols-2">
-            <div>
-              <label className="block mb-1">
-                {tAction("estimatedReduction")}
-              </label>
-              <input
-                type="number"
-                min="0"
-                max="100"
-                value={newAction.reduction}
-                onChange={(e) =>
-                  setNewAction({
-                    ...newAction,
-                    reduction: parseFloat(e.target.value) || 0,
-                  })
-                }
-                className="input-bordered w-full input"
-              />
-            </div>
+            {/* Only show reduction input for Direct actions */}
+            {newAction.type === "Direct" && (
+              <div>
+                <label className="block mb-1">
+                  {tAction("estimatedReduction")}
+                </label>
+                <input
+                  type="number"
+                  min="0"
+                  max="100"
+                  value={newAction.reduction}
+                  onChange={(e) =>
+                    setNewAction({
+                      ...newAction,
+                      reduction: parseFloat(e.target.value) || 0,
+                    })
+                  }
+                  className="input-bordered w-full input"
+                />
+              </div>
+            )}
+            {/* Show fixed 1% for Indirect actions */}
+            {newAction.type === "Indirect" && (
+              <div>
+                <label className="block mb-1">
+                  {tAction("estimatedReduction")}
+                </label>
+                <div className="flex items-center bg-gray-100 px-3 py-2 rounded">
+                  <span className="font-semibold">1% (Fixed for indirect actions)</span>
+                </div>
+              </div>
+            )}
             <div>
               <label className="block mb-1">{tAction("timeline")}</label>
               <input
@@ -663,7 +689,8 @@ const ActionsManager: React.FC = () => {
               saveLoading ||
               !newAction.category ||
               !newAction.type ||
-              !newAction.translations[locales[0]]?.title
+              // Only require at least one language to have a title
+              !locales.some((locale) => newAction.translations[locale]?.title)
             }
           >
             {saveLoading && (
@@ -781,23 +808,54 @@ const ActionsManager: React.FC = () => {
               </div>
             </div>
 
-            <div className="gap-4 grid grid-cols-1">
+            <div className="gap-4 grid grid-cols-2">
+              {/* Only show reduction input for Direct actions */}
+              {editingAction.type === "Direct" && (
+                <div>
+                  <label className="block mb-1">
+                    {tAction("estimatedReduction")}
+                  </label>
+                  <input
+                    type="number"
+                    min="0"
+                    max="100"
+                    value={editingAction.reduction}
+                    onChange={(e) =>
+                      setEditingAction({
+                        ...editingAction,
+                        reduction: parseFloat(e.target.value) || 0,
+                      })
+                    }
+                    className="input-bordered w-full input"
+                  />
+                </div>
+              )}
+              {/* Show fixed 1% for Indirect actions */}
+              {editingAction.type === "Indirect" && (
+                <div>
+                  <label className="block mb-1">
+                    {tAction("estimatedReduction")}
+                  </label>
+                  <div className="flex items-center bg-gray-100 px-3 py-2 rounded">
+                    <span className="font-semibold">1% (Fixed for indirect actions)</span>
+                  </div>
+                </div>
+              )}
               <div>
-                <label className="block mb-1">
-                  {tAction("estimatedReduction")}
-                </label>
+                <label className="block mb-1">{tAction("timeline")}</label>
                 <input
                   type="number"
-                  min="0"
-                  max="100"
-                  value={editingAction.reduction}
+                  min="1"
+                  max="50"
+                  value={editingAction.timeline || 1}
                   onChange={(e) =>
                     setEditingAction({
                       ...editingAction,
-                      reduction: parseFloat(e.target.value) || 0,
+                      timeline: parseInt(e.target.value) || 1,
                     })
                   }
                   className="input-bordered w-full input"
+                  placeholder="Number of years"
                 />
               </div>
             </div>

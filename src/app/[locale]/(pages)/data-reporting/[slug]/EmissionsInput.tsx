@@ -26,6 +26,13 @@ const EmissionsInput: React.FC<EmissionsInputProps> = ({
     handleCalculateEmissions();
   };
 
+  // Handle input change with comma/period conversion
+  const handleInputChange = (index: number, value: string) => {
+    // Replace comma with period for decimal separator
+    const normalizedValue = value.replace(/,/g, '.');
+    setEmissions(index, normalizedValue);
+  };
+
   return (
     <div className="card mb-8">
       <h3 className="text-2xl font-bold">{t("currentEmissionsTitle")}</h3>
@@ -36,11 +43,13 @@ const EmissionsInput: React.FC<EmissionsInputProps> = ({
           <div key={e.id} className="flex w-full flex-col">
             <label>{e.name}</label>
             <input
-              type="number"
+              type="text"
+              inputMode="decimal"
               placeholder={t("currentEmissionsPlaceholder")}
               value={e.value}
-              onChange={(ev) => setEmissions(i, ev.target.value)}
+              onChange={(ev) => handleInputChange(i, ev.target.value)}
               className="input w-full"
+              pattern="[0-9]*[.,]?[0-9]*"
             />
           </div>
         ))}

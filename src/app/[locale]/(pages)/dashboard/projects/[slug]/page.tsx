@@ -257,6 +257,68 @@ const ProjectDetails = () => {
 
   const handleAddAction = () => {
     setShowCreateModal(true);
+    setEditingAction(null);
+    setTimeout(() => {
+      const modal = document.getElementById(
+        "custom_action",
+      ) as HTMLDialogElement;
+      if (modal) modal.showModal();
+    }, 0);
+  };
+
+  const handleSubmitCreate = async (newAction: CustomAction) => {
+    try {
+      // Submit action directly without approval since teacher is creating it
+      const response = await fetch(`/api/project/${projectId}/actions`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          customActionData: {
+            title: newAction.title,
+            description: newAction.description,
+            category: newAction.category,
+            subcategory: newAction.subcategory || "",
+            reduction: newAction.reduction,
+            effort: newAction.effort,
+            manager: newAction.manager,
+            nature: newAction.nature,
+            objectives: newAction.objectives,
+            keyContacts: newAction.keyContacts,
+            steps: newAction.steps,
+            calendar: newAction.calendar,
+            indicators: newAction.indicators,
+            monitoring: newAction.monitoring,
+            performance: newAction.performance,
+            timeline: newAction.timeline || 1,
+            type: newAction.type || "Direct",
+          },
+          studentName: user?.username || "Teacher",
+          studentId: user?.uid || "",
+          calculatedReduction: newAction.reduction,
+          actionType: newAction.type || "Direct",
+          categoryData: {
+            categoryId: newAction.category,
+            categoryName: newAction.category,
+          },
+          isTeacherAction: true, // Teacher action doesn't need approval
+        }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || "Failed to create action");
+      }
+
+      setShowCreateModal(false);
+      refetch(); // Refresh the project data
+    } catch (error) {
+      console.error("Error creating action:", error);
+      alert(
+        `Failed to create action: ${error instanceof Error ? error.message : "Unknown error"}`,
+      );
+    }
   };
 
   // Handle share URL copy
@@ -572,11 +634,7 @@ const ProjectDetails = () => {
       {showCreateModal && (
         <CustomActionFormModal
           mode="create"
-          onSubmit={() => {
-            // Handle new action creation
-            setShowCreateModal(false);
-            refetch();
-          }}
+          onSubmit={handleSubmitCreate}
           categories={categories}
           subcategoryOptions={subcategoryOptions}
           effortCategories={[
