@@ -75,7 +75,7 @@ const AdminRegistration = () => {
             type="text"
             name="firstName"
             required
-            placeholder="First Name"
+            placeholder="First Name *"
             value={formData.firstName}
             onChange={handleChange}
           />
@@ -87,7 +87,7 @@ const AdminRegistration = () => {
             type="text"
             name="lastName"
             required
-            placeholder="Last Name"
+            placeholder="Last Name *"
             value={formData.lastName}
             onChange={handleChange}
           />
@@ -99,7 +99,7 @@ const AdminRegistration = () => {
             type="email"
             name="email"
             required
-            placeholder="Email"
+            placeholder="Email *"
             value={formData.email}
             onChange={handleChange}
           />
@@ -111,7 +111,7 @@ const AdminRegistration = () => {
             type="password"
             name="password"
             required
-            placeholder="Password"
+            placeholder="Password *"
             minLength={6}
             value={formData.password}
             onChange={handleChange}

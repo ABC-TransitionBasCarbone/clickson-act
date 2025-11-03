@@ -369,7 +369,7 @@ const SignUpForm = () => {
           type="text"
           name="firstName"
           required
-          placeholder={t("User.firstName")}
+          placeholder={t("User.firstName") + " *"}
           value={formData.firstName}
           onChange={handleChange}
         />
@@ -381,7 +381,7 @@ const SignUpForm = () => {
           type="text"
           name="lastName"
           required
-          placeholder={t("User.lastName")}
+          placeholder={t("User.lastName") + " *"}
           value={formData.lastName}
           onChange={handleChange}
         />
@@ -393,7 +393,7 @@ const SignUpForm = () => {
           type="email"
           name="email"
           required
-          placeholder={t("User.email")}
+          placeholder={t("User.email") + " *"}
           value={formData.email}
           onChange={handleChange}
         />
@@ -405,7 +405,7 @@ const SignUpForm = () => {
           type="password"
           name="password"
           required
-          placeholder={t("User.password")}
+          placeholder={t("User.password") + " *"}
           minLength={8}
           value={formData.password}
           onChange={handleChange}
@@ -421,7 +421,7 @@ const SignUpForm = () => {
           required
           className="h-full w-full outline-none"
         >
-          <option value="">{t("User.country")}</option>
+          <option value="">{t("User.country") + " *"}</option>
           {countries.map((country) => (
             <option key={country} value={country}>
               {country}
@@ -436,7 +436,7 @@ const SignUpForm = () => {
           type="text"
           name="city"
           required
-          placeholder={t("User.city")}
+          placeholder={t("User.city") + " *"}
           value={formData.city}
           onChange={handleChange}
         />
@@ -447,7 +447,7 @@ const SignUpForm = () => {
           type="text"
           name="postalCode"
           required
-          placeholder={t("User.postalCode")}
+          placeholder={t("User.postalCode") + " *"}
           value={formData.postalCode}
           onChange={handleChange}
         />
@@ -464,7 +464,7 @@ const SignUpForm = () => {
           disabled={loading}
         >
           <option value="">
-            {loading ? "Loading schools..." : t("User.selectSchool")}
+            {loading ? "Loading schools..." : t("User.selectSchool") + " *"}
           </option>
           {schools.map((school) => (
             <option key={school.id} value={school.name}>
@@ -482,7 +482,7 @@ const SignUpForm = () => {
             type="text"
             name="customSchool"
             required
-            placeholder={t("User.enterSchool")}
+            placeholder={t("User.enterSchool") + " *"}
             value={formData.customSchool}
             onChange={handleChange}
           />
@@ -500,7 +500,7 @@ const SignUpForm = () => {
                 type="number"
                 name="goal"
                 required
-                placeholder={t("User.schoolGoal")}
+                placeholder={t("User.schoolGoal") + " *"}
                 value={formData.goal}
                 onChange={handleChange}
                 min="0"
@@ -520,7 +520,7 @@ const SignUpForm = () => {
                 type="number"
                 name="deadlineYear"
                 required
-                placeholder={t("User.deadlineYear")}
+                placeholder={t("User.deadlineYear") + " *"}
                 value={formData.deadlineYear}
                 onChange={handleChange}
                 min={new Date().getFullYear()}

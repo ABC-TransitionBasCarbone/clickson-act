@@ -109,6 +109,20 @@ async function loginHandler(req: NextRequest) {
       const teacherDoc = await adminDb.collection("teachers").doc(uid).get();
       if (teacherDoc.exists) {
         userData = teacherDoc.data();
+        
+        // Check if teacher is approved (if approval system is in place)
+        // Teachers without an approved field are considered approved (backward compatibility)
+        // Teachers with approved: false need approval from referent teacher
+        if (userData?.approved === false) {
+          return NextResponse.json(
+            {
+              error:
+                "Your account is pending approval from the referent teacher. Please wait for approval before accessing the platform.",
+              requiresApproval: true,
+            },
+            { status: 403 },
+          );
+        }
       } else {
         // Check admins collection
         const adminDoc = await adminDb.collection("admins").doc(uid).get();

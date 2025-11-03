@@ -108,6 +108,7 @@ async function registerHandler(req: NextRequest) {
 
     console.log("Storing user data in Firestore...");
     let schoolId = null;
+    let needsApproval = false; // Track if teacher needs approval from referent
 
     // Handle school linking
     if (sanitizedData.school) {
@@ -138,9 +139,12 @@ async function registerHandler(req: NextRequest) {
             goal: Number(goal),
             deadlineYear: String(deadlineYear),
             createdAt: new Date().toISOString(),
+            referentTeacherId: userRecord.uid, // First teacher is referent
           });
 
         console.log("New school entry created successfully");
+        // First teacher doesn't need approval
+        needsApproval = false;
       } else {
         // Linking to existing school
         console.log("Looking for existing school:", sanitizedData.school);
@@ -159,6 +163,7 @@ async function registerHandler(req: NextRequest) {
           // If school already has a referent teacher, mark this teacher as pending
           if (schoolData.referentTeacherId) {
             console.log("School has referent teacher, marking new teacher as pending");
+            needsApproval = true;
             
             // Add this teacher to the pending list
             const pendingTeacher = {
@@ -180,6 +185,7 @@ async function registerHandler(req: NextRequest) {
             await adminDb.collection("schools").doc(schoolId).update({
               referentTeacherId: userRecord.uid,
             });
+            needsApproval = false;
           }
         } else {
           console.log("School not found, creating with defaults");
@@ -193,13 +199,15 @@ async function registerHandler(req: NextRequest) {
             createdAt: new Date().toISOString(),
             referentTeacherId: userRecord.uid, // First teacher is referent
           });
+          // First teacher doesn't need approval
+          needsApproval = false;
         }
       }
     }
 
     // Store complete user info in Firestore
     const collectionName = role === "admin" ? "admins" : "teachers";
-    await adminDb.collection(collectionName).doc(userRecord.uid).set({
+    const teacherData: Record<string, unknown> = {
       uid: userRecord.uid,
       email: sanitizedData.email,
       name: sanitizedData.name,
@@ -212,7 +220,22 @@ async function registerHandler(req: NextRequest) {
       schoolId: schoolId, // Link to school document
       createdAt: new Date().toISOString(),
       role: role,
-    });
+    };
+    
+    // Only set approval flag for teachers (not admins)
+    // If teacher needs approval (school has referent), set approved: false
+    // Otherwise (first teacher, no school, or admin), teacher is auto-approved
+    if (role === "teacher") {
+      // If we determined teacher needs approval, set approved: false
+      // Otherwise, set approved: true (or omit for backward compatibility)
+      if (needsApproval) {
+        teacherData.approved = false;
+      } else {
+        teacherData.approved = true; // Auto-approve first teacher or if no school
+      }
+    }
+    
+    await adminDb.collection(collectionName).doc(userRecord.uid).set(teacherData);
     console.log("User data stored successfully");
 
     // Create a custom token for the authenticated user
