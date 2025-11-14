@@ -3,7 +3,7 @@
 import Modal from "@/components/Modal";
 import { Action } from "@/types/Action";
 import { useTranslations } from "next-intl";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { useUser } from "@/context/UserContext";
 
 interface CustomAction extends Action {
@@ -190,12 +190,49 @@ const ActionModal: React.FC<ActionModalProps> = ({
     }
   };
 
+  // Memoize filtered subcategories to ensure proper reactivity
+  const filteredSubcategories = useMemo(() => {
+    if (!newAction.category) {
+      return [];
+    }
+    
+    const filtered = subcategoryOptions.filter(
+      (sub) => {
+        // First, try using categoryId if it exists
+        if (sub.categoryId) {
+          return sub.categoryId === newAction.category || String(sub.categoryId) === String(newAction.category);
+        }
+        
+        // If categoryId is not set, extract it from the value field
+        // Value format is: "categoryId-subcategoryId"
+        if (sub.value && typeof sub.value === 'string') {
+          const parts = sub.value.split('-');
+          // UUID format: 8-4-4-4-12, so categoryId is first 36 characters (8-4-4-4-12)
+          // But we need to check if it starts with the category ID
+          if (sub.value.startsWith(newAction.category)) {
+            return true;
+          }
+          
+          // Try extracting the first UUID from the value
+          // UUIDs are 36 characters: 8-4-4-4-12
+          const categoryIdFromValue = sub.value.substring(0, 36);
+          if (categoryIdFromValue === newAction.category) {
+            return true;
+          }
+        }
+        
+        return false;
+      }
+    );
+    
+    return filtered;
+  }, [newAction.category, subcategoryOptions]);
+
   // Different validation for teachers vs students
   const isInvalid =
     isTeacher || allowAllFieldsEdit
-      ? // Teachers and data reporting screen: validate all required fields
+      ? // Teachers and data reporting screen: validate all required fields (subcategory is optional)
         newAction.category === "" ||
-        newAction.subcategory === "" ||
         newAction.title === "" ||
         newAction.description === "" ||
         newAction.reduction === 0 ||
@@ -290,17 +327,11 @@ const ActionModal: React.FC<ActionModalProps> = ({
               }
             >
               <option value="">{t("selectCategory")}</option>
-              {subcategoryOptions
-                .filter(
-                  (sub) =>
-                    !newAction.category ||
-                    sub.categoryId === newAction.category,
-                )
-                .map((sub) => (
-                  <option key={sub.value} value={sub.value}>
-                    {sub.label}
-                  </option>
-                ))}
+              {filteredSubcategories.map((sub) => (
+                <option key={sub.value} value={sub.value}>
+                  {sub.label}
+                </option>
+              ))}
             </select>
           </div>
 

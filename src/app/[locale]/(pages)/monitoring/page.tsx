@@ -167,10 +167,10 @@ const Monitoring: React.FC = () => {
   if (user && !user.passcode) {
     if (teacherLoading) {
       return (
-        <div className="bg-gray-50">
-          <div className="mx-auto px-6 py-8 container">
+        <div className="min-h-screen bg-gray-50">
+          <div className="container mx-auto px-6 py-8">
             <div className="text-center">
-              <div className="mx-auto border-gray-900 border-b-2 rounded-full w-32 h-32 animate-spin"></div>
+              <div className="mx-auto h-32 w-32 animate-spin rounded-full border-b-2 border-gray-900"></div>
               <p className="mt-4 text-gray-600">Loading projects...</p>
             </div>
           </div>
@@ -180,10 +180,10 @@ const Monitoring: React.FC = () => {
 
     if (teacherError) {
       return (
-        <div className="bg-gray-50">
-          <div className="mx-auto px-6 py-8 container">
+        <div className="min-h-screen bg-gray-50">
+          <div className="container mx-auto px-6 py-8">
             <div className="text-center">
-              <h1 className="mb-4 font-bold text-red-600 text-2xl">Error</h1>
+              <h1 className="mb-4 text-2xl font-bold text-red-600">Error</h1>
               <p className="mb-4 text-gray-600">{teacherError}</p>
               <button onClick={fetchProjects} className="btn btn-primary">
                 Try Again
@@ -195,31 +195,31 @@ const Monitoring: React.FC = () => {
     }
 
     return (
-      <div className="bg-gray-50">
+      <div className="min-h-screen bg-gray-50">
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
           transition={{ duration: 0.5 }}
-          className="mx-auto px-6 py-8 container"
+          className="container mx-auto px-6 py-8"
         >
           <div className="mb-8">
-            <h1 className="font-bold text-3xl tracking-tight">
+            <h1 className="text-3xl font-bold tracking-tight">
               Project Monitoring
             </h1>
-            <p className="mt-1 text-muted-foreground">
+            <p className="text-muted-foreground mt-1">
               Select a project to monitor its progress and actions
             </p>
           </div>
 
-          <div className="gap-6 grid md:grid-cols-2 lg:grid-cols-3 mb-6">
+          <div className="mb-6 grid gap-6 md:grid-cols-2 lg:grid-cols-3">
             {projects.map((project) => (
               <div
                 key={project.id}
-                className="hover:shadow-md transition-shadow card"
+                className="card transition-shadow hover:shadow-md"
               >
                 <div>
-                  <div className="flex justify-between items-start mb-5 font-bold text-xl">
+                  <div className="mb-5 flex items-start justify-between text-xl font-bold">
                     <h3>{project.name}</h3>
                     <span
                       className={`rounded-full px-2 py-1 text-xs font-medium ${
@@ -235,7 +235,7 @@ const Monitoring: React.FC = () => {
                   </div>
                 </div>
                 <div>
-                  <div className="gap-4 grid grid-cols-2 text-sm">
+                  <div className="grid grid-cols-2 gap-4 text-sm">
                     <div>
                       <p className="text-muted-foreground">{t("startDate")}</p>
                       <p className="font-medium">
@@ -264,7 +264,7 @@ const Monitoring: React.FC = () => {
                   {project.passcode && (
                     <Link
                       href={`/monitoring/${project.passcode}`}
-                      className="w-full btn btn-primary"
+                      className="btn btn-primary w-full"
                     >
                       Monitor Project
                     </Link>
@@ -276,7 +276,7 @@ const Monitoring: React.FC = () => {
 
           {projects.length === 0 && (
             <div className="py-12 text-center">
-              <h2 className="mb-2 font-semibold text-xl">No Projects Found</h2>
+              <h2 className="mb-2 text-xl font-semibold">No Projects Found</h2>
               <p className="mb-4 text-gray-600">
                 You haven&apos;t created any projects yet.
               </p>
@@ -537,16 +537,16 @@ const Monitoring: React.FC = () => {
   };
 
   return (
-    <div className="bg-gray-50">
+    <div className="min-h-screen bg-gray-50">
       <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
         transition={{ duration: 0.5 }}
-        className="mx-auto px-6 py-8 container"
+        className="container mx-auto px-6 py-8"
       >
         <div className="mb-8">
-          <h1 className="font-bold text-3xl">Monitoring Dashboard</h1>
+          <h1 className="text-3xl font-bold">Monitoring Dashboard</h1>
           <p className="mt-1 text-gray-500">
             Track your progress and plan future actions
             {projectData && ` - ${projectData.name}`}
@@ -575,24 +575,24 @@ const Monitoring: React.FC = () => {
         )}
 
         {loading ? (
-          <div className="flex justify-center items-center h-64">
+          <div className="flex h-64 items-center justify-center">
             <div className="text-center">
-              <div className="mx-auto mb-4 border-4 border-gray-300 border-t-primary rounded-full w-8 h-8 animate-spin"></div>
+              <div className="border-t-primary mx-auto mb-4 h-8 w-8 animate-spin rounded-full border-4 border-gray-300"></div>
               <p className="text-gray-500">Loading project data...</p>
             </div>
           </div>
         ) : error ? (
-          <div className="bg-red-50 mb-8 p-4 rounded-lg">
+          <div className="mb-8 rounded-lg bg-red-50 p-4">
             <p className="text-red-700">Error: {error}</p>
             <button
               onClick={refetch}
-              className="bg-red-100 hover:bg-red-200 mt-2 px-3 py-1 rounded text-red-700"
+              className="mt-2 rounded bg-red-100 px-3 py-1 text-red-700 hover:bg-red-200"
             >
               Retry
             </button>
           </div>
         ) : (
-          <div className="gap-6 grid md:grid-cols-2 mb-6">
+          <div className="mb-6 grid gap-6 md:grid-cols-2">
             <CurrentActions
               currentActions={availableActions}
               onEdit={(action) => handleEditClick(action, "available")}

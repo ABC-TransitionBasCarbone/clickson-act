@@ -1,5 +1,5 @@
 "use client";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useMemo } from "react";
 import { motion } from "framer-motion";
 import { useTranslations } from "next-intl";
 import { useUser } from "@/context/UserContext";
@@ -115,7 +115,11 @@ const StudentCalculator: React.FC = () => {
 
     // For Direct actions, calculate based on the action's impact on the subcategory
     // relative to total school emissions
-    if (actionType === "Direct" && selectedCategory && selectedSubcategories.length > 0) {
+    if (
+      actionType === "Direct" &&
+      selectedCategory &&
+      selectedSubcategories.length > 0
+    ) {
       // Get selected subcategory percentages
       const selectedSubcategoryData = selectedCategory.subcategories.filter(
         (sub) => selectedSubcategories.includes(sub.id),
@@ -137,20 +141,20 @@ const StudentCalculator: React.FC = () => {
           // Calculate the reduction as:
           // (action_reduction% × subcategory_emissions) / total_emissions
           // This gives us the % reduction relative to total school emissions
-          const reductionInKgCO2 = (action.reduction / 100) * avgSubcategoryAmount;
-          const reductionPercentageOfTotal = (reductionInKgCO2 / totalSchoolEmissions) * 100;
+          const reductionInKgCO2 =
+            (action.reduction / 100) * avgSubcategoryAmount;
+          const reductionPercentageOfTotal =
+            (reductionInKgCO2 / totalSchoolEmissions) * 100;
 
-          console.log(
-            `Direct action "${action.title}" calculation:`,
-            {
-              actionReduction: action.reduction + "%",
-              avgSubcategoryAmount: avgSubcategoryAmount.toFixed(2) + " kgCO2e",
-              reductionInKgCO2: reductionInKgCO2.toFixed(2) + " kgCO2e",
-              totalSchoolEmissions: totalSchoolEmissions.toFixed(2) + " kgCO2e",
-              reductionPercentageOfTotal: reductionPercentageOfTotal.toFixed(4) + "%",
-              formula: `(${action.reduction}% × ${avgSubcategoryAmount.toFixed(2)}) / ${totalSchoolEmissions.toFixed(2)} = ${reductionPercentageOfTotal.toFixed(4)}%`,
-            },
-          );
+          console.log(`Direct action "${action.title}" calculation:`, {
+            actionReduction: action.reduction + "%",
+            avgSubcategoryAmount: avgSubcategoryAmount.toFixed(2) + " kgCO2e",
+            reductionInKgCO2: reductionInKgCO2.toFixed(2) + " kgCO2e",
+            totalSchoolEmissions: totalSchoolEmissions.toFixed(2) + " kgCO2e",
+            reductionPercentageOfTotal:
+              reductionPercentageOfTotal.toFixed(4) + "%",
+            formula: `(${action.reduction}% × ${avgSubcategoryAmount.toFixed(2)}) / ${totalSchoolEmissions.toFixed(2)} = ${reductionPercentageOfTotal.toFixed(4)}%`,
+          });
 
           return reductionPercentageOfTotal;
         }
@@ -248,22 +252,22 @@ const StudentCalculator: React.FC = () => {
   }, [actionTemplates]);
 
   return (
-    <div className="bg-gray-100 min-h-screen">
+    <div className="min-h-screen bg-gray-100">
       <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
         transition={{ duration: 0.5 }}
-        className="mx-auto px-6 py-8 container"
+        className="container mx-auto px-6 py-8"
       >
         <div className="mx-auto max-w-3xl">
           <div className="mb-8 text-center">
-            <h1 className="mb-2 font-bold text-3xl">{t("title")}</h1>
+            <h1 className="mb-2 text-3xl font-bold">{t("title")}</h1>
             <p className="text-gray-400">
               {t("hello")} {user?.username}, {t("subtitle")}
             </p>
             {school && (
-              <p className="mt-2 text-gray-500 text-sm">
+              <p className="mt-2 text-sm text-gray-500">
                 School: {school.name} | Goal: {school.goal}% by{" "}
                 {school.deadlineYear}
               </p>
@@ -272,8 +276,8 @@ const StudentCalculator: React.FC = () => {
 
           {/* Loading State */}
           {categoriesLoading || actionsLoading ? (
-            <div className="mb-8 card">
-              <div className="flex justify-center items-center py-8">
+            <div className="card mb-8">
+              <div className="flex items-center justify-center py-8">
                 <div className="loading loading-spinner loading-lg"></div>
                 <span className="ml-2">
                   {categoriesLoading && actionsLoading
@@ -286,7 +290,7 @@ const StudentCalculator: React.FC = () => {
             </div>
           ) : categoriesError || actionsError ? (
             /* Error State */
-            <div className="mb-8 card">
+            <div className="card mb-8">
               <div className="alert alert-error">
                 <span>
                   {categoriesError ||
@@ -301,11 +305,11 @@ const StudentCalculator: React.FC = () => {
               {/* Validation Message */}
               {schoolCategories.length > 0 &&
                 schoolCategories.every((cat) => cat.amount === 0) && (
-                  <div className="bg-amber-50 mb-6 p-4 border border-amber-200 rounded-lg">
+                  <div className="mb-6 rounded-lg border border-amber-200 bg-amber-50 p-4">
                     <h3 className="mb-2 font-semibold text-amber-800">
                       Emission Data Required
                     </h3>
-                    <p className="text-amber-700 text-sm">
+                    <p className="text-sm text-amber-700">
                       Your teacher needs to set up emission amounts for your
                       school before you can calculate action impacts. You can
                       still select categories and actions, but precise
@@ -337,7 +341,7 @@ const StudentCalculator: React.FC = () => {
               {currentStep === "actions" && selectedCategory && (
                 <>
                   {/* Breadcrumb */}
-                  <div className="flex items-center space-x-2 mb-6 text-gray-600 text-sm">
+                  <div className="mb-6 flex items-center space-x-2 text-sm text-gray-600">
                     <button
                       onClick={() => setCurrentStep("category")}
                       className="hover:text-primary"
@@ -400,17 +404,41 @@ const StudentCalculator: React.FC = () => {
 
       <AddActionModalWrapper
         onAddAction={handleAddCustomAction}
-        categories={schoolCategories.map((cat) => ({
-          value: cat.category,
-          label: cat.name,
-        }))}
-        subcategoryOptions={schoolCategories.flatMap((cat) =>
-          cat.subcategories.map((sub) => ({
-            value: sub.id,
-            label: sub.name,
-            categoryId: cat.category,
-          })),
+        categories={useMemo(
+          () =>
+            schoolCategories.map((cat) => ({
+              value: cat.category,
+              label: cat.name,
+            })),
+          [schoolCategories],
         )}
+        subcategoryOptions={useMemo(() => {
+          const options = schoolCategories.flatMap((cat) => {
+            if (!cat.category) {
+              console.warn(
+                `StudentCalculator - Category "${cat.name}" has no category ID!`,
+              );
+              return [];
+            }
+            return cat.subcategories.map((sub) => {
+              // Check if sub.id is already in format "categoryId-subcategoryId"
+              // If not, create it in that format
+              let value = sub.id;
+              if (!value.includes("-") || value.split("-").length < 5) {
+                // If sub.id doesn't look like a composite ID, create one
+                value = `${cat.category}-${sub.id}`;
+              }
+
+              const option = {
+                value: value,
+                label: sub.name,
+                categoryId: cat.category, // Always set categoryId explicitly
+              };
+              return option;
+            });
+          });
+          return options;
+        }, [schoolCategories])}
       />
     </div>
   );

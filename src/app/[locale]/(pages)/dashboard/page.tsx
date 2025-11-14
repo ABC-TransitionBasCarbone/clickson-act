@@ -306,7 +306,7 @@ const TeacherDashboard: React.FC = () => {
   }
 
   return (
-    <div className="bg-gray-50">
+    <div className="min-h-screen bg-gray-50">
       <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
@@ -358,7 +358,7 @@ const TeacherDashboard: React.FC = () => {
 
         {/* Tab Content */}
         <motion.div
-          className="mx-auto max-w-6xl"
+          className=""
           key={activeTab}
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}

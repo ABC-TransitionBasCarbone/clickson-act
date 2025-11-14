@@ -3,7 +3,7 @@
 import Modal from "@/components/Modal";
 import { Action } from "@/types/Action";
 import { useTranslations } from "next-intl";
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { useUser } from "@/context/UserContext";
 import { useToast } from "@/context/ToastContext";
 
@@ -73,14 +73,6 @@ const EditActionModal: React.FC<EditActionModalProps> = ({
 
   // Update the editedAction to use the mapped category
   const mappedCategory = mapActionCategoryToDropdown(action.category);
-
-  // Debug: Log subcategory information
-  console.log("EditActionModal - Action subcategory:", action.subcategory);
-  console.log(
-    "EditActionModal - Available subcategoryOptions:",
-    subcategoryOptions,
-  );
-  console.log("EditActionModal - Mapped category:", mappedCategory);
 
   // Find the best matching subcategory for the action
   const findMatchingSubcategory = (
@@ -226,11 +218,46 @@ const EditActionModal: React.FC<EditActionModalProps> = ({
     onClose();
   };
 
+  // Memoize filtered subcategories to ensure proper reactivity
+  const filteredSubcategories = useMemo(() => {
+    if (!editedAction.category) {
+      return [];
+    }
+    
+    const filtered = subcategoryOptions.filter(
+      (sub) => {
+        // First, try using categoryId if it exists
+        if (sub.categoryId) {
+          return sub.categoryId === editedAction.category || String(sub.categoryId) === String(editedAction.category);
+        }
+        
+        // If categoryId is not set, extract it from the value field
+        // Value format is: "categoryId-subcategoryId"
+        if (sub.value && typeof sub.value === 'string') {
+          // Check if value starts with the category ID
+          if (sub.value.startsWith(editedAction.category)) {
+            return true;
+          }
+          
+          // Try extracting the first UUID from the value
+          // UUIDs are 36 characters: 8-4-4-4-12
+          const categoryIdFromValue = sub.value.substring(0, 36);
+          if (categoryIdFromValue === editedAction.category) {
+            return true;
+          }
+        }
+        
+        return false;
+      }
+    );
+    
+    return filtered;
+  }, [editedAction.category, subcategoryOptions]);
+
   // Different validation for teachers vs students
   const isInvalid = isTeacher
-    ? // Teachers: validate all required fields
+    ? // Teachers: validate all required fields (subcategory is optional)
       editedAction.category === "" ||
-      editedAction.subcategory === "" ||
       editedAction.title === "" ||
       editedAction.description === "" ||
       editedAction.reduction === 0 ||
@@ -331,17 +358,11 @@ const EditActionModal: React.FC<EditActionModalProps> = ({
               disabled={!editedAction.category}
             >
               <option value="">{t("selectCategory")}</option>
-              {subcategoryOptions
-                .filter(
-                  (sub) =>
-                    !editedAction.category ||
-                    sub.categoryId === editedAction.category,
-                )
-                .map((sub) => (
-                  <option key={sub.value} value={sub.value}>
-                    {sub.label}
-                  </option>
-                ))}
+              {filteredSubcategories.map((sub) => (
+                <option key={sub.value} value={sub.value}>
+                  {sub.label}
+                </option>
+              ))}
             </select>
           </div>
 
