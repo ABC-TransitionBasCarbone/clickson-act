@@ -247,9 +247,7 @@ const TeacherDashboard: React.FC = () => {
       <div className="container mx-auto min-h-screen px-6 py-8">
         <div className="text-center">
           <h1 className="mb-4 text-2xl font-bold">{t("accessDenied")}</h1>
-          <p className="mb-4 text-gray-600">
-            {t("accessDeniedMessage")}
-          </p>
+          <p className="mb-4 text-gray-600">{t("accessDeniedMessage")}</p>
           <button
             onClick={() => router.push(`/data-reporting/${user.passcode}`)}
             className="btn btn-primary"
@@ -267,9 +265,7 @@ const TeacherDashboard: React.FC = () => {
       <div className="container mx-auto px-6 py-8">
         <div className="text-center">
           <h1 className="mb-4 text-2xl font-bold">{t("pleaseLogIn")}</h1>
-          <p className="mb-4 text-gray-600">
-            {t("pleaseLogInMessage")}
-          </p>
+          <p className="mb-4 text-gray-600">{t("pleaseLogInMessage")}</p>
           <button
             onClick={() => router.push("/data-reporting")}
             className="btn btn-primary"
@@ -323,9 +319,9 @@ const TeacherDashboard: React.FC = () => {
           </div>
 
           {/* Enhanced Tabbed Interface */}
-          <div className="">
-            <div className="rounded-xl border border-gray-200 bg-white px-2.5 py-1.5 shadow-sm">
-              <div className="flex flex-wrap gap-1.5">
+          <div className="max-lg:pt-5">
+            <div className="rounded-xl border border-gray-200 bg-white px-2.5 py-2.5 shadow-sm lg:py-1.5">
+              <div className="max-lg: flex justify-center gap-1.5 max-lg:flex-col">
                 {tabs
                   .filter((tab) => tab.show)
                   .map((tab) => {
@@ -335,9 +331,9 @@ const TeacherDashboard: React.FC = () => {
                     return (
                       <button
                         key={tab.id}
-                        className={`group relative flex cursor-pointer items-center gap-2.5 rounded-lg px-5 py-3.5 text-sm font-medium transition-all duration-300 ${
+                        className={`group relative flex max-w-full cursor-pointer items-center gap-2.5 rounded-lg px-5 py-3.5 text-sm font-medium transition-all duration-300 ${
                           isActive
-                            ? "bg-primary scale-105 text-white shadow-md"
+                            ? "bg-primary text-white shadow-md"
                             : "text-gray-600 hover:scale-102 hover:bg-gray-50 hover:text-gray-900"
                         }`}
                         onClick={() => setActiveTab(tab.id)}
@@ -465,7 +461,9 @@ const TeacherDashboard: React.FC = () => {
                   <h2 className="mb-2 text-2xl font-bold">
                     {teacherSchool.name}
                   </h2>
-                  <p className="text-gray-600">{t("schoolInformationAndGoals")}</p>
+                  <p className="text-gray-600">
+                    {t("schoolInformationAndGoals")}
+                  </p>
                 </div>
                 {!isEditing ? (
                   <button
@@ -532,7 +530,9 @@ const TeacherDashboard: React.FC = () => {
                     </div>
                   </div>
                   <div className="mt-6 rounded-lg bg-blue-50 p-4">
-                    <h3 className="mb-2 font-semibold">{t("schoolGoalSummary")}</h3>
+                    <h3 className="mb-2 font-semibold">
+                      {t("schoolGoalSummary")}
+                    </h3>
                     <p className="text-gray-700">
                       <strong>{teacherSchool.name}</strong> {t("aimsToReduce")}{" "}
                       <strong>{teacherSchool.goal}%</strong> {t("byTheYear")}{" "}
@@ -602,9 +602,9 @@ const TeacherDashboard: React.FC = () => {
                   <div className="rounded-lg bg-yellow-50 p-4">
                     <h3 className="mb-2 font-semibold">{t("preview")}</h3>
                     <p className="text-gray-700">
-                      <strong>{teacherSchool.name}</strong> {t("willAimToReduce")}{" "}
-                      <strong>{editForm.goal}%</strong> {t("byTheYear")}{" "}
-                      <strong>{editForm.deadlineYear}</strong>.
+                      <strong>{teacherSchool.name}</strong>{" "}
+                      {t("willAimToReduce")} <strong>{editForm.goal}%</strong>{" "}
+                      {t("byTheYear")} <strong>{editForm.deadlineYear}</strong>.
                     </p>
                   </div>
                 </div>
