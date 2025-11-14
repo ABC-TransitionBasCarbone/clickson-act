@@ -67,19 +67,19 @@ const TeacherDashboard: React.FC = () => {
     },
     {
       id: "school" as const,
-      label: "School Information",
+      label: t("schoolInformation"),
       icon: School,
       show: !!teacherInfo?.school,
     },
     {
       id: "emissions" as const,
-      label: "Emission Data",
+      label: t("emissionData"),
       icon: TrendingUp,
       show: !!teacherInfo?.school,
     },
     {
       id: "pending" as const,
-      label: "Pending",
+      label: t("pending"),
       icon: Clock,
       show: !!teacherInfo?.school,
     },
@@ -99,11 +99,11 @@ const TeacherDashboard: React.FC = () => {
           setSelectedProject(data.projects[0].id);
         }
       } else {
-        setError(data.error || "Failed to fetch projects");
+        setError(data.error || t("failedToFetchProjects"));
       }
     } catch (error) {
       console.error("Error fetching projects:", error);
-      setError("Failed to fetch projects");
+      setError(t("failedToFetchProjects"));
     } finally {
       setLoading(false);
     }
@@ -185,14 +185,14 @@ const TeacherDashboard: React.FC = () => {
 
         // Show success message with passcode
         alert(
-          `Project created successfully! Student passcode: ${data.project.passcode}`,
+          t("projectCreatedSuccessfully", { passcode: data.project.passcode }),
         );
       } else {
-        alert(`Error creating project: ${data.error}`);
+        alert(t("errorCreatingProject", { error: data.error }));
       }
     } catch (error) {
       console.error("Error creating project:", error);
-      alert("Error creating project. Please try again.");
+      alert(t("errorCreatingProjectGeneric"));
     }
   };
 
@@ -221,13 +221,13 @@ const TeacherDashboard: React.FC = () => {
       if (response.ok) {
         setTeacherSchool({ ...teacherSchool, ...editForm });
         setIsEditing(false);
-        alert("School updated successfully!");
+        alert(t("schoolUpdatedSuccessfully"));
       } else {
-        alert(`Error updating school: ${data.error}`);
+        alert(t("errorUpdatingSchool", { error: data.error }));
       }
     } catch (error) {
       console.error("Error updating school:", error);
-      alert("Error updating school. Please try again.");
+      alert(t("errorUpdatingSchoolGeneric"));
     } finally {
       setSavingSchool(false);
     }
@@ -246,15 +246,15 @@ const TeacherDashboard: React.FC = () => {
     return (
       <div className="container mx-auto min-h-screen px-6 py-8">
         <div className="text-center">
-          <h1 className="mb-4 text-2xl font-bold">Access Denied</h1>
+          <h1 className="mb-4 text-2xl font-bold">{t("accessDenied")}</h1>
           <p className="mb-4 text-gray-600">
-            You are logged in as a student. This dashboard is for teachers only.
+            {t("accessDeniedMessage")}
           </p>
           <button
             onClick={() => router.push(`/data-reporting/${user.passcode}`)}
             className="btn btn-primary"
           >
-            Go to Student Calculator
+            {t("goToStudentCalculator")}
           </button>
         </div>
       </div>
@@ -266,15 +266,15 @@ const TeacherDashboard: React.FC = () => {
     return (
       <div className="container mx-auto px-6 py-8">
         <div className="text-center">
-          <h1 className="mb-4 text-2xl font-bold">Please Log In</h1>
+          <h1 className="mb-4 text-2xl font-bold">{t("pleaseLogIn")}</h1>
           <p className="mb-4 text-gray-600">
-            You need to be logged in as a teacher to access this dashboard.
+            {t("pleaseLogInMessage")}
           </p>
           <button
             onClick={() => router.push("/data-reporting")}
             className="btn btn-primary"
           >
-            Go to Login
+            {t("goToLogin")}
           </button>
         </div>
       </div>
@@ -295,10 +295,10 @@ const TeacherDashboard: React.FC = () => {
     return (
       <div className="container mx-auto px-6 py-8">
         <div className="text-center">
-          <h1 className="mb-4 text-2xl font-bold text-red-600">Error</h1>
+          <h1 className="mb-4 text-2xl font-bold text-red-600">{t("error")}</h1>
           <p className="mb-4 text-gray-600">{error}</p>
           <button onClick={fetchProjects} className="btn btn-primary">
-            Try Again
+            {t("tryAgain")}
           </button>
         </div>
       </div>
@@ -465,7 +465,7 @@ const TeacherDashboard: React.FC = () => {
                   <h2 className="mb-2 text-2xl font-bold">
                     {teacherSchool.name}
                   </h2>
-                  <p className="text-gray-600">School Information & Goals</p>
+                  <p className="text-gray-600">{t("schoolInformationAndGoals")}</p>
                 </div>
                 {!isEditing ? (
                   <button
@@ -473,7 +473,7 @@ const TeacherDashboard: React.FC = () => {
                     className="btn-outline btn btn-sm"
                   >
                     <Edit className="mr-2 h-4 w-4" />
-                    Edit Goals
+                    {t("editGoals")}
                   </button>
                 ) : (
                   <div className="flex gap-2">
@@ -485,12 +485,12 @@ const TeacherDashboard: React.FC = () => {
                       {savingSchool ? (
                         <>
                           <span className="loading loading-spinner loading-xs"></span>
-                          Saving...
+                          {t("saving")}
                         </>
                       ) : (
                         <>
                           <Save className="mr-2 h-4 w-4" />
-                          Save
+                          {t("save")}
                         </>
                       )}
                     </button>
@@ -499,7 +499,7 @@ const TeacherDashboard: React.FC = () => {
                       className="btn-outline btn btn-sm"
                     >
                       <X className="mr-2 h-4 w-4" />
-                      Cancel
+                      {t("cancel")}
                     </button>
                   </div>
                 )}
@@ -510,33 +510,33 @@ const TeacherDashboard: React.FC = () => {
                   <div className="grid gap-6 md:grid-cols-2">
                     <div className="rounded-lg bg-gray-50 p-4">
                       <h3 className="mb-2 text-lg font-semibold">
-                        Reduction Goal
+                        {t("reductionGoal")}
                       </h3>
                       <p className="text-3xl font-bold text-green-600">
                         {teacherSchool.goal}%
                       </p>
                       <p className="mt-1 text-sm text-gray-600">
-                        Target emission reduction
+                        {t("targetEmissionReduction")}
                       </p>
                     </div>
                     <div className="rounded-lg bg-gray-50 p-4">
                       <h3 className="mb-2 text-lg font-semibold">
-                        Target Year
+                        {t("targetYear")}
                       </h3>
                       <p className="text-primary text-3xl font-bold">
                         {teacherSchool.deadlineYear}
                       </p>
                       <p className="mt-1 text-sm text-gray-600">
-                        Deadline to achieve goal
+                        {t("deadlineToAchieveGoal")}
                       </p>
                     </div>
                   </div>
                   <div className="mt-6 rounded-lg bg-blue-50 p-4">
-                    <h3 className="mb-2 font-semibold">School Goal Summary</h3>
+                    <h3 className="mb-2 font-semibold">{t("schoolGoalSummary")}</h3>
                     <p className="text-gray-700">
-                      <strong>{teacherSchool.name}</strong> aims to reduce
-                      emissions by <strong>{teacherSchool.goal}%</strong> by the
-                      year <strong>{teacherSchool.deadlineYear}</strong>.
+                      <strong>{teacherSchool.name}</strong> {t("aimsToReduce")}{" "}
+                      <strong>{teacherSchool.goal}%</strong> {t("byTheYear")}{" "}
+                      <strong>{teacherSchool.deadlineYear}</strong>.
                     </p>
                   </div>
                 </div>
@@ -545,13 +545,13 @@ const TeacherDashboard: React.FC = () => {
                   <div className="grid gap-6 md:grid-cols-2">
                     <div>
                       <label htmlFor="goal" className="mb-2 block font-medium">
-                        Reduction Goal (%)
+                        {t("reductionGoalPercent")}
                       </label>
                       <input
                         id="goal"
                         name="goal"
                         type="number"
-                        placeholder="Enter reduction goal"
+                        placeholder={t("enterReductionGoal")}
                         className="input-bordered input w-full"
                         value={editForm.goal}
                         onChange={(e) =>
@@ -565,7 +565,7 @@ const TeacherDashboard: React.FC = () => {
                         required
                       />
                       <p className="mt-1 text-sm text-gray-500">
-                        Enter a percentage between 0 and 100
+                        {t("enterPercentageBetween")}
                       </p>
                     </div>
 
@@ -574,13 +574,13 @@ const TeacherDashboard: React.FC = () => {
                         htmlFor="deadlineYear"
                         className="mb-2 block font-medium"
                       >
-                        Target Year
+                        {t("targetYear")}
                       </label>
                       <input
                         id="deadlineYear"
                         name="deadlineYear"
                         type="number"
-                        placeholder="Enter target year"
+                        placeholder={t("enterTargetYear")}
                         className="input-bordered input w-full"
                         value={editForm.deadlineYear}
                         onChange={(e) =>
@@ -594,16 +594,16 @@ const TeacherDashboard: React.FC = () => {
                         required
                       />
                       <p className="mt-1 text-sm text-gray-500">
-                        Year when the goal should be achieved
+                        {t("yearWhenGoalShouldBeAchieved")}
                       </p>
                     </div>
                   </div>
 
                   <div className="rounded-lg bg-yellow-50 p-4">
-                    <h3 className="mb-2 font-semibold">Preview</h3>
+                    <h3 className="mb-2 font-semibold">{t("preview")}</h3>
                     <p className="text-gray-700">
-                      <strong>{teacherSchool.name}</strong> will aim to reduce
-                      emissions by <strong>{editForm.goal}%</strong> by the year{" "}
+                      <strong>{teacherSchool.name}</strong> {t("willAimToReduce")}{" "}
+                      <strong>{editForm.goal}%</strong> {t("byTheYear")}{" "}
                       <strong>{editForm.deadlineYear}</strong>.
                     </p>
                   </div>
@@ -632,7 +632,7 @@ const TeacherDashboard: React.FC = () => {
                   {projects.length > 1 && (
                     <div className="mb-6">
                       <label className="mb-2 block text-sm font-medium">
-                        Select Project to Review:
+                        {t("selectProjectToReview")}
                       </label>
                       <select
                         value={selectedProject}
@@ -663,17 +663,16 @@ const TeacherDashboard: React.FC = () => {
                 <div className="card">
                   <div className="py-8 text-center">
                     <h3 className="mb-2 text-xl font-semibold">
-                      No Projects Found
+                      {t("noProjectsFound")}
                     </h3>
                     <p className="mb-4 text-gray-600">
-                      Create a project to start receiving student action
-                      submissions.
+                      {t("createProjectToStart")}
                     </p>
                     <button
                       onClick={openProjectModal}
                       className="btn btn-primary"
                     >
-                      Create Project
+                      {t("createProject")}
                     </button>
                   </div>
                 </div>

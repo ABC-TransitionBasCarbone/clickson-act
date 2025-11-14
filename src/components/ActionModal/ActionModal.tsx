@@ -195,36 +195,37 @@ const ActionModal: React.FC<ActionModalProps> = ({
     if (!newAction.category) {
       return [];
     }
-    
-    const filtered = subcategoryOptions.filter(
-      (sub) => {
-        // First, try using categoryId if it exists
-        if (sub.categoryId) {
-          return sub.categoryId === newAction.category || String(sub.categoryId) === String(newAction.category);
-        }
-        
-        // If categoryId is not set, extract it from the value field
-        // Value format is: "categoryId-subcategoryId"
-        if (sub.value && typeof sub.value === 'string') {
-          const parts = sub.value.split('-');
-          // UUID format: 8-4-4-4-12, so categoryId is first 36 characters (8-4-4-4-12)
-          // But we need to check if it starts with the category ID
-          if (sub.value.startsWith(newAction.category)) {
-            return true;
-          }
-          
-          // Try extracting the first UUID from the value
-          // UUIDs are 36 characters: 8-4-4-4-12
-          const categoryIdFromValue = sub.value.substring(0, 36);
-          if (categoryIdFromValue === newAction.category) {
-            return true;
-          }
-        }
-        
-        return false;
+
+    const filtered = subcategoryOptions.filter((sub) => {
+      // First, try using categoryId if it exists
+      if (sub.categoryId) {
+        return (
+          sub.categoryId === newAction.category ||
+          String(sub.categoryId) === String(newAction.category)
+        );
       }
-    );
-    
+
+      // If categoryId is not set, extract it from the value field
+      // Value format is: "categoryId-subcategoryId"
+      if (sub.value && typeof sub.value === "string") {
+        const parts = sub.value.split("-");
+        // UUID format: 8-4-4-4-12, so categoryId is first 36 characters (8-4-4-4-12)
+        // But we need to check if it starts with the category ID
+        if (sub.value.startsWith(newAction.category)) {
+          return true;
+        }
+
+        // Try extracting the first UUID from the value
+        // UUIDs are 36 characters: 8-4-4-4-12
+        const categoryIdFromValue = sub.value.substring(0, 36);
+        if (categoryIdFromValue === newAction.category) {
+          return true;
+        }
+      }
+
+      return false;
+    });
+
     return filtered;
   }, [newAction.category, subcategoryOptions]);
 
@@ -246,9 +247,9 @@ const ActionModal: React.FC<ActionModalProps> = ({
       title={mode === "edit" ? t("editAction") : t("addCustomAction")}
     >
       <div className="sm:max-w-md">
-        <div className="gap-4 grid grid-cols-2">
+        <div className="grid grid-cols-2 gap-4">
           {/* Status */}
-          <div className="gap-2 grid">
+          <div className="grid gap-2">
             <label htmlFor="status">{t("status")}</label>
             <select
               id="status"
@@ -262,7 +263,7 @@ const ActionModal: React.FC<ActionModalProps> = ({
                     | "Available",
                 })
               }
-              className="w-full input"
+              className="input w-full"
               disabled={fieldDisabled || !canEditField("status")}
             >
               <option value="Available">{t("available")}</option>
@@ -272,7 +273,7 @@ const ActionModal: React.FC<ActionModalProps> = ({
           </div>
 
           {/* Assigned To */}
-          <div className="gap-2 grid">
+          <div className="grid gap-2">
             <label htmlFor="assignedTo">{t("assignedTo")}</label>
             <input
               id="assignedTo"
@@ -280,13 +281,13 @@ const ActionModal: React.FC<ActionModalProps> = ({
               onChange={(e) =>
                 setNewAction({ ...newAction, assignedTo: e.target.value })
               }
-              className="w-full input"
+              className="input w-full"
               disabled={fieldDisabled || !canEditField("assignedTo")}
             />
           </div>
 
           {/* Category */}
-          <div className="gap-2 grid">
+          <div className="grid gap-2">
             <label htmlFor="category">{t("category")}</label>
             <select
               id="category"
@@ -298,7 +299,7 @@ const ActionModal: React.FC<ActionModalProps> = ({
                   subcategory: "",
                 })
               }
-              className="w-full input"
+              className="input w-full"
               disabled={fieldDisabled || !canEditField("category")}
             >
               <option value="">{t("selectCategory")}</option>
@@ -311,7 +312,7 @@ const ActionModal: React.FC<ActionModalProps> = ({
           </div>
 
           {/* Subcategory */}
-          <div className="gap-2 grid">
+          <div className="grid gap-2">
             <label htmlFor="subcategory">{t("subcategory")}</label>
             <select
               id="subcategory"
@@ -319,7 +320,7 @@ const ActionModal: React.FC<ActionModalProps> = ({
               onChange={(e) =>
                 setNewAction({ ...newAction, subcategory: e.target.value })
               }
-              className="w-full input"
+              className="input w-full"
               disabled={
                 fieldDisabled ||
                 !newAction.category ||
@@ -336,7 +337,7 @@ const ActionModal: React.FC<ActionModalProps> = ({
           </div>
 
           {/* Timeline */}
-          <div className="gap-2 grid">
+          <div className="grid gap-2">
             <label htmlFor="timeline">{t("timeline")}</label>
             <input
               id="timeline"
@@ -347,14 +348,14 @@ const ActionModal: React.FC<ActionModalProps> = ({
               }
               min={1}
               max={50}
-              placeholder="Number of years"
-              className="w-full input"
+              placeholder={t("numberOfYears")}
+              className="input w-full"
               disabled={fieldDisabled || !canEditField("timeline")}
             />
           </div>
 
           {/* Title */}
-          <div className="gap-2 grid">
+          <div className="grid gap-2">
             <label htmlFor="title">{t("actionTitle")}</label>
             <input
               id="title"
@@ -362,13 +363,13 @@ const ActionModal: React.FC<ActionModalProps> = ({
               onChange={(e) =>
                 setNewAction({ ...newAction, title: e.target.value })
               }
-              className="w-full input"
+              className="input w-full"
               disabled={fieldDisabled || !canEditField("title")}
             />
           </div>
 
           {/* Description */}
-          <div className="gap-2 grid">
+          <div className="grid gap-2">
             <label htmlFor="description">{t("description")}</label>
             <input
               id="description"
@@ -376,13 +377,13 @@ const ActionModal: React.FC<ActionModalProps> = ({
               onChange={(e) =>
                 setNewAction({ ...newAction, description: e.target.value })
               }
-              className="w-full input"
+              className="input w-full"
               disabled={fieldDisabled || !canEditField("description")}
             />
           </div>
 
           {/* Effort */}
-          <div className="gap-2 grid">
+          <div className="grid gap-2">
             <label htmlFor="effort">{t("effort")}</label>
             <select
               id="effort"
@@ -390,7 +391,7 @@ const ActionModal: React.FC<ActionModalProps> = ({
               onChange={(e) =>
                 setNewAction({ ...newAction, effort: e.target.value })
               }
-              className="w-full input"
+              className="input w-full"
               disabled={fieldDisabled || !canEditField("effort")}
             >
               <option value="">{t("selectEffort")}</option>
@@ -403,7 +404,7 @@ const ActionModal: React.FC<ActionModalProps> = ({
           </div>
 
           {/* Reduction */}
-          <div className="gap-2 grid">
+          <div className="grid gap-2">
             <label htmlFor="reduction">{t("estimatedReduction")}</label>
             <input
               id="reduction"
@@ -417,13 +418,13 @@ const ActionModal: React.FC<ActionModalProps> = ({
               }
               min={1}
               max={100}
-              className="w-full input"
+              className="input w-full"
               disabled={fieldDisabled || !canEditField("reduction")}
             />
           </div>
 
           {/* Manager */}
-          <div className="gap-2 grid">
+          <div className="grid gap-2">
             <label htmlFor="manager">{t("manager")}</label>
             <input
               id="manager"
@@ -431,13 +432,13 @@ const ActionModal: React.FC<ActionModalProps> = ({
               onChange={(e) =>
                 setNewAction({ ...newAction, manager: e.target.value })
               }
-              className="w-full input"
+              className="input w-full"
               disabled={fieldDisabled || !canEditField("manager")}
             />
           </div>
 
           {/* Nature */}
-          <div className="gap-2 grid">
+          <div className="grid gap-2">
             <label htmlFor="nature">{t("nature")}</label>
             <input
               id="nature"
@@ -445,13 +446,13 @@ const ActionModal: React.FC<ActionModalProps> = ({
               onChange={(e) =>
                 setNewAction({ ...newAction, nature: e.target.value })
               }
-              className="w-full input"
+              className="input w-full"
               disabled={fieldDisabled || !canEditField("nature")}
             />
           </div>
 
           {/* Objectives */}
-          <div className="gap-2 grid">
+          <div className="grid gap-2">
             <label htmlFor="objectives">{t("objectives")}</label>
             <textarea
               rows={3}
@@ -460,13 +461,13 @@ const ActionModal: React.FC<ActionModalProps> = ({
               onChange={(e) =>
                 setNewAction({ ...newAction, objectives: e.target.value })
               }
-              className="w-full textarea"
+              className="textarea w-full"
               disabled={fieldDisabled || !canEditField("objectives")}
             />
           </div>
 
           {/* Key Contacts */}
-          <div className="gap-2 grid">
+          <div className="grid gap-2">
             <label htmlFor="keyContacts" className="flex items-center gap-2">
               {t("keyContacts")}
               {isTeacher &&
@@ -474,7 +475,7 @@ const ActionModal: React.FC<ActionModalProps> = ({
                 initialAction.pendingChanges.keyContacts !==
                   initialAction.keyContacts && (
                   <span className="badge badge-warning badge-sm">
-                    Pending Change
+                    {t("pendingChange")}
                   </span>
                 )}
             </label>
@@ -496,14 +497,14 @@ const ActionModal: React.FC<ActionModalProps> = ({
           </div>
 
           {/* Steps */}
-          <div className="gap-2 grid">
+          <div className="grid gap-2">
             <label htmlFor="steps" className="flex items-center gap-2">
               {t("steps")}
               {isTeacher &&
                 initialAction?.pendingChanges?.steps &&
                 initialAction.pendingChanges.steps !== initialAction.steps && (
                   <span className="badge badge-warning badge-sm">
-                    Pending Change
+                    {t("pendingChange")}
                   </span>
                 )}
             </label>
@@ -524,7 +525,7 @@ const ActionModal: React.FC<ActionModalProps> = ({
           </div>
 
           {/* Calendar */}
-          <div className="gap-2 grid">
+          <div className="grid gap-2">
             <label htmlFor="calendar">{t("calendar")}</label>
             <textarea
               rows={3}
@@ -533,13 +534,13 @@ const ActionModal: React.FC<ActionModalProps> = ({
               onChange={(e) =>
                 setNewAction({ ...newAction, calendar: e.target.value })
               }
-              className="w-full textarea"
+              className="textarea w-full"
               disabled={fieldDisabled || !canEditField("calendar")}
             />
           </div>
 
           {/* Monitoring */}
-          <div className="gap-2 grid">
+          <div className="grid gap-2">
             <label htmlFor="monitoring" className="flex items-center gap-2">
               {t("monitoring")}
               {isTeacher &&
@@ -547,7 +548,7 @@ const ActionModal: React.FC<ActionModalProps> = ({
                 initialAction.pendingChanges.monitoring !==
                   initialAction.monitoring && (
                   <span className="badge badge-warning badge-sm">
-                    Pending Change
+                    {t("pendingChange")}
                   </span>
                 )}
             </label>
@@ -569,7 +570,7 @@ const ActionModal: React.FC<ActionModalProps> = ({
           </div>
 
           {/* Performance */}
-          <div className="gap-2 grid">
+          <div className="grid gap-2">
             <label htmlFor="performance" className="flex items-center gap-2">
               {t("performance")}
               {isTeacher &&
@@ -577,7 +578,7 @@ const ActionModal: React.FC<ActionModalProps> = ({
                 initialAction.pendingChanges.performance !==
                   initialAction.performance && (
                   <span className="badge badge-warning badge-sm">
-                    Pending Change
+                    {t("pendingChange")}
                   </span>
                 )}
             </label>
@@ -601,36 +602,38 @@ const ActionModal: React.FC<ActionModalProps> = ({
 
         {/* Pending Changes Notification for Teachers */}
         {mode === "edit" && isTeacher && initialAction?.needsApproval && (
-          <div className="mt-4 alert alert-warning">
+          <div className="alert alert-warning mt-4">
             <div className="w-full">
-              <h3 className="font-bold">Pending Student Changes</h3>
+              <h3 className="font-bold">{t("pendingStudentChanges")}</h3>
               <div className="mb-3 text-xs">
-                Changes submitted by: {initialAction.pendingChanges?.changedBy}
+                {t("changesSubmittedBy")}{" "}
+                {initialAction.pendingChanges?.changedBy}
                 <br />
-                Submitted at:{" "}
+                {t("submittedAt")}{" "}
                 {initialAction.pendingChanges?.changedAt
                   ? new Date(
                       initialAction.pendingChanges.changedAt,
                     ).toLocaleString()
-                  : "Unknown"}
+                  : t("unknown")}
               </div>
 
               {/* Show detailed changes */}
               <div className="space-y-2">
-                <h4 className="font-semibold text-sm">Changes Made:</h4>
+                <h4 className="text-sm font-semibold">{t("changesMade")}</h4>
                 {initialAction.pendingChanges?.steps &&
                   initialAction.pendingChanges.steps !==
                     initialAction.steps && (
-                    <div className="bg-white p-2 border rounded">
-                      <div className="font-medium text-gray-700 text-sm">
-                        Steps:
+                    <div className="rounded border bg-white p-2">
+                      <div className="text-sm font-medium text-gray-700">
+                        {t("stepsColon")}
                       </div>
                       <div className="text-xs">
                         <div className="text-red-600">
-                          Original: {initialAction.steps || "Not specified"}
+                          {t("original")}{" "}
+                          {initialAction.steps || t("notSpecified")}
                         </div>
                         <div className="text-green-600">
-                          Proposed: {initialAction.pendingChanges.steps}
+                          {t("proposed")} {initialAction.pendingChanges.steps}
                         </div>
                       </div>
                     </div>
@@ -639,17 +642,18 @@ const ActionModal: React.FC<ActionModalProps> = ({
                 {initialAction.pendingChanges?.monitoring &&
                   initialAction.pendingChanges.monitoring !==
                     initialAction.monitoring && (
-                    <div className="bg-white p-2 border rounded">
-                      <div className="font-medium text-gray-700 text-sm">
-                        Monitoring:
+                    <div className="rounded border bg-white p-2">
+                      <div className="text-sm font-medium text-gray-700">
+                        {t("monitoringColon")}
                       </div>
                       <div className="text-xs">
                         <div className="text-red-600">
-                          Original:{" "}
-                          {initialAction.monitoring || "Not specified"}
+                          {t("original")}{" "}
+                          {initialAction.monitoring || t("notSpecified")}
                         </div>
                         <div className="text-green-600">
-                          Proposed: {initialAction.pendingChanges.monitoring}
+                          {t("proposed")}{" "}
+                          {initialAction.pendingChanges.monitoring}
                         </div>
                       </div>
                     </div>
@@ -658,17 +662,18 @@ const ActionModal: React.FC<ActionModalProps> = ({
                 {initialAction.pendingChanges?.performance &&
                   initialAction.pendingChanges.performance !==
                     initialAction.performance && (
-                    <div className="bg-white p-2 border rounded">
-                      <div className="font-medium text-gray-700 text-sm">
-                        Performance:
+                    <div className="rounded border bg-white p-2">
+                      <div className="text-sm font-medium text-gray-700">
+                        {t("performanceColon")}
                       </div>
                       <div className="text-xs">
                         <div className="text-red-600">
-                          Original:{" "}
-                          {initialAction.performance || "Not specified"}
+                          {t("original")}{" "}
+                          {initialAction.performance || t("notSpecified")}
                         </div>
                         <div className="text-green-600">
-                          Proposed: {initialAction.pendingChanges.performance}
+                          {t("proposed")}{" "}
+                          {initialAction.pendingChanges.performance}
                         </div>
                       </div>
                     </div>
@@ -677,17 +682,18 @@ const ActionModal: React.FC<ActionModalProps> = ({
                 {initialAction.pendingChanges?.keyContacts &&
                   initialAction.pendingChanges.keyContacts !==
                     initialAction.keyContacts && (
-                    <div className="bg-white p-2 border rounded">
-                      <div className="font-medium text-gray-700 text-sm">
-                        Key Contacts:
+                    <div className="rounded border bg-white p-2">
+                      <div className="text-sm font-medium text-gray-700">
+                        {t("keyContactsColon")}
                       </div>
                       <div className="text-xs">
                         <div className="text-red-600">
-                          Original:{" "}
-                          {initialAction.keyContacts || "Not specified"}
+                          {t("original")}{" "}
+                          {initialAction.keyContacts || t("notSpecified")}
                         </div>
                         <div className="text-green-600">
-                          Proposed: {initialAction.pendingChanges.keyContacts}
+                          {t("proposed")}{" "}
+                          {initialAction.pendingChanges.keyContacts}
                         </div>
                       </div>
                     </div>
@@ -698,9 +704,8 @@ const ActionModal: React.FC<ActionModalProps> = ({
                   !initialAction.pendingChanges?.monitoring &&
                   !initialAction.pendingChanges?.performance &&
                   !initialAction.pendingChanges?.keyContacts && (
-                    <div className="text-gray-600 text-sm italic">
-                      No field changes detected. Student may have submitted
-                      without making changes.
+                    <div className="text-sm text-gray-600 italic">
+                      {t("noFieldChangesDetected")}
                     </div>
                   )}
               </div>
@@ -710,17 +715,15 @@ const ActionModal: React.FC<ActionModalProps> = ({
 
         {/* Unsaved Changes Notification for Students */}
         {hasUnsavedChanges && !isTeacher && (
-          <div className="mt-4 alert alert-info">
+          <div className="alert alert-info mt-4">
             <div>
-              <h3 className="font-bold">Unsaved Changes</h3>
-              <div className="text-xs">
-                Your changes will be submitted for teacher approval.
-              </div>
+              <h3 className="font-bold">{t("unsavedChanges")}</h3>
+              <div className="text-xs">{t("changesWillBeSubmitted")}</div>
             </div>
           </div>
         )}
 
-        <div className="flex flex-wrap justify-center gap-3 mt-6">
+        <div className="mt-6 flex flex-wrap justify-center gap-3">
           {/* Delete button in edit mode - only for teachers */}
           {mode === "edit" && !isEditing && isTeacher && onDelete && (
             <button
@@ -737,7 +740,7 @@ const ActionModal: React.FC<ActionModalProps> = ({
               className="btn btn-success"
               onClick={() => onCompleteAction(newAction)}
             >
-              Complete Action
+              {t("completeAction")}
             </button>
           )}
 
@@ -750,7 +753,7 @@ const ActionModal: React.FC<ActionModalProps> = ({
                 className="btn btn-success"
                 onClick={() => onApproveChanges(newAction)}
               >
-                Approve Changes
+                {t("approveChanges")}
               </button>
             )}
 
@@ -763,7 +766,7 @@ const ActionModal: React.FC<ActionModalProps> = ({
                 className="btn btn-error"
                 onClick={() => onRejectChanges(newAction)}
               >
-                Reject Changes
+                {t("rejectChanges")}
               </button>
             )}
 
@@ -788,7 +791,7 @@ const ActionModal: React.FC<ActionModalProps> = ({
                 ? mode === "edit"
                   ? t("saveChanges")
                   : t("addAction")
-                : "Submit for Approval"}
+                : t("submitForApproval")}
             </button>
           )}
 

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { School, SchoolEmissionCategory } from "@/types/School";
 import { useToast } from "@/context/ToastContext";
+import { useTranslations } from "next-intl";
 
 interface EmissionDataManagerProps {
   school: School;
@@ -27,6 +28,7 @@ const EmissionDataManager: React.FC<EmissionDataManagerProps> = ({
   onUpdate,
 }) => {
   const { showToast } = useToast();
+  const t = useTranslations("EmissionDataManager");
   const [schoolCategories, setSchoolCategories] = useState<
     SchoolEmissionCategory[]
   >(school.emissionCategories || []);
@@ -152,7 +154,7 @@ const EmissionDataManager: React.FC<EmissionDataManagerProps> = ({
         }
       } catch (error) {
         console.error("Error fetching global categories:", error);
-        showToast("error", "Error", "Failed to load emission categories", 5000);
+        showToast("error", t("error"), t("failedToLoadCategories"), 5000);
       } finally {
         setLoading(false);
       }
@@ -343,13 +345,13 @@ const EmissionDataManager: React.FC<EmissionDataManagerProps> = ({
       };
 
       onUpdate(updatedSchool);
-      showToast("success", "Success", "Emission data saved successfully", 4000);
+      showToast("success", t("success"), t("emissionDataSavedSuccessfully"), 4000);
     } catch (error) {
       console.error("Error saving emission data:", error);
       showToast(
         "error",
-        "Error",
-        error instanceof Error ? error.message : "Failed to save emission data",
+        t("error"),
+        error instanceof Error ? error.message : t("failedToSaveData"),
         5000,
       );
     } finally {
@@ -362,7 +364,7 @@ const EmissionDataManager: React.FC<EmissionDataManagerProps> = ({
       <div className="card">
         <div className="flex items-center justify-center py-8">
           <div className="loading loading-spinner loading-lg"></div>
-          <span className="ml-2">Loading emission categories...</span>
+          <span className="ml-2">{t("loadingEmissionCategories")}</span>
         </div>
       </div>
     );
@@ -373,18 +375,16 @@ const EmissionDataManager: React.FC<EmissionDataManagerProps> = ({
       <div className="mb-6">
         <div className="flex items-start justify-between">
           <div>
-            <h3 className="text-2xl font-bold">School Emission Data</h3>
+            <h3 className="text-2xl font-bold">{t("title")}</h3>
             <p className="mt-2 text-gray-600">
-              Enter the emission amounts (in kgCO2e) for your school. The tool
-              will automatically calculate percentages for action impact
-              calculations.
+              {t("description")}
             </p>
           </div>
         </div>
         {percentages.totalEmissions > 0 && (
           <div className="mt-4 rounded-lg border border-blue-200 bg-blue-50 p-4">
             <h4 className="font-semibold text-blue-900">
-              Total School Emissions
+              {t("totalSchoolEmissions")}
             </h4>
             <p className="text-lg font-bold text-blue-800">
               {percentages.totalEmissions.toLocaleString()} kgCO2e
@@ -433,7 +433,7 @@ const EmissionDataManager: React.FC<EmissionDataManagerProps> = ({
                 {percentages.totalEmissions > 0 && (
                   <div className="text-right">
                     <div className="text-sm text-gray-500">
-                      Percentage of total
+                      {t("percentageOfTotal")}
                     </div>
                     <div className="text-lg font-bold text-green-600">
                       {percentages.categories.find(
@@ -447,7 +447,7 @@ const EmissionDataManager: React.FC<EmissionDataManagerProps> = ({
             </div>
 
             <div className="ml-4 space-y-3">
-              <h4 className="font-medium text-gray-700">Subcategories:</h4>
+              <h4 className="font-medium text-gray-700">{t("subcategories")}</h4>
               {category.subcategories.map((subcategory) => {
                 const categoryPercentages = percentages.categories.find(
                   (c) => c.categoryId === category.categoryId,
@@ -506,7 +506,7 @@ const EmissionDataManager: React.FC<EmissionDataManagerProps> = ({
                       {category.amount > 0 && (
                         <div className="min-w-[60px] text-right">
                           <div className="text-xs text-gray-500">
-                            % of category
+                            {t("percentOfCategory")}
                           </div>
                           <div className="text-primary text-sm font-semibold">
                             {subcategoryPercentage}%
@@ -531,10 +531,10 @@ const EmissionDataManager: React.FC<EmissionDataManagerProps> = ({
           {saving ? (
             <>
               <div className="loading loading-spinner loading-sm"></div>
-              Saving...
+              {t("saving")}
             </>
           ) : (
-            "Save Emission Data"
+            t("saveEmissionData")
           )}
         </button>
       </div>

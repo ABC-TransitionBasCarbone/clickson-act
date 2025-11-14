@@ -26,6 +26,8 @@ const Monitoring: React.FC = () => {
   const router = useRouter();
   const { user } = useUser();
   const t = useTranslations("TeacherDashboard");
+  const tMonitoring = useTranslations("MonitoringPage");
+  const tAction = useTranslations("Action");
 
   // Use emission categories hook to fetch from database
   const { categories: emissionCategories } = useEmissionCategories();
@@ -147,11 +149,11 @@ const Monitoring: React.FC = () => {
       if (response.ok) {
         setProjects(data.projects || []);
       } else {
-        setTeacherError(data.error || "Failed to fetch projects");
+        setTeacherError(data.error || t("failedToFetchProjects"));
       }
     } catch (error) {
       console.error("Error fetching projects:", error);
-      setTeacherError("Failed to fetch projects");
+      setTeacherError(t("failedToFetchProjects"));
     } finally {
       setTeacherLoading(false);
     }
@@ -203,10 +205,10 @@ const Monitoring: React.FC = () => {
         >
           <div className="mb-8">
             <h1 className="text-3xl font-bold tracking-tight">
-              Project Monitoring
+              {tMonitoring("projectMonitoring")}
             </h1>
             <p className="text-muted-foreground mt-1">
-              Select a project to monitor its progress and actions
+              {tMonitoring("selectProjectToMonitor")}
             </p>
           </div>
 
@@ -243,7 +245,7 @@ const Monitoring: React.FC = () => {
                       </p>
                     </div>
                     <div>
-                      <p className="text-muted-foreground">Sub Goal</p>
+                      <p className="text-muted-foreground">{tMonitoring("subGoal")}</p>
                       <p className="font-medium">
                         {typeof project.subGoalDeadline === "number"
                           ? project.subGoalDeadline
@@ -264,7 +266,7 @@ const Monitoring: React.FC = () => {
                       href={`/monitoring/${project.passcode}`}
                       className="btn btn-primary w-full"
                     >
-                      Monitor Project
+                      {tMonitoring("monitorProject")}
                     </Link>
                   )}
                 </div>
@@ -274,12 +276,12 @@ const Monitoring: React.FC = () => {
 
           {projects.length === 0 && (
             <div className="py-12 text-center">
-              <h2 className="mb-2 text-xl font-semibold">No Projects Found</h2>
+              <h2 className="mb-2 text-xl font-semibold">{tMonitoring("noProjectsFound")}</h2>
               <p className="mb-4 text-gray-600">
-                You haven&apos;t created any projects yet.
+                {tMonitoring("noProjectsDescription")}
               </p>
               <Link href="/dashboard" className="btn btn-primary">
-                Go to Dashboard
+                {tMonitoring("goToDashboard")}
               </Link>
             </div>
           )}
@@ -320,7 +322,7 @@ const Monitoring: React.FC = () => {
   const handleSubmitEdit = async (updatedAction: CustomAction) => {
     try {
       if (!user?.passcode) {
-        throw new Error("No project passcode available");
+        throw new Error(tAction("noProjectPasscodeAvailable"));
       }
 
       // Call the API to update the action in the database
@@ -334,7 +336,7 @@ const Monitoring: React.FC = () => {
 
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.error || "Failed to update action");
+        throw new Error(errorData.error || tAction("failedToUpdateAction").replace("{error}", errorData.error || ""));
       }
 
       // Update local state
@@ -360,7 +362,7 @@ const Monitoring: React.FC = () => {
     } catch (error) {
       console.error("Error updating action:", error);
       alert(
-        `Failed to update action: ${error instanceof Error ? error.message : "Unknown error"}`,
+        tAction("failedToUpdateAction", { error: error instanceof Error ? error.message : tAction("unknown") }),
       );
     }
   };
@@ -369,11 +371,11 @@ const Monitoring: React.FC = () => {
   const handleApproveChanges = async (action: CustomAction) => {
     try {
       if (!action.pendingChanges) {
-        throw new Error("No pending changes to approve");
+        throw new Error(tAction("noPendingChangesToApprove"));
       }
 
       if (!user?.passcode) {
-        throw new Error("No project passcode available");
+        throw new Error(tAction("noProjectPasscodeAvailable"));
       }
 
       // Apply the pending changes to the action
@@ -398,7 +400,7 @@ const Monitoring: React.FC = () => {
 
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.error || "Failed to approve changes");
+        throw new Error(errorData.error || tAction("failedToApproveChanges").replace("{error}", errorData.error || ""));
       }
 
       // Update local state
@@ -421,7 +423,7 @@ const Monitoring: React.FC = () => {
     } catch (error) {
       console.error("Error approving changes:", error);
       alert(
-        `Failed to approve changes: ${error instanceof Error ? error.message : "Unknown error"}`,
+        tAction("failedToApproveChanges", { error: error instanceof Error ? error.message : tAction("unknown") }),
       );
     }
   };
@@ -430,11 +432,11 @@ const Monitoring: React.FC = () => {
   const handleRejectChanges = async (action: CustomAction) => {
     try {
       if (!action.pendingChanges) {
-        throw new Error("No pending changes to reject");
+        throw new Error(tAction("noPendingChangesToReject"));
       }
 
       if (!user?.passcode) {
-        throw new Error("No project passcode available");
+        throw new Error(tAction("noProjectPasscodeAvailable"));
       }
 
       // Remove pending changes from the action
@@ -455,7 +457,7 @@ const Monitoring: React.FC = () => {
 
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.error || "Failed to reject changes");
+        throw new Error(errorData.error || tAction("failedToRejectChanges").replace("{error}", errorData.error || ""));
       }
 
       // Update local state
@@ -478,7 +480,7 @@ const Monitoring: React.FC = () => {
     } catch (error) {
       console.error("Error rejecting changes:", error);
       alert(
-        `Failed to reject changes: ${error instanceof Error ? error.message : "Unknown error"}`,
+        tAction("failedToRejectChanges", { error: error instanceof Error ? error.message : tAction("unknown") }),
       );
     }
   };
@@ -498,7 +500,7 @@ const Monitoring: React.FC = () => {
       console.log("Deleting action:", action.id);
 
       if (!user?.passcode) {
-        throw new Error("No project passcode available");
+        throw new Error(tAction("noProjectPasscodeAvailable"));
       }
 
       // Call the API to delete from database
@@ -511,7 +513,7 @@ const Monitoring: React.FC = () => {
 
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.error || "Failed to delete action");
+        throw new Error(errorData.error || tAction("failedToDeleteAction").replace("{error}", errorData.error || ""));
       }
 
       // Update local state
@@ -529,7 +531,7 @@ const Monitoring: React.FC = () => {
     } catch (error) {
       console.error("Error deleting action:", error);
       alert(
-        `Failed to delete action: ${error instanceof Error ? error.message : "Unknown error"}`,
+        tAction("failedToDeleteAction", { error: error instanceof Error ? error.message : tAction("unknown") }),
       );
     }
   };
@@ -544,9 +546,9 @@ const Monitoring: React.FC = () => {
         className="container mx-auto px-6 py-8"
       >
         <div className="mb-8">
-          <h1 className="text-3xl font-bold">Monitoring Dashboard</h1>
+          <h1 className="text-3xl font-bold">{tMonitoring("title")}</h1>
           <p className="mt-1 text-gray-500">
-            Track your progress and plan future actions
+            {tMonitoring("subtitle")}
             {projectData && ` - ${projectData.name}`}
           </p>
         </div>
@@ -573,15 +575,15 @@ const Monitoring: React.FC = () => {
         )}
 
         {loading ? (
-          <LoadingState message="Loading project data..." spinnerSize="large" />
+          <LoadingState message={tMonitoring("loadingProjectData")} spinnerSize="large" />
         ) : error ? (
           <div className="mb-8 rounded-lg bg-red-50 p-4">
-            <p className="text-red-700">Error: {error}</p>
+            <p className="text-red-700">{tMonitoring("errorColon")} {error}</p>
             <button
               onClick={refetch}
               className="mt-2 rounded bg-red-100 px-3 py-1 text-red-700 hover:bg-red-200"
             >
-              Retry
+              {tMonitoring("retry")}
             </button>
           </div>
         ) : (
@@ -611,9 +613,9 @@ const Monitoring: React.FC = () => {
           categories={categories}
           subcategoryOptions={subcategoryOptions}
           effortCategories={[
-            { value: "easy", label: "Easy" },
-            { value: "medium", label: "Medium" },
-            { value: "hard", label: "Hard" },
+            { value: "easy", label: tAction("Easy") },
+            { value: "medium", label: tAction("Medium") },
+            { value: "hard", label: tAction("Hard") },
           ]}
           initialAction={editingAction}
         />
@@ -625,9 +627,9 @@ const Monitoring: React.FC = () => {
           categories={categories}
           subcategoryOptions={subcategoryOptions}
           effortCategories={[
-            { value: "easy", label: "Easy" },
-            { value: "medium", label: "Medium" },
-            { value: "hard", label: "Hard" },
+            { value: "easy", label: tAction("Easy") },
+            { value: "medium", label: tAction("Medium") },
+            { value: "hard", label: tAction("Hard") },
           ]}
           initialAction={undefined}
         />
