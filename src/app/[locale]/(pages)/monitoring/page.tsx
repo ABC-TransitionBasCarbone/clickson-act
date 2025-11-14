@@ -14,6 +14,7 @@ import { useUser } from "@/context/UserContext";
 import { useProjectData } from "@/hooks/useProjectData";
 import { useEmissionCategories } from "@/hooks/useEmissionCategories";
 import Project from "@/types/ProjectType";
+import LoadingState from "@/components/ui/LoadingState";
 
 // Custom action interface that extends Action
 interface CustomAction extends Action {
@@ -167,14 +168,11 @@ const Monitoring: React.FC = () => {
   if (user && !user.passcode) {
     if (teacherLoading) {
       return (
-        <div className="min-h-screen bg-gray-50">
-          <div className="container mx-auto px-6 py-8">
-            <div className="text-center">
-              <div className="mx-auto h-32 w-32 animate-spin rounded-full border-b-2 border-gray-900"></div>
-              <p className="mt-4 text-gray-600">Loading projects...</p>
-            </div>
-          </div>
-        </div>
+        <LoadingState
+          messageKey="loadingProjects"
+          namespace="DataReporting"
+          spinnerSize="large"
+        />
       );
     }
 
@@ -575,12 +573,7 @@ const Monitoring: React.FC = () => {
         )}
 
         {loading ? (
-          <div className="flex h-64 items-center justify-center">
-            <div className="text-center">
-              <div className="border-t-primary mx-auto mb-4 h-8 w-8 animate-spin rounded-full border-4 border-gray-300"></div>
-              <p className="text-gray-500">Loading project data...</p>
-            </div>
-          </div>
+          <LoadingState message="Loading project data..." spinnerSize="large" />
         ) : error ? (
           <div className="mb-8 rounded-lg bg-red-50 p-4">
             <p className="text-red-700">Error: {error}</p>

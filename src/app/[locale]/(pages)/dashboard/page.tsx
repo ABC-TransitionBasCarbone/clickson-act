@@ -22,6 +22,7 @@ import { Link, useRouter } from "@/i18n/navigation";
 import EmissionDataManager from "@/components/teacher/EmissionDataManager";
 import PendingActionsManager from "@/components/teacher/PendingActionsManager";
 import PendingTeachersManager from "@/components/teacher/PendingTeachersManager";
+import LoadingState from "@/components/ui/LoadingState";
 
 const TeacherDashboard: React.FC = () => {
   const t = useTranslations("TeacherDashboard");
@@ -282,12 +283,11 @@ const TeacherDashboard: React.FC = () => {
 
   if (loading) {
     return (
-      <div className="container mx-auto px-6 py-8">
-        <div className="text-center">
-          <div className="mx-auto h-32 w-32 animate-spin rounded-full border-b-2 border-gray-900"></div>
-          <p className="mt-4 text-gray-600">Loading projects...</p>
-        </div>
-      </div>
+      <LoadingState
+        messageKey="loadingProjects"
+        namespace="DataReporting"
+        spinnerSize="large"
+      />
     );
   }
 

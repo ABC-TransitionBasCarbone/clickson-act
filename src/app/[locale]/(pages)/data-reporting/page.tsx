@@ -10,6 +10,7 @@ import Modal from "@/components/Modal";
 import LoginForm from "@/components/User/LoginForm ";
 import SignUpForm from "@/components/User/SignUpForm";
 import PassCodeForm from "@/components/User/PassCodeForm ";
+import LoadingState from "@/components/ui/LoadingState";
 
 const DataReportingIndex: React.FC = () => {
   const t = useTranslations("DataReporting");
@@ -71,14 +72,11 @@ const DataReportingIndex: React.FC = () => {
 
   if (loading) {
     return (
-      <div className="bg-gray-100 min-h-svh">
-        <div className="mx-auto px-6 py-8 container">
-          <div className="text-center">
-            <div className="mx-auto border-gray-900 border-b-2 rounded-full w-32 h-32 animate-spin"></div>
-            <p className="mt-4 text-gray-600">{t("loadingProjects")}</p>
-          </div>
-        </div>
-      </div>
+      <LoadingState 
+        messageKey="loadingProjects"
+        namespace="DataReporting"
+        spinnerSize="large"
+      />
     );
   }
 

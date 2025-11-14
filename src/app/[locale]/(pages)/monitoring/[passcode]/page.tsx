@@ -13,6 +13,7 @@ import CurrentActions from "@/components/(action)/CurrentActions";
 import { useUser } from "@/context/UserContext";
 import { useProjectData } from "@/hooks/useProjectData";
 import { useEmissionCategories } from "@/hooks/useEmissionCategories";
+import LoadingState from "@/components/ui/LoadingState";
 
 const ProjectMonitoring: React.FC = () => {
   const router = useRouter();
@@ -430,12 +431,7 @@ const ProjectMonitoring: React.FC = () => {
         )}
 
         {loading ? (
-          <div className="flex h-64 items-center justify-center">
-            <div className="text-center">
-              <div className="border-t-primary mx-auto mb-4 h-8 w-8 animate-spin rounded-full border-4 border-gray-300"></div>
-              <p className="text-gray-500">Loading project data...</p>
-            </div>
-          </div>
+          <LoadingState message="Loading project data..." spinnerSize="large" />
         ) : error ? (
           <div className="mb-8 rounded-lg bg-red-50 p-4">
             <p className="text-red-700">Error: {error}</p>
