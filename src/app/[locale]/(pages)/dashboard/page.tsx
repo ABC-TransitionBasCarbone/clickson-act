@@ -442,9 +442,14 @@ const TeacherDashboard: React.FC = () => {
                             {t("viewDetails")}
                           </Link>
                         )}
-                        <Link href="/monitoring" className="btn btn-secondary">
-                          {t("monitoring")}
-                        </Link>
+                        {project.passcode && (
+                          <Link
+                            href={`/monitoring/${project.passcode}`}
+                            className="btn btn-secondary"
+                          >
+                            {t("monitoring")}
+                          </Link>
+                        )}
                       </div>
                     </div>
                   </div>

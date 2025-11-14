@@ -206,7 +206,15 @@ const countries = [
   "Zimbabwe",
 ];
 
-const SignUpForm = () => {
+interface SignUpFormProps {
+  onStayOnPage?: boolean;
+  onSignupSuccess?: () => void;
+}
+
+const SignUpForm: React.FC<SignUpFormProps> = ({
+  onStayOnPage = false,
+  onSignupSuccess,
+}) => {
   const t = useTranslations();
   const router = useRouter();
   const { user, setUser } = useUser();
@@ -258,11 +266,15 @@ const SignUpForm = () => {
       const modal = document.getElementById(
         "signup",
       ) as HTMLDialogElement | null;
-      const isModalOpen = modal?.open;
+      const unifiedModal = document.getElementById(
+        "unified-auth-modal",
+      ) as HTMLDialogElement | null;
+      const isModalOpen = modal?.open || unifiedModal?.open;
 
-      if (isModalOpen) {
+      if (isModalOpen && !onStayOnPage) {
         // Close the modal if it's open
         if (modal) modal.close();
+        if (unifiedModal) unifiedModal.close();
 
         // Redirect based on user type
         if (user.passcode) {
@@ -274,7 +286,7 @@ const SignUpForm = () => {
         }
       }
     }
-  }, [user, router]);
+  }, [user, router, onStayOnPage]);
 
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>,
@@ -319,8 +331,15 @@ const SignUpForm = () => {
         role: data.user.role,
       });
 
-      // Redirect teacher to dashboard after successful registration (using i18n navigation)
-      router.push("/dashboard");
+      // Call success callback if provided
+      if (onSignupSuccess) {
+        onSignupSuccess();
+      }
+
+      // Redirect teacher to dashboard after successful registration (using i18n navigation) unless staying on page
+      if (!onStayOnPage) {
+        router.push("/dashboard");
+      }
     } catch (err: unknown) {
       let message = "Unknown error";
       if (err instanceof Error) {
@@ -540,22 +559,24 @@ const SignUpForm = () => {
         {t("User.signup")}
       </button>
 
-      <button
-        type="button"
-        className="btn btn-link capitalize"
-        onClick={() => {
-          const loginModal = document.getElementById(
-            "login",
-          ) as HTMLDialogElement;
-          const signupModal = document.getElementById(
-            "signup",
-          ) as HTMLDialogElement;
-          if (signupModal) signupModal.close();
-          if (loginModal) loginModal.showModal();
-        }}
-      >
-        Already have an account? Login
-      </button>
+      {!onStayOnPage && (
+        <button
+          type="button"
+          className="btn btn-link capitalize"
+          onClick={() => {
+            const loginModal = document.getElementById(
+              "login",
+            ) as HTMLDialogElement;
+            const signupModal = document.getElementById(
+              "signup",
+            ) as HTMLDialogElement;
+            if (signupModal) signupModal.close();
+            if (loginModal) loginModal.showModal();
+          }}
+        >
+          Already have an account? Login
+        </button>
+      )}
     </form>
   );
 };

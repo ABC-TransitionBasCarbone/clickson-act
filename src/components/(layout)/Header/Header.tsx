@@ -11,16 +11,12 @@ import {
   LayoutDashboard,
   ChevronDown,
   LogIn,
-  Users,
 } from "lucide-react";
 import NavLinks from "./NavLinks";
 import MobileMenu from "./MobileMenu";
 import BurgerButton from "./BurgerButton";
 import LanguageSelector from "./LanguageSelector";
-import LoginForm from "../../User/LoginForm ";
-import PassCodeForm from "../../User/PassCodeForm ";
-import SignUpForm from "../../User/SignUpForm";
-import Modal from "../../Modal";
+import UnifiedAuthModal from "../../User/UnifiedAuthModal";
 
 const Header = () => {
   const pathname = usePathname();
@@ -29,9 +25,8 @@ const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [showLogoutModal, setShowLogoutModal] = useState(false);
   const [showUserDropdown, setShowUserDropdown] = useState(false);
-  const [showAuthDropdown, setShowAuthDropdown] = useState(false);
+  const [showAuthModal, setShowAuthModal] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
-  const authDropdownRef = useRef<HTMLDivElement>(null);
 
   const handleLogout = () => {
     setUser(null);
@@ -47,12 +42,6 @@ const Header = () => {
         !dropdownRef.current.contains(event.target as Node)
       ) {
         setShowUserDropdown(false);
-      }
-      if (
-        authDropdownRef.current &&
-        !authDropdownRef.current.contains(event.target as Node)
-      ) {
-        setShowAuthDropdown(false);
       }
     };
 
@@ -147,51 +136,13 @@ const Header = () => {
                 )}
               </div>
             ) : (
-              <div className="relative hidden lg:block" ref={authDropdownRef}>
-                <button
-                  onClick={() => setShowAuthDropdown(!showAuthDropdown)}
-                  className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-100"
-                >
-                  <LogIn size={16} />
-                  <span>Login/Connect</span>
-                  <ChevronDown
-                    size={14}
-                    className={`transition-transform ${showAuthDropdown ? "rotate-180" : ""}`}
-                  />
-                </button>
-
-                {/* Auth Dropdown Menu */}
-                {showAuthDropdown && (
-                  <div className="absolute right-0 z-50 mt-2 w-48 rounded-lg border border-gray-200 bg-white py-1 shadow-lg">
-                    <button
-                      onClick={() => {
-                        const modal = document.getElementById(
-                          "login",
-                        ) as HTMLDialogElement;
-                        if (modal) modal.showModal();
-                        setShowAuthDropdown(false);
-                      }}
-                      className="flex w-full items-center gap-3 px-4 py-2 text-left text-sm text-gray-700 transition-colors hover:bg-gray-100"
-                    >
-                      <User size={16} />
-                      Teacher
-                    </button>
-                    <button
-                      onClick={() => {
-                        const modal = document.getElementById(
-                          "passcode",
-                        ) as HTMLDialogElement;
-                        if (modal) modal.showModal();
-                        setShowAuthDropdown(false);
-                      }}
-                      className="flex w-full items-center gap-3 px-4 py-2 text-left text-sm text-gray-700 transition-colors hover:bg-gray-100"
-                    >
-                      <Users size={16} />
-                      Student
-                    </button>
-                  </div>
-                )}
-              </div>
+              <button
+                onClick={() => setShowAuthModal(true)}
+                className="hidden items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-100 lg:flex"
+              >
+                <LogIn size={16} />
+                <span>Login/Connect</span>
+              </button>
             )}
 
             {/* Language Selector */}
@@ -212,6 +163,7 @@ const Header = () => {
         onClose={() => setIsMenuOpen(false)}
         showLogoutModal={showLogoutModal}
         setShowLogoutModal={setShowLogoutModal}
+        onOpenAuthModal={() => setShowAuthModal(true)}
       />
 
       {/* Logout Confirmation Modal */}
@@ -241,16 +193,11 @@ const Header = () => {
         </div>
       )}
 
-      {/* Modals */}
-      <Modal id="login" title="Teacher Login">
-        <LoginForm />
-      </Modal>
-      <Modal id="signup" title="Teacher Registration">
-        <SignUpForm />
-      </Modal>
-      <Modal id="passcode" title="Student Connect">
-        <PassCodeForm />
-      </Modal>
+      {/* Unified Auth Modal */}
+      <UnifiedAuthModal
+        isOpen={showAuthModal}
+        onClose={() => setShowAuthModal(false)}
+      />
     </>
   );
 };

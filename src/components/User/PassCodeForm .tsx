@@ -6,7 +6,15 @@ import { User, RectangleEllipsis } from "lucide-react";
 import { useRouter } from "@/i18n/navigation";
 import { useUser } from "@/context/UserContext";
 
-const PassCodeForm = () => {
+interface PassCodeFormProps {
+  onStayOnPage?: boolean;
+  onLoginSuccess?: () => void;
+}
+
+const PassCodeForm: React.FC<PassCodeFormProps> = ({
+  onStayOnPage = false,
+  onLoginSuccess,
+}) => {
   const t = useTranslations();
   const router = useRouter();
   const { user, setUser } = useUser();
@@ -20,15 +28,19 @@ const PassCodeForm = () => {
       const modal = document.getElementById(
         "passcode",
       ) as HTMLDialogElement | null;
-      const isModalOpen = modal?.open;
+      const unifiedModal = document.getElementById(
+        "unified-auth-modal",
+      ) as HTMLDialogElement | null;
+      const isModalOpen = modal?.open || unifiedModal?.open;
 
-      if (isModalOpen) {
+      if (isModalOpen && !onStayOnPage) {
         // Close the modal and redirect
         if (modal) modal.close();
+        if (unifiedModal) unifiedModal.close();
         router.push(`/data-reporting/${user.passcode}`);
       }
     }
-  }, [user, router]);
+  }, [user, router, onStayOnPage]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -53,8 +65,16 @@ const PassCodeForm = () => {
         passcode: formData.passcode,
         studentId: data.studentId,
       });
-      // Redirect student to their calculator (using i18n navigation)
-      router.push(`/data-reporting/${formData.passcode}`);
+
+      // Call success callback if provided
+      if (onLoginSuccess) {
+        onLoginSuccess();
+      }
+
+      // Redirect student to their calculator (using i18n navigation) unless staying on page
+      if (!onStayOnPage) {
+        router.push(`/data-reporting/${formData.passcode}`);
+      }
     } catch (err: unknown) {
       let message = "Unknown error";
       if (err instanceof Error) {

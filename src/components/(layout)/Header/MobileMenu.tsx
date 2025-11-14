@@ -1,18 +1,20 @@
 import { motion } from "motion/react";
 import { Link } from "@/i18n/navigation";
 import { useUser } from "@/context/UserContext";
-import { User, LogOut, LayoutDashboard, Users } from "lucide-react";
+import { User, LogOut, LayoutDashboard, LogIn } from "lucide-react";
 import NavLinks from "./NavLinks";
 
 const MobileMenu = ({
   isOpen,
   onClose,
   setShowLogoutModal,
+  onOpenAuthModal,
 }: {
   isOpen: boolean;
   onClose: () => void;
   showLogoutModal: boolean;
   setShowLogoutModal: (show: boolean) => void;
+  onOpenAuthModal: () => void;
 }) => {
   const { user } = useUser();
 
@@ -78,37 +80,16 @@ const MobileMenu = ({
             <div className="mt-5 rounded-lg border border-gray-200 bg-white">
               {/* Auth options */}
               <div className="p-3">
-                <h3 className="mb-3 text-sm font-medium text-gray-700">
+                <button
+                  onClick={() => {
+                    onOpenAuthModal();
+                    onClose();
+                  }}
+                  className="flex w-full items-center gap-3 rounded-lg px-4 py-2 text-sm text-gray-700 transition-colors hover:bg-gray-100"
+                >
+                  <LogIn size={16} />
                   Login/Connect
-                </h3>
-                <div className="space-y-2">
-                  <button
-                    onClick={() => {
-                      const modal = document.getElementById(
-                        "login",
-                      ) as HTMLDialogElement;
-                      if (modal) modal.showModal();
-                      onClose();
-                    }}
-                    className="flex w-full items-center gap-3 rounded-lg px-4 py-2 text-sm text-gray-700 transition-colors hover:bg-gray-100"
-                  >
-                    <User size={16} />
-                    Teacher
-                  </button>
-                  <button
-                    onClick={() => {
-                      const modal = document.getElementById(
-                        "passcode",
-                      ) as HTMLDialogElement;
-                      if (modal) modal.showModal();
-                      onClose();
-                    }}
-                    className="flex w-full items-center gap-3 rounded-lg px-4 py-2 text-sm text-gray-700 transition-colors hover:bg-gray-100"
-                  >
-                    <Users size={16} />
-                    Student
-                  </button>
-                </div>
+                </button>
               </div>
             </div>
           )}

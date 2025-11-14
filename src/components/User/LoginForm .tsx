@@ -11,7 +11,15 @@ const openModal = (id: string) => {
   if (modal) modal.showModal();
 };
 
-const LoginForm = () => {
+interface LoginFormProps {
+  onStayOnPage?: boolean;
+  onLoginSuccess?: () => void;
+}
+
+const LoginForm: React.FC<LoginFormProps> = ({
+  onStayOnPage = false,
+  onLoginSuccess,
+}) => {
   const t = useTranslations();
   const router = useRouter();
   const { user, setUser } = useUser();
@@ -25,11 +33,15 @@ const LoginForm = () => {
       const modal = document.getElementById(
         "login",
       ) as HTMLDialogElement | null;
-      const isModalOpen = modal?.open;
+      const unifiedModal = document.getElementById(
+        "unified-auth-modal",
+      ) as HTMLDialogElement | null;
+      const isModalOpen = modal?.open || unifiedModal?.open;
 
-      if (isModalOpen) {
+      if (isModalOpen && !onStayOnPage) {
         // Close the modal if it's open
         if (modal) modal.close();
+        if (unifiedModal) unifiedModal.close();
 
         // Redirect based on user type
         if (user.passcode) {
@@ -41,7 +53,7 @@ const LoginForm = () => {
         }
       }
     }
-  }, [user, router]);
+  }, [user, router, onStayOnPage]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -94,8 +106,15 @@ const LoginForm = () => {
           : undefined,
       });
 
-      // Redirect to dashboard after teacher login (using i18n navigation)
-      router.push("/dashboard");
+      // Call success callback if provided
+      if (onLoginSuccess) {
+        onLoginSuccess();
+      }
+
+      // Redirect to dashboard after teacher login (using i18n navigation) unless staying on page
+      if (!onStayOnPage) {
+        router.push("/dashboard");
+      }
     } catch (err: unknown) {
       let message = "Unknown error";
       if (err instanceof Error) {
@@ -113,17 +132,24 @@ const LoginForm = () => {
         "login",
       ) as HTMLDialogElement | null;
       if (modal) modal.close();
-      router.push("/dashboard");
+      if (!onStayOnPage) {
+        router.push("/dashboard");
+      }
     } else if (user && user.passcode) {
       // User is logged in as student, redirect to their calculator
       const modal = document.getElementById(
         "login",
       ) as HTMLDialogElement | null;
       if (modal) modal.close();
-      router.push(`/data-reporting/${user.passcode}`);
+      if (!onStayOnPage) {
+        router.push(`/data-reporting/${user.passcode}`);
+      }
     } else {
       // User is not logged in, open the signup modal
-      openModal("signup");
+      // If in unified modal, this will be handled by parent
+      if (!onStayOnPage) {
+        openModal("signup");
+      }
     }
   };
 
@@ -192,13 +218,15 @@ const LoginForm = () => {
           {t("User.login")}
         </button>
 
-        <button
-          type="button"
-          className="btn btn-link capitalize"
-          onClick={handleSignupClick}
-        >
-          {t("User.signup")}
-        </button>
+        {!onStayOnPage && (
+          <button
+            type="button"
+            className="btn btn-link capitalize"
+            onClick={handleSignupClick}
+          >
+            {t("User.signup")}
+          </button>
+        )}
       </div>
     </form>
   );
