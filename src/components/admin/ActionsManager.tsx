@@ -298,14 +298,14 @@ const ActionsManager: React.FC = () => {
           // Debug logging for action translation issues
           if (
             !translatedAction.title ||
-            translatedAction.title === "Untitled Action"
+            translatedAction.title === tAction("untitledAction")
           ) {
             console.log("Action with missing/fallback title:", {
               actionId: action.id,
               selectedLocale,
               availableTranslations: action.translations
                 ? Object.keys(action.translations)
-                : "No translations",
+                : tAction("noTranslations"),
               translationData: action.translations,
               resultTitle: translatedAction.title,
             });
@@ -349,7 +349,7 @@ const ActionsManager: React.FC = () => {
                           );
                           return translatedCategory.name;
                         }
-                        return action.category || "Unknown Category";
+                        return action.category || tAction("unknownCategory");
                       })()}
                     </span>
                     <span
@@ -357,7 +357,7 @@ const ActionsManager: React.FC = () => {
                     >
                       {action.type}
                     </span>
-                    <span>Reduction: {action.reduction}%</span>
+                    <span>{tAction("reduction")} {action.reduction}%</span>
                     <span>Effort: {tAction(action.effort)}</span>
                   </div>
                 </div>
@@ -855,7 +855,7 @@ const ActionsManager: React.FC = () => {
                     })
                   }
                   className="input-bordered w-full input"
-                  placeholder="Number of years"
+                  placeholder={tAction("numberOfYears")}
                 />
               </div>
             </div>

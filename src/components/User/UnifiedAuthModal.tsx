@@ -15,7 +15,7 @@ const UnifiedAuthModal: React.FC<UnifiedAuthModalProps> = ({
   isOpen,
   onClose,
 }) => {
-  const t = useTranslations();
+  const t = useTranslations("User");
   const [activeTab, setActiveTab] = useState<"teacher" | "student">("teacher");
   const [showRegister, setShowRegister] = useState(false);
   const dialogRef = useRef<HTMLDialogElement>(null);
@@ -48,12 +48,12 @@ const UnifiedAuthModal: React.FC<UnifiedAuthModalProps> = ({
       className="modal"
       onClose={handleClose}
     >
-      <div className="modal-box flex flex-col gap-5 max-w-md">
-        <h3 className="text-lg font-bold">Login / Register</h3>
+      <div className="modal-box flex max-w-md flex-col gap-5">
+        <h3 className="text-lg font-bold">{t("loginRegister")}</h3>
 
         {/* Tabs */}
         <div className="border-b border-gray-200">
-          <nav className="flex space-x-4 -mb-px">
+          <nav className="-mb-px flex space-x-4">
             <button
               onClick={() => {
                 setActiveTab("teacher");
@@ -65,7 +65,7 @@ const UnifiedAuthModal: React.FC<UnifiedAuthModalProps> = ({
                   : "border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700"
               }`}
             >
-              Teacher
+              {t("teacher")}
             </button>
             <button
               onClick={() => {
@@ -78,7 +78,7 @@ const UnifiedAuthModal: React.FC<UnifiedAuthModalProps> = ({
                   : "border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700"
               }`}
             >
-              Student
+              {t("student")}
             </button>
           </nav>
         </div>
@@ -99,10 +99,10 @@ const UnifiedAuthModal: React.FC<UnifiedAuthModalProps> = ({
                   <div className="text-center">
                     <button
                       type="button"
-                      className="btn btn-link capitalize text-sm"
+                      className="btn btn-link text-sm capitalize"
                       onClick={() => setShowRegister(true)}
                     >
-                      Don't have an account? Register
+                      {t("dontHaveAccount")}
                     </button>
                   </div>
                 </>
@@ -118,10 +118,10 @@ const UnifiedAuthModal: React.FC<UnifiedAuthModalProps> = ({
                   <div className="text-center">
                     <button
                       type="button"
-                      className="btn btn-link capitalize text-sm"
+                      className="btn btn-link text-sm capitalize"
                       onClick={() => setShowRegister(false)}
                     >
-                      Already have an account? Login
+                      {t("alreadyHaveAccount")}
                     </button>
                   </div>
                 </>
@@ -139,11 +139,10 @@ const UnifiedAuthModal: React.FC<UnifiedAuthModalProps> = ({
         </div>
       </div>
       <form method="dialog" className="modal-backdrop">
-        <button onClick={handleClose}>close</button>
+        <button onClick={handleClose}>{t("close")}</button>
       </form>
     </dialog>
   );
 };
 
 export default UnifiedAuthModal;
-

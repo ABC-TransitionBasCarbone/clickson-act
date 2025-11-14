@@ -29,7 +29,23 @@
     "schoolGoal": "Στόχος Σχολείου",
     "schoolGoalHelp": "Ορίστε το ποσοστό μείωσης εκπομπών που στοχεύει να επιτύχει το σχολείο σας (π.χ., 50% σημαίνει μείωση εκπομπών κατά το ήμισυ)",
     "deadlineYear": "Έτος Παράδοσης",
-    "deadlineYearHelp": "Επιλέξτε το έτος-στόχο μέχρι το οποίο το σχολείο σας θέλει να επιτύχει τον στόχο μείωσης εκπομπών"
+    "deadlineYearHelp": "Επιλέξτε το έτος-στόχο μέχρι το οποίο το σχολείο σας θέλει να επιτύχει τον στόχο μείωσης εκπομπών",
+    "loginRegister": "Σύνδεση / Εγγραφή",
+    "teacher": "Δάσκαλος",
+    "student": "Μαθητής",
+    "dontHaveAccount": "Δεν έχετε λογαριασμό; Εγγραφείτε",
+    "alreadyHaveAccount": "Έχετε ήδη λογαριασμό; Συνδεθείτε",
+    "close": "κλείσιμο",
+    "loginFailed": "Η σύνδεση απέτυχε",
+    "registrationFailed": "Η εγγραφή απέτυχε",
+    "unknownError": "Άγνωστο σφάλμα",
+    "alreadyLoggedInAs": "Είστε ήδη συνδεδεμένοι ως",
+    "passcodeColon": "Κωδικός:",
+    "goToCalculator": "Πήγαινε στον Υπολογιστή",
+    "withPasscode": "με κωδικό",
+    "continueToCalculator": "Συνέχεια στον Υπολογιστή",
+    "loadingSchools": "Φόρτωση σχολείων...",
+    "other": "Άλλο"
   },
 
   "HomePage": {
@@ -328,7 +344,21 @@
     "failedToDeleteAction": "Αποτυχία διαγραφής ενέργειας: {error}",
     "noPendingChangesToApprove": "Δεν υπάρχουν εκκρεμείς αλλαγές προς έγκριση",
     "noPendingChangesToReject": "Δεν υπάρχουν εκκρεμείς αλλαγές προς απόρριψη",
-    "noProjectPasscodeAvailable": "Δεν υπάρχει διαθέσιμος κωδικός έργου"
+    "noProjectPasscodeAvailable": "Δεν υπάρχει διαθέσιμος κωδικός έργου",
+    "modifyAction": "Τροποποίηση Ενέργειας",
+    "validationError": "Σφάλμα Επικύρωσης",
+    "fillAllRequiredFields": "Παρακαλώ συμπληρώστε όλα τα υποχρεωτικά πεδία.",
+    "failedToCreateCustomAction": "Αποτυχία δημιουργίας προσαρμοσμένης ενέργειας",
+    "actionSubmitted": "Η Ενέργεια Υποβλήθηκε!",
+    "actionSubmittedForApproval": "\"{title}\" έχει υποβληθεί για έγκριση δασκάλου.",
+    "failedToCreateCustomActionTitle": "Αποτυχία Δημιουργίας Προσαρμοσμένης Ενέργειας",
+    "couldNotCreateCustomAction": "Δεν ήταν δυνατή η δημιουργία προσαρμοσμένης ενέργειας: {error}",
+    "submitting": "Υποβολή...",
+    "untitledAction": "Ενέργεια Χωρίς Τίτλο",
+    "noTranslations": "Δεν υπάρχουν μεταφράσεις",
+    "unknownCategory": "Άγνωστη Κατηγορία",
+    "reduction": "Μείωση:",
+    "years": "έτος/έτη"
   },
 
   "AdminDashboard": {
@@ -419,5 +449,59 @@
     "failedToLoadCategories": "Αποτυχία φόρτωσης κατηγοριών εκπομπών",
     "failedToSaveData": "Αποτυχία αποθήκευσης δεδομένων εκπομπών",
     "emissionDataSavedSuccessfully": "Τα δεδομένα εκπομπών αποθηκεύτηκαν με επιτυχία"
+  },
+
+  "PendingTeachers": {
+    "loadingPendingTeachers": "Φόρτωση εκκρεμών δασκάλων...",
+    "pendingTeacherApprovals": "Εκκρεμείς Εγκρίσεις Δασκάλων",
+    "teachersWaitingForApproval": "Δάσκαλοι που περιμένουν την έγκρισή σας για να συμμετάσχουν σε αυτό το σχολείο",
+    "requested": "Ζητήθηκε:",
+    "approveTeacher": "Έγκριση δασκάλου",
+    "rejectTeacher": "Απόρριψη δασκάλου",
+    "approve": "Έγκριση",
+    "reject": "Απόρριψη",
+    "success": "Επιτυχία",
+    "error": "Σφάλμα",
+    "teacherApprovedSuccessfully": "Ο δάσκαλος εγκρίθηκε με επιτυχία",
+    "failedToApproveTeacher": "Αποτυχία έγκρισης δασκάλου",
+    "teacherRejected": "Ο δάσκαλος απορρίφθηκε",
+    "failedToRejectTeacher": "Αποτυχία απόρριψης δασκάλου",
+    "confirmRejectTeacher": "Είστε σίγουροι ότι θέλετε να απορρίψετε αυτόν τον δάσκαλο; Ο λογαριασμός του θα διαγραφεί."
+  },
+
+  "PendingActions": {
+    "loadingPendingActions": "Φόρτωση εκκρεμών ενεργειών...",
+    "noPendingActions": "Δεν Υπάρχουν Εκκρεμείς Ενέργειες",
+    "allActionsReviewed": "Όλες οι ενέργειες μαθητών έχουν αναθεωρηθεί.",
+    "pendingStudentActions": "Εκκρεμείς Ενέργειες Μαθητών",
+    "reviewAndApprove": "Αναθεωρήστε και εγκρίνετε ή απορρίψτε ενέργειες που υποβλήθηκαν από μαθητές.",
+    "by": "από",
+    "impact": "Αντίκτυπος",
+    "categoryColon": "Κατηγορία:",
+    "subcategoriesColon": "Υποκατηγορίες:",
+    "typeOfImpactColon": "Τύπος αντίκτυπου:",
+    "customActionDetails": "Λεπτομέρειες Προσαρμοσμένης Ενέργειας",
+    "effortColon": "Προσπάθεια:",
+    "timelineColon": "Χρονοδιάγραμμα:",
+    "reductionColon": "Μείωση:",
+    "approve": "Έγκριση",
+    "reject": "Απόρριψη",
+    "actionRejectedByTeacher": "Η ενέργεια απορρίφθηκε από τον δάσκαλο",
+    "error": "Σφάλμα",
+    "success": "Επιτυχία",
+    "failedToLoadPendingActions": "Αποτυχία φόρτωσης εκκρεμών ενεργειών",
+    "approvedSuccessfully": "εγκρίθηκε με επιτυχία",
+    "rejectedSuccessfully": "απορρίφθηκε με επιτυχία",
+    "failedTo": "Αποτυχία",
+    "action": "ενέργεια"
+  },
+
+  "CategoriesManager": {
+    "failedToCreateCategory": "Αποτυχία δημιουργίας κατηγορίας",
+    "failedToCreateSubcategory": "Αποτυχία δημιουργίας υποκατηγορίας",
+    "enterCategoryName": "Εισάγετε όνομα κατηγορίας",
+    "enterDescription": "Εισάγετε περιγραφή",
+    "enterSubcategoryName": "Εισάγετε όνομα υποκατηγορίας",
+    "saving": "Αποθήκευση..."
   }
 }

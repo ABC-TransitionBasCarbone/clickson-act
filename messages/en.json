@@ -29,7 +29,23 @@
     "schoolGoal": "School Goal",
     "schoolGoalHelp": "Set the percentage of emission reduction your school aims to achieve (e.g., 50% means reducing emissions by half)",
     "deadlineYear": "Deadline Year",
-    "deadlineYearHelp": "Choose the target year by which your school wants to achieve the emission reduction goal"
+    "deadlineYearHelp": "Choose the target year by which your school wants to achieve the emission reduction goal",
+    "loginRegister": "Login / Register",
+    "teacher": "Teacher",
+    "student": "Student",
+    "dontHaveAccount": "Don't have an account? Register",
+    "alreadyHaveAccount": "Already have an account? Login",
+    "close": "close",
+    "loginFailed": "Login failed",
+    "registrationFailed": "Registration failed",
+    "unknownError": "Unknown error",
+    "alreadyLoggedInAs": "You are already logged in as",
+    "passcodeColon": "Passcode:",
+    "goToCalculator": "Go to Calculator",
+    "withPasscode": "with passcode",
+    "continueToCalculator": "Continue to Calculator",
+    "loadingSchools": "Loading schools...",
+    "other": "Other"
   },
 
   "HomePage": {
@@ -400,7 +416,21 @@
     "failedToDeleteAction": "Failed to delete action: {error}",
     "noPendingChangesToApprove": "No pending changes to approve",
     "noPendingChangesToReject": "No pending changes to reject",
-    "noProjectPasscodeAvailable": "No project passcode available"
+    "noProjectPasscodeAvailable": "No project passcode available",
+    "modifyAction": "Modify Action",
+    "validationError": "Validation Error",
+    "fillAllRequiredFields": "Please fill in all required fields.",
+    "failedToCreateCustomAction": "Failed to create custom action",
+    "actionSubmitted": "Action Submitted!",
+    "actionSubmittedForApproval": "\"{title}\" has been submitted for teacher approval.",
+    "failedToCreateCustomActionTitle": "Failed to Create Custom Action",
+    "couldNotCreateCustomAction": "Could not create custom action: {error}",
+    "submitting": "Submitting...",
+    "untitledAction": "Untitled Action",
+    "noTranslations": "No translations",
+    "unknownCategory": "Unknown Category",
+    "reduction": "Reduction:",
+    "years": "year(s)"
   },
 
   "AdminDashboard": {
@@ -477,5 +507,59 @@
     "failedToLoadCategories": "Failed to load emission categories",
     "failedToSaveData": "Failed to save emission data",
     "emissionDataSavedSuccessfully": "Emission data saved successfully"
+  },
+
+  "PendingTeachers": {
+    "loadingPendingTeachers": "Loading pending teachers...",
+    "pendingTeacherApprovals": "Pending Teacher Approvals",
+    "teachersWaitingForApproval": "Teachers waiting for your approval to join this school",
+    "requested": "Requested:",
+    "approveTeacher": "Approve teacher",
+    "rejectTeacher": "Reject teacher",
+    "approve": "Approve",
+    "reject": "Reject",
+    "success": "Success",
+    "error": "Error",
+    "teacherApprovedSuccessfully": "Teacher approved successfully",
+    "failedToApproveTeacher": "Failed to approve teacher",
+    "teacherRejected": "Teacher rejected",
+    "failedToRejectTeacher": "Failed to reject teacher",
+    "confirmRejectTeacher": "Are you sure you want to reject this teacher? Their account will be deleted."
+  },
+
+  "PendingActions": {
+    "loadingPendingActions": "Loading pending actions...",
+    "noPendingActions": "No Pending Actions",
+    "allActionsReviewed": "All student actions have been reviewed.",
+    "pendingStudentActions": "Pending Student Actions",
+    "reviewAndApprove": "Review and approve or reject actions submitted by students.",
+    "by": "by",
+    "impact": "Impact",
+    "categoryColon": "Category:",
+    "subcategoriesColon": "Subcategories:",
+    "typeOfImpactColon": "Type of impact:",
+    "customActionDetails": "Custom Action Details",
+    "effortColon": "Effort:",
+    "timelineColon": "Timeline:",
+    "reductionColon": "Reduction:",
+    "approve": "Approve",
+    "reject": "Reject",
+    "actionRejectedByTeacher": "Action rejected by teacher",
+    "error": "Error",
+    "success": "Success",
+    "failedToLoadPendingActions": "Failed to load pending actions",
+    "approvedSuccessfully": "approved successfully",
+    "rejectedSuccessfully": "rejected successfully",
+    "failedTo": "Failed to",
+    "action": "action"
+  },
+
+  "CategoriesManager": {
+    "failedToCreateCategory": "Failed to create category",
+    "failedToCreateSubcategory": "Failed to create subcategory",
+    "enterCategoryName": "Enter category name",
+    "enterDescription": "Enter description",
+    "enterSubcategoryName": "Enter subcategory name",
+    "saving": "Saving..."
   }
 }

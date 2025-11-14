@@ -188,11 +188,11 @@ const EmissionCategoriesManager: React.FC = () => {
         resetNewCategory();
         setValidationError("");
       } else {
-        setValidationError(data.error || "Failed to create category");
+        setValidationError(data.error || t("failedToCreateCategory"));
         console.error("Error creating category:", data.error);
       }
     } catch (error) {
-      setValidationError("Failed to create category");
+      setValidationError(t("failedToCreateCategory"));
       console.error("Error creating category:", error);
     } finally {
       setSaveLoading(false);
@@ -296,11 +296,11 @@ const EmissionCategoriesManager: React.FC = () => {
         resetNewSubcategory();
         setValidationError("");
       } else {
-        setValidationError(data.error || "Failed to create subcategory");
+        setValidationError(data.error || t("failedToCreateSubcategory"));
         console.error("Error creating subcategory:", data.error);
       }
     } catch (error) {
-      setValidationError("Failed to create subcategory");
+      setValidationError(t("failedToCreateSubcategory"));
       console.error("Error creating subcategory:", error);
     } finally {
       setSaveLoading(false);
@@ -934,7 +934,7 @@ const EmissionCategoriesManager: React.FC = () => {
                         )
                       }
                       className="input-bordered w-full input"
-                      placeholder="Enter category name"
+                      placeholder={t("enterCategoryName")}
                     />
                   </div>
                   <div>
@@ -954,7 +954,7 @@ const EmissionCategoriesManager: React.FC = () => {
                         )
                       }
                       className="textarea-bordered w-full textarea"
-                      placeholder="Enter description"
+                      placeholder={t("enterDescription")}
                       rows={3}
                     />
                   </div>
@@ -993,7 +993,7 @@ const EmissionCategoriesManager: React.FC = () => {
               {saveLoading && (
                 <span className="loading loading-spinner loading-sm"></span>
               )}
-              {saveLoading ? "Saving..." : tCommon("save")}
+              {saveLoading ? t("saving") : tCommon("save")}
             </button>
           </div>
         </AdminModal>
@@ -1231,7 +1231,7 @@ const EmissionCategoriesManager: React.FC = () => {
                         )
                       }
                       className="input-bordered w-full input"
-                      placeholder="Enter subcategory name"
+                      placeholder={t("enterSubcategoryName")}
                     />
                   </div>
                   <div>
@@ -1255,7 +1255,7 @@ const EmissionCategoriesManager: React.FC = () => {
                         )
                       }
                       className="textarea-bordered w-full textarea"
-                      placeholder="Enter description"
+                      placeholder={t("enterDescription")}
                       rows={3}
                     />
                   </div>
@@ -1294,7 +1294,7 @@ const EmissionCategoriesManager: React.FC = () => {
               {saveLoading && (
                 <span className="loading loading-spinner loading-sm"></span>
               )}
-              {saveLoading ? "Saving..." : tCommon("save")}
+              {saveLoading ? t("saving") : tCommon("save")}
             </button>
           </div>
         </AdminModal>

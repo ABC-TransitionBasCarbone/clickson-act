@@ -320,7 +320,7 @@ const SignUpForm: React.FC<SignUpFormProps> = ({
         }),
       });
       const data = await res.json();
-      if (!res.ok) throw new Error(data.error || "Registration failed");
+      if (!res.ok) throw new Error(data.error || t("User.registrationFailed"));
 
       // Set user in context with authentication token
       setUser({
@@ -341,7 +341,7 @@ const SignUpForm: React.FC<SignUpFormProps> = ({
         router.push("/dashboard");
       }
     } catch (err: unknown) {
-      let message = "Unknown error";
+      let message = t("User.unknownError");
       if (err instanceof Error) {
         message = err.message;
       }
@@ -354,10 +354,10 @@ const SignUpForm: React.FC<SignUpFormProps> = ({
     return (
       <div className="p-4 text-center">
         <p className="mb-4 text-gray-600">
-          You are already logged in as <strong>{user.username}</strong>
+          {t("User.alreadyLoggedInAs")} <strong>{user.username}</strong>
           {user.passcode && (
             <span className="mt-1 block text-sm text-gray-500">
-              Passcode: {user.passcode}
+              {t("User.passcodeColon")} {user.passcode}
             </span>
           )}
         </p>
@@ -366,14 +366,14 @@ const SignUpForm: React.FC<SignUpFormProps> = ({
             onClick={() => router.push(`/data-reporting/${user.passcode}`)}
             className="btn btn-primary capitalize"
           >
-            Go to Calculator
+            {t("User.goToCalculator")}
           </button>
         ) : (
           <button
             onClick={() => router.push("/dashboard")}
             className="btn btn-primary capitalize"
           >
-            Go to Dashboard
+            {t("User.goToDashboard")}
           </button>
         )}
       </div>
@@ -483,14 +483,14 @@ const SignUpForm: React.FC<SignUpFormProps> = ({
           disabled={loading}
         >
           <option value="">
-            {loading ? "Loading schools..." : t("User.selectSchool") + " *"}
+            {loading ? t("User.loadingSchools") : t("User.selectSchool") + " *"}
           </option>
           {schools.map((school) => (
             <option key={school.id} value={school.name}>
               {school.name}
             </option>
           ))}
-          <option value="Other">Other</option>
+          <option value="Other">{t("User.other")}</option>
         </select>
       </label>
 

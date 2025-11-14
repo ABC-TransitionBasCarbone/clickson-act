@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { authenticatedFetch } from "@/lib/auth-utils";
 import { useToast } from "@/context/ToastContext";
+import { useTranslations } from "next-intl";
 import { Check, X, UserPlus } from "lucide-react";
 
 interface PendingTeacher {
@@ -12,6 +13,7 @@ interface PendingTeacher {
 
 const PendingTeachersManager: React.FC = () => {
   const { showToast } = useToast();
+  const t = useTranslations("PendingTeachers");
   const [pendingTeachers, setPendingTeachers] = useState<PendingTeacher[]>([]);
   const [loading, setLoading] = useState(true);
   const [processing, setProcessing] = useState<string | null>(null);
@@ -56,17 +58,17 @@ const PendingTeachersManager: React.FC = () => {
       const data = await response.json();
 
       if (data.success) {
-        showToast("success", "Success", "Teacher approved successfully", 3000);
+        showToast("success", t("success"), t("teacherApprovedSuccessfully"), 3000);
         // Remove from list
         setPendingTeachers((prev) =>
           prev.filter((pt) => pt.teacherId !== teacherId),
         );
       } else {
-        showToast("error", "Error", data.error || "Failed to approve teacher", 5000);
+        showToast("error", t("error"), data.error || t("failedToApproveTeacher"), 5000);
       }
     } catch (error) {
       console.error("Error approving teacher:", error);
-      showToast("error", "Error", "Failed to approve teacher", 5000);
+      showToast("error", t("error"), t("failedToApproveTeacher"), 5000);
     } finally {
       setProcessing(null);
     }
@@ -74,9 +76,7 @@ const PendingTeachersManager: React.FC = () => {
 
   const handleReject = async (teacherId: string) => {
     if (
-      !confirm(
-        "Are you sure you want to reject this teacher? Their account will be deleted.",
-      )
+      !confirm(t("confirmRejectTeacher"))
     ) {
       return;
     }
@@ -94,17 +94,17 @@ const PendingTeachersManager: React.FC = () => {
       const data = await response.json();
 
       if (data.success) {
-        showToast("success", "Success", "Teacher rejected", 3000);
+        showToast("success", t("success"), t("teacherRejected"), 3000);
         // Remove from list
         setPendingTeachers((prev) =>
           prev.filter((pt) => pt.teacherId !== teacherId),
         );
       } else {
-        showToast("error", "Error", data.error || "Failed to reject teacher", 5000);
+        showToast("error", t("error"), data.error || t("failedToRejectTeacher"), 5000);
       }
     } catch (error) {
       console.error("Error rejecting teacher:", error);
-      showToast("error", "Error", "Failed to reject teacher", 5000);
+      showToast("error", t("error"), t("failedToRejectTeacher"), 5000);
     } finally {
       setProcessing(null);
     }
@@ -115,7 +115,7 @@ const PendingTeachersManager: React.FC = () => {
       <div className="card">
         <div className="flex justify-center items-center py-8">
           <div className="loading loading-spinner loading-lg"></div>
-          <span className="ml-2">Loading pending teachers...</span>
+          <span className="ml-2">{t("loadingPendingTeachers")}</span>
         </div>
       </div>
     );
@@ -130,10 +130,10 @@ const PendingTeachersManager: React.FC = () => {
       <div className="mb-6">
         <div className="flex items-center gap-2">
           <UserPlus className="w-6 h-6 text-orange-600" />
-          <h3 className="font-bold text-2xl">Pending Teacher Approvals</h3>
+          <h3 className="font-bold text-2xl">{t("pendingTeacherApprovals")}</h3>
         </div>
         <p className="mt-2 text-gray-600">
-          Teachers waiting for your approval to join this school
+          {t("teachersWaitingForApproval")}
         </p>
       </div>
 
@@ -147,7 +147,7 @@ const PendingTeachersManager: React.FC = () => {
               <h4 className="font-semibold text-lg">{teacher.teacherName}</h4>
               <p className="text-gray-600 text-sm">{teacher.teacherEmail}</p>
               <p className="mt-1 text-gray-500 text-xs">
-                Requested: {new Date(teacher.requestedAt).toLocaleString()}
+                {t("requested")} {new Date(teacher.requestedAt).toLocaleString()}
               </p>
             </div>
             <div className="flex items-center gap-2">
@@ -155,27 +155,27 @@ const PendingTeachersManager: React.FC = () => {
                 onClick={() => handleApprove(teacher.teacherId)}
                 disabled={processing === teacher.teacherId}
                 className="flex items-center gap-1 btn btn-success btn-sm"
-                title="Approve teacher"
+                title={t("approveTeacher")}
               >
                 {processing === teacher.teacherId ? (
                   <span className="loading loading-spinner loading-xs"></span>
                 ) : (
                   <Check size={16} />
                 )}
-                Approve
+                {t("approve")}
               </button>
               <button
                 onClick={() => handleReject(teacher.teacherId)}
                 disabled={processing === teacher.teacherId}
                 className="flex items-center gap-1 btn btn-error btn-sm"
-                title="Reject teacher"
+                title={t("rejectTeacher")}
               >
                 {processing === teacher.teacherId ? (
                   <span className="loading loading-spinner loading-xs"></span>
                 ) : (
                   <X size={16} />
                 )}
-                Reject
+                {t("reject")}
               </button>
             </div>
           </div>

@@ -72,7 +72,7 @@ const LoginForm: React.FC<LoginFormProps> = ({
         }),
       });
       const data = await res.json();
-      if (!res.ok) throw new Error(data.error || "Login failed");
+      if (!res.ok) throw new Error(data.error || t("User.loginFailed"));
 
       // Store tokens securely
       const secureStorage = {
@@ -116,7 +116,7 @@ const LoginForm: React.FC<LoginFormProps> = ({
         router.push("/dashboard");
       }
     } catch (err: unknown) {
-      let message = "Unknown error";
+      let message = t("User.unknownError");
       if (err instanceof Error) {
         message = err.message;
       }
@@ -158,10 +158,10 @@ const LoginForm: React.FC<LoginFormProps> = ({
     return (
       <div className="p-4 text-center">
         <p className="mb-4 text-gray-600">
-          You are already logged in as <strong>{user.username}</strong>
+          {t("User.alreadyLoggedInAs")} <strong>{user.username}</strong>
           {user.passcode && (
             <span className="mt-1 block text-sm text-gray-500">
-              Passcode: {user.passcode}
+              {t("User.passcodeColon")} {user.passcode}
             </span>
           )}
         </p>
@@ -170,14 +170,14 @@ const LoginForm: React.FC<LoginFormProps> = ({
             onClick={() => router.push(`/data-reporting/${user.passcode}`)}
             className="btn btn-primary capitalize"
           >
-            Go to Calculator
+            {t("User.goToCalculator")}
           </button>
         ) : (
           <button
             onClick={() => router.push("/dashboard")}
             className="btn btn-primary capitalize"
           >
-            Go to Dashboard
+            {t("User.goToDashboard")}
           </button>
         )}
       </div>

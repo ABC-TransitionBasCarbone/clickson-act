@@ -125,8 +125,8 @@ const EditActionModal: React.FC<EditActionModalProps> = ({
     ) {
       showToast(
         "error",
-        "Validation Error",
-        "Please fill in all required fields.",
+        t("validationError"),
+        t("fillAllRequiredFields"),
         3000,
       );
       return;
@@ -179,7 +179,7 @@ const EditActionModal: React.FC<EditActionModalProps> = ({
 
         if (!response.ok) {
           const errorData = await response.json();
-          throw new Error(errorData.error || "Failed to create custom action");
+          throw new Error(errorData.error || t("failedToCreateCustomAction"));
         }
 
         const result = await response.json();
@@ -187,8 +187,8 @@ const EditActionModal: React.FC<EditActionModalProps> = ({
 
         showToast(
           "success",
-          "Action Submitted!",
-          `"${editedAction.title}" has been submitted for teacher approval.`,
+          t("actionSubmitted"),
+          t("actionSubmittedForApproval", { title: editedAction.title }),
           4000,
         );
       } else {
@@ -202,11 +202,11 @@ const EditActionModal: React.FC<EditActionModalProps> = ({
     } catch (error) {
       console.error("Error creating custom action:", error);
       const errorMessage =
-        error instanceof Error ? error.message : "Unknown error";
+        error instanceof Error ? error.message : t("unknown");
       showToast(
         "error",
-        "Failed to Create Custom Action",
-        `Could not create custom action: ${errorMessage}`,
+        t("failedToCreateCustomActionTitle"),
+        t("couldNotCreateCustomAction", { error: errorMessage }),
         6000,
       );
     } finally {
@@ -269,7 +269,7 @@ const EditActionModal: React.FC<EditActionModalProps> = ({
       editedAction.reduction === 0;
 
   return (
-    <Modal id="edit_action_modal" title="Modify Action">
+    <Modal id="edit_action_modal" title={t("modifyAction")}>
       <div className="sm:max-w-md">
         <div className="gap-4 grid grid-cols-2">
           {/* Status */}
@@ -381,7 +381,7 @@ const EditActionModal: React.FC<EditActionModalProps> = ({
               }
               min={1}
               max={50}
-              placeholder="Number of years"
+              placeholder={t("numberOfYears")}
               className="w-full input"
             />
           </div>
@@ -581,10 +581,10 @@ const EditActionModal: React.FC<EditActionModalProps> = ({
             {isSubmitting ? (
               <>
                 <span className="loading loading-spinner loading-xs"></span>
-                Submitting...
+                {t("submitting")}
               </>
             ) : (
-              "Submit for Approval"
+              t("submitForApproval")
             )}
           </button>
 

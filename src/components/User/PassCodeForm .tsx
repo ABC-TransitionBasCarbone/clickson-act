@@ -59,7 +59,7 @@ const PassCodeForm: React.FC<PassCodeFormProps> = ({
         }),
       });
       const data = await res.json();
-      if (!res.ok) throw new Error(data.error || "Login failed");
+      if (!res.ok) throw new Error(data.error || t("User.loginFailed"));
       setUser({
         username: formData.username,
         passcode: formData.passcode,
@@ -76,7 +76,7 @@ const PassCodeForm: React.FC<PassCodeFormProps> = ({
         router.push(`/data-reporting/${formData.passcode}`);
       }
     } catch (err: unknown) {
-      let message = "Unknown error";
+      let message = t("User.unknownError");
       if (err instanceof Error) {
         message = err.message;
       }
@@ -89,14 +89,14 @@ const PassCodeForm: React.FC<PassCodeFormProps> = ({
     return (
       <div className="p-4 text-center">
         <p className="mb-4 text-gray-600">
-          You are already logged in as <strong>{user.username}</strong> with
-          passcode <strong>{user.passcode}</strong>
+          {t("User.alreadyLoggedInAs")} <strong>{user.username}</strong> {t("User.withPasscode")}{" "}
+          <strong>{user.passcode}</strong>
         </p>
         <button
           onClick={() => router.push(`/data-reporting/${user.passcode}`)}
           className="btn btn-primary capitalize"
         >
-          Continue to Calculator
+          {t("User.continueToCalculator")}
         </button>
       </div>
     );
