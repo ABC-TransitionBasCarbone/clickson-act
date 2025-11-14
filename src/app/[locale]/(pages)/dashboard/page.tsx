@@ -107,7 +107,7 @@ const TeacherDashboard: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  }, [user]);
+  }, [user, t]);
 
   const fetchTeacherSchool = useCallback(async () => {
     if (!user) return;

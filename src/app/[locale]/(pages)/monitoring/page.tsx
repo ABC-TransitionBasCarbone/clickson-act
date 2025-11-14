@@ -157,7 +157,7 @@ const Monitoring: React.FC = () => {
     } finally {
       setTeacherLoading(false);
     }
-  }, [user]);
+  }, [user, t]);
 
   // Fetch projects when component mounts (for teachers)
   useEffect(() => {

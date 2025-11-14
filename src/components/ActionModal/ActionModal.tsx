@@ -208,7 +208,6 @@ const ActionModal: React.FC<ActionModalProps> = ({
       // If categoryId is not set, extract it from the value field
       // Value format is: "categoryId-subcategoryId"
       if (sub.value && typeof sub.value === "string") {
-        const parts = sub.value.split("-");
         // UUID format: 8-4-4-4-12, so categoryId is first 36 characters (8-4-4-4-12)
         // But we need to check if it starts with the category ID
         if (sub.value.startsWith(newAction.category)) {

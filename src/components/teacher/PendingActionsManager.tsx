@@ -64,7 +64,7 @@ const PendingActionsManager: React.FC<PendingActionsManagerProps> = ({
     if (projectId) {
       fetchPendingActions();
     }
-  }, [projectId, showToast]);
+  }, [projectId, showToast, t]);
 
   const handleReviewAction = async (
     pendingActionId: string,

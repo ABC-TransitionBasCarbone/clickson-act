@@ -161,7 +161,7 @@ const EmissionDataManager: React.FC<EmissionDataManagerProps> = ({
     };
 
     fetchGlobalCategories();
-  }, [school, showToast]);
+  }, [school, showToast, t]);
 
   // Parse input value handling commas as decimal separators
   const parseInputValue = (value: string): number => {
