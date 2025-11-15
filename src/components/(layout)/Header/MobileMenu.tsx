@@ -27,19 +27,19 @@ const MobileMenu = ({
         animate={{ opacity: 1, y: 0 }}
         exit={{ opacity: 0, display: "none" }}
         transition={{ duration: 0.5 }}
-        className="absolute top-12 left-0 z-50 m-2.5 w-[calc(100vw-20px)] rounded-xl bg-gray-100 p-4 lg:hidden"
+        className="lg:hidden top-22 left-0 z-50 fixed bg-gray-100 m-2.5 p-4 rounded-xl w-[calc(100vw-20px)]"
         onClick={onClose}
       >
-        <div className="flex h-full flex-col">
+        <div className="flex flex-col h-full">
           <NavLinks className="flex-col" />
 
           {/* User/Auth section at bottom */}
           {user ? (
-            <div className="mt-5 rounded-lg border border-gray-200 bg-white">
+            <div className="bg-white mt-5 border border-gray-200 rounded-lg">
               {/* User info */}
               <div className="flex items-center gap-2 p-3 py-3">
                 <User size={16} className="text-primary" />
-                <span className="text-primary font-bold">{user.username}</span>
+                <span className="font-bold text-primary">{user.username}</span>
               </div>
 
               {/* User actions */}
@@ -47,7 +47,7 @@ const MobileMenu = ({
                 {(user.role === "teacher" || user.role === "admin") && (
                   <Link
                     href="/dashboard"
-                    className="flex items-center gap-3 rounded-lg px-4 py-2 text-sm text-gray-700 transition-colors hover:bg-gray-100"
+                    className="flex items-center gap-3 hover:bg-gray-100 px-4 py-2 rounded-lg text-gray-700 text-sm transition-colors"
                     onClick={() => onClose()}
                   >
                     <LayoutDashboard size={16} />
@@ -57,7 +57,7 @@ const MobileMenu = ({
                 {user.role === "admin" && (
                   <Link
                     href="/admin"
-                    className="flex items-center gap-3 rounded-lg px-4 py-2 text-sm text-gray-700 transition-colors hover:bg-gray-100"
+                    className="flex items-center gap-3 hover:bg-gray-100 px-4 py-2 rounded-lg text-gray-700 text-sm transition-colors"
                     onClick={() => onClose()}
                   >
                     <LayoutDashboard size={16} />
@@ -69,7 +69,7 @@ const MobileMenu = ({
                     setShowLogoutModal(true);
                     onClose();
                   }}
-                  className="flex w-full items-center gap-3 rounded-lg px-4 py-2 text-left text-sm text-red-600 transition-colors hover:bg-red-50"
+                  className="flex items-center gap-3 hover:bg-red-50 px-4 py-2 rounded-lg w-full text-red-600 text-sm text-left transition-colors"
                 >
                   <LogOut size={16} />
                   Logout
@@ -77,7 +77,7 @@ const MobileMenu = ({
               </div>
             </div>
           ) : (
-            <div className="mt-5 rounded-lg border border-gray-200 bg-white">
+            <div className="bg-white mt-5 border border-gray-200 rounded-lg">
               {/* Auth options */}
               <div className="p-3">
                 <button
@@ -85,7 +85,7 @@ const MobileMenu = ({
                     onOpenAuthModal();
                     onClose();
                   }}
-                  className="flex w-full items-center gap-3 rounded-lg px-4 py-2 text-sm text-gray-700 transition-colors hover:bg-gray-100"
+                  className="flex items-center gap-3 hover:bg-gray-100 px-4 py-2 rounded-lg w-full text-gray-700 text-sm transition-colors"
                 >
                   <LogIn size={16} />
                   Login/Connect
@@ -98,7 +98,7 @@ const MobileMenu = ({
       {/* Backdrop to close menu */}
       <div
         onClick={onClose}
-        className="fixed top-0 left-0 z-40 h-full w-full bg-black/30 lg:hidden"
+        className="lg:hidden top-0 left-0 z-40 fixed bg-black/30 w-full h-full"
       />
     </>
   );

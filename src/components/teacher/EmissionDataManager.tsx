@@ -345,7 +345,12 @@ const EmissionDataManager: React.FC<EmissionDataManagerProps> = ({
       };
 
       onUpdate(updatedSchool);
-      showToast("success", t("success"), t("emissionDataSavedSuccessfully"), 4000);
+      showToast(
+        "success",
+        t("success"),
+        t("emissionDataSavedSuccessfully"),
+        4000,
+      );
     } catch (error) {
       console.error("Error saving emission data:", error);
       showToast(
@@ -362,7 +367,7 @@ const EmissionDataManager: React.FC<EmissionDataManagerProps> = ({
   if (loading) {
     return (
       <div className="card">
-        <div className="flex items-center justify-center py-8">
+        <div className="flex justify-center items-center py-8">
           <div className="loading loading-spinner loading-lg"></div>
           <span className="ml-2">{t("loadingEmissionCategories")}</span>
         </div>
@@ -373,20 +378,18 @@ const EmissionDataManager: React.FC<EmissionDataManagerProps> = ({
   return (
     <div className="card">
       <div className="mb-6">
-        <div className="flex items-start justify-between">
+        <div className="flex max-lg:flex-col justify-between items-start">
           <div>
-            <h3 className="text-2xl font-bold">{t("title")}</h3>
-            <p className="mt-2 text-gray-600">
-              {t("description")}
-            </p>
+            <h3 className="font-bold text-2xl">{t("title")}</h3>
+            <p className="mt-2 text-gray-600">{t("description")}</p>
           </div>
         </div>
         {percentages.totalEmissions > 0 && (
-          <div className="mt-4 rounded-lg border border-blue-200 bg-blue-50 p-4">
+          <div className="bg-blue-50 mt-4 p-4 border border-blue-200 rounded-lg">
             <h4 className="font-semibold text-blue-900">
               {t("totalSchoolEmissions")}
             </h4>
-            <p className="text-lg font-bold text-blue-800">
+            <p className="font-bold text-blue-800 text-lg">
               {percentages.totalEmissions.toLocaleString()} kgCO2e
             </p>
           </div>
@@ -395,11 +398,11 @@ const EmissionDataManager: React.FC<EmissionDataManagerProps> = ({
 
       <div className="space-y-6">
         {schoolCategories.map((category) => (
-          <div key={category.categoryId} className="rounded-lg border p-4">
+          <div key={category.categoryId} className="p-4 border rounded-lg">
             <div className="mb-4">
-              <div className="flex items-start justify-between">
+              <div className="flex max-lg:flex-col justify-between items-start">
                 <div>
-                  <label className="mb-2 block text-lg font-semibold">
+                  <label className="block mb-2 font-semibold text-lg">
                     {category.categoryName}
                   </label>
                   <div className="flex items-center space-x-2">
@@ -424,30 +427,32 @@ const EmissionDataManager: React.FC<EmissionDataManagerProps> = ({
                       onBlur={() =>
                         handleCategoryAmountBlur(category.categoryId)
                       }
-                      className="input w-40"
+                      className="w-40 input"
                       placeholder="0"
                     />
                     <span className="text-gray-500">kgCO2e</span>
                   </div>
                 </div>
                 {percentages.totalEmissions > 0 && (
-                  <div className="text-right">
-                    <div className="text-sm text-gray-500">
-                      {t("percentageOfTotal")}
-                    </div>
-                    <div className="text-lg font-bold text-green-600">
+                  <div className="flex gap-1 text-right">
+                    <div className="font-bold text-green-600 text-sm lg:text-lg">
                       {percentages.categories.find(
                         (c) => c.categoryId === category.categoryId,
                       )?.percentage || 0}
                       %
+                    </div>
+                    <div className="text-gray-500 text-sm">
+                      {t("percentageOfTotal")}
                     </div>
                   </div>
                 )}
               </div>
             </div>
 
-            <div className="ml-4 space-y-3">
-              <h4 className="font-medium text-gray-700">{t("subcategories")}</h4>
+            <div className="space-y-3 lg:ml-4">
+              <h4 className="font-semibold text-gray-700">
+                {t("subcategories")}
+              </h4>
               {category.subcategories.map((subcategory) => {
                 const categoryPercentages = percentages.categories.find(
                   (c) => c.categoryId === category.categoryId,
@@ -462,13 +467,13 @@ const EmissionDataManager: React.FC<EmissionDataManagerProps> = ({
                 return (
                   <div
                     key={subcategory.subcategoryId}
-                    className="flex items-center justify-between"
+                    className="flex max-lg:flex-col justify-between items-start lg:items-center"
                   >
-                    <label className="flex-1 text-sm font-medium">
+                    <label className="max-lg:flex-1 lg:min-w-1/2 font-medium text-sm">
                       {subcategory.subcategoryName}
                     </label>
-                    <div className="flex items-center space-x-4">
-                      <div className="flex items-center space-x-2">
+                    <div className="flex max-lg:flex-col lg:justify-start items-start lg:items-center lg:gap-10 space-x-4 max-lg:space-x-0 max-lg:space-y-2 max-lg:mt-2 max-lg:w-full min-w-1/3">
+                      <div className="flex items-center space-x-2 mb-0">
                         <input
                           type="text"
                           inputMode="decimal"
@@ -498,18 +503,18 @@ const EmissionDataManager: React.FC<EmissionDataManagerProps> = ({
                               subcategory.subcategoryId,
                             )
                           }
-                          className="input w-32 text-sm"
+                          className="w-32 text-sm input"
                           placeholder="0"
                         />
-                        <span className="text-sm text-gray-500">kgCO2e</span>
+                        <span className="text-gray-500 text-sm">kgCO2e</span>
                       </div>
                       {category.amount > 0 && (
-                        <div className="min-w-[60px] text-right">
-                          <div className="text-xs text-gray-500">
-                            {t("percentOfCategory")}
-                          </div>
-                          <div className="text-primary text-sm font-semibold">
+                        <div className="flex lg:flex-1 lg:justify-end gap-1 max-lg:w-full text-right">
+                          <div className="font-semibold text-primary text-sm">
                             {subcategoryPercentage}%
+                          </div>
+                          <div className="text-gray-500 text-xs max-lg:text-sm leading-normal">
+                            {t("percentOfCategory")}
                           </div>
                         </div>
                       )}
@@ -522,7 +527,7 @@ const EmissionDataManager: React.FC<EmissionDataManagerProps> = ({
         ))}
       </div>
 
-      <div className="mt-6 flex justify-end">
+      <div className="flex justify-end mt-6">
         <button
           onClick={handleSave}
           disabled={saving}

@@ -12,10 +12,10 @@ import CustomActionFormModal from "@/components/ActionModal";
 import { motion } from "framer-motion";
 import { useProjectData } from "@/hooks/useProjectData";
 import { useEmissionCategories } from "@/hooks/useEmissionCategories";
-import { Edit, Share2 } from "lucide-react";
+import { Edit, Share2, ArrowLeft } from "lucide-react";
 import { useUser } from "@/context/UserContext";
-import { usePathname } from "@/i18n/navigation";
-import { useLocale } from "next-intl";
+import { usePathname, useRouter } from "@/i18n/navigation";
+import { useLocale, useTranslations } from "next-intl";
 import { Action } from "@/types/Action";
 
 // Action interface for type safety - matches the data from the hook
@@ -42,7 +42,9 @@ const ProjectDetails = () => {
   const { slug: projectId } = useParams<{ slug: string }>();
   const { user } = useUser();
   const pathname = usePathname();
+  const router = useRouter();
   const locale = useLocale();
+  const t = useTranslations("ProjectDetails");
 
   // Use emission categories hook to fetch from database
   const { categories: emissionCategories } = useEmissionCategories();
@@ -88,10 +90,16 @@ const ProjectDetails = () => {
   );
 
   // Share and copy states
-  const [shareButtonText, setShareButtonText] = useState("Share");
-  const [passcodeButtonText, setPasscodeButtonText] = useState("Copy Passcode");
+  const [shareButtonText, setShareButtonText] = useState("");
+  const [passcodeButtonText, setPasscodeButtonText] = useState("");
 
-  // Initialize edit form when project data loads
+  // Initialize button texts and edit form when project data loads
+  useEffect(() => {
+    setShareButtonText(t("share"));
+    setPasscodeButtonText(t("copyPasscode"));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [locale]);
+
   useEffect(() => {
     if (project) {
       setEditForm({
@@ -124,13 +132,13 @@ const ProjectDetails = () => {
       if (response.ok) {
         setIsEditModalOpen(false);
         refetch(); // Refresh the data
-        alert("Project updated successfully!");
+        alert(t("projectUpdatedSuccessfully"));
       } else {
-        alert(`Error updating project: ${data.error}`);
+        alert(t("errorUpdatingProject", { error: data.error }));
       }
     } catch (error) {
       console.error("Error updating project:", error);
-      alert("Error updating project. Please try again.");
+      alert(t("errorUpdatingProjectGeneric"));
     }
   };
 
@@ -143,7 +151,7 @@ const ProjectDetails = () => {
   const handleApproveChanges = async (action: CustomAction) => {
     try {
       if (!action.pendingChanges) {
-        throw new Error("No pending changes to approve");
+        throw new Error(t("noPendingChangesToApprove"));
       }
 
       // Apply the pending changes to the action
@@ -168,7 +176,7 @@ const ProjectDetails = () => {
 
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.error || "Failed to approve changes");
+        throw new Error(errorData.error || t("failedToApproveChanges"));
       }
 
       // Update the editingAction state to reflect the approved changes and refresh data
@@ -177,7 +185,9 @@ const ProjectDetails = () => {
     } catch (error) {
       console.error("Error approving changes:", error);
       alert(
-        `Failed to approve changes: ${error instanceof Error ? error.message : "Unknown error"}`,
+        t("failedToApproveChangesWithError", {
+          error: error instanceof Error ? error.message : t("unknownError"),
+        }),
       );
     }
   };
@@ -186,7 +196,7 @@ const ProjectDetails = () => {
   const handleRejectChanges = async (action: CustomAction) => {
     try {
       if (!action.pendingChanges) {
-        throw new Error("No pending changes to reject");
+        throw new Error(t("noPendingChangesToReject"));
       }
 
       // Remove pending changes from the action
@@ -207,7 +217,7 @@ const ProjectDetails = () => {
 
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.error || "Failed to reject changes");
+        throw new Error(errorData.error || t("failedToRejectChanges"));
       }
 
       // Update the editingAction state to reflect the rejected changes and refresh data
@@ -216,7 +226,9 @@ const ProjectDetails = () => {
     } catch (error) {
       console.error("Error rejecting changes:", error);
       alert(
-        `Failed to reject changes: ${error instanceof Error ? error.message : "Unknown error"}`,
+        t("failedToRejectChangesWithError", {
+          error: error instanceof Error ? error.message : t("unknownError"),
+        }),
       );
     }
   };
@@ -241,7 +253,7 @@ const ProjectDetails = () => {
 
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.error || "Failed to delete action");
+        throw new Error(errorData.error || t("failedToDeleteAction"));
       }
 
       // Close the modal and refresh data
@@ -250,7 +262,9 @@ const ProjectDetails = () => {
     } catch (error) {
       console.error("Error deleting action:", error);
       alert(
-        `Failed to delete action: ${error instanceof Error ? error.message : "Unknown error"}`,
+        t("failedToDeleteActionWithError", {
+          error: error instanceof Error ? error.message : t("unknownError"),
+        }),
       );
     }
   };
@@ -294,7 +308,7 @@ const ProjectDetails = () => {
             timeline: newAction.timeline || 1,
             type: newAction.type || "Direct",
           },
-          studentName: user?.username || "Teacher",
+          studentName: user?.username || t("teacher"),
           studentId: user?.uid || "",
           calculatedReduction: newAction.reduction,
           actionType: newAction.type || "Direct",
@@ -308,7 +322,7 @@ const ProjectDetails = () => {
 
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.error || "Failed to create action");
+        throw new Error(errorData.error || t("failedToCreateAction"));
       }
 
       setShowCreateModal(false);
@@ -316,7 +330,9 @@ const ProjectDetails = () => {
     } catch (error) {
       console.error("Error creating action:", error);
       alert(
-        `Failed to create action: ${error instanceof Error ? error.message : "Unknown error"}`,
+        t("failedToCreateActionWithError", {
+          error: error instanceof Error ? error.message : t("unknownError"),
+        }),
       );
     }
   };
@@ -327,14 +343,14 @@ const ProjectDetails = () => {
     navigator.clipboard
       .writeText(fullUrl)
       .then(() => {
-        setShareButtonText("Link Copied!");
+        setShareButtonText(t("linkCopied"));
         setTimeout(() => {
-          setShareButtonText("Share");
+          setShareButtonText(t("share"));
         }, 2000);
       })
       .catch((err) => {
         console.error("Failed to copy URL: ", err);
-        alert("Failed to copy link");
+        alert(t("failedToCopyLink"));
       });
   };
 
@@ -344,14 +360,14 @@ const ProjectDetails = () => {
       navigator.clipboard
         .writeText(project.passcode)
         .then(() => {
-          setPasscodeButtonText("Copied!");
+          setPasscodeButtonText(t("copied"));
           setTimeout(() => {
-            setPasscodeButtonText("Copy Passcode");
+            setPasscodeButtonText(t("copyPasscode"));
           }, 2000);
         })
         .catch((err) => {
           console.error("Failed to copy passcode: ", err);
-          alert("Failed to copy passcode");
+          alert(t("failedToCopyPasscode"));
         });
     }
   };
@@ -412,7 +428,7 @@ const ProjectDetails = () => {
     return (
       <div className="flex justify-center items-center min-h-screen">
         <div className="text-center">
-          <h2 className="mb-2 font-bold text-red-600 text-2xl">Error</h2>
+          <h2 className="mb-2 font-bold text-red-600 text-2xl">{t("error")}</h2>
           <p className="text-gray-600">{error}</p>
         </div>
       </div>
@@ -432,10 +448,15 @@ const ProjectDetails = () => {
       >
         {/* Simple Header */}
         <div className="mb-8">
+          <button
+            onClick={() => router.back()}
+            className="flex items-center gap-2 mb-4 text-muted-foreground hover:text-foreground transition-colors"
+          >
+            <ArrowLeft className="w-4 h-4" />
+            <span>{t("back")}</span>
+          </button>
           <h1 className="font-bold text-3xl tracking-tight">{project?.name}</h1>
-          <p className="mt-1 text-muted-foreground">
-            Project Details and Progress
-          </p>
+          <p className="mt-1 text-muted-foreground">{t("subtitle")}</p>
         </div>
 
         {/* Project Overview Card */}
@@ -443,58 +464,60 @@ const ProjectDetails = () => {
           <div className="relative card">
             <div className="flex justify-between items-start">
               <div className="flex-1">
-                <h3 className="mb-6 font-bold text-2xl">Project Overview</h3>
+                <h3 className="mb-6 font-bold text-lg lg:text-2xl">
+                  {t("overview.title")}
+                </h3>
                 <div className="space-y-4">
-                  <div className="flex gap-2.5">
-                    <h3 className="font-medium">Project Name:</h3>
+                  <div className="flex max-lg:flex-col gap-x-2.5">
+                    <h3 className="font-medium text-sm lg:text-base">
+                      {t("overview.projectName")}
+                    </h3>
                     <span>{project?.name}</span>
                   </div>
-                  <div className="flex gap-2.5">
-                    <h3 className="font-medium">Current Status:</h3>
-                    <span
-                      className={`rounded-full px-3 py-1 text-sm font-medium ${
-                        project?.status === "active"
-                          ? "bg-green-100 text-green-800"
-                          : project?.status === "completed"
-                            ? "bg-blue-100 text-blue-800"
-                            : "bg-amber-100 text-amber-800"
-                      }`}
-                    >
-                      {project?.status || "Active"}
+                  <div className="flex max-lg:flex-col gap-x-2.5">
+                    <h3 className="font-medium text-sm lg:text-base">
+                      {t("overview.currentStatus")}
+                    </h3>
+                    <span className={`font-medium`}>
+                      {t(`status.${project?.status || "active"}`)}
                     </span>
                   </div>
-                  <div className="flex gap-2.5">
-                    <h3 className="font-medium">Sub-goal Target:</h3>
+                  <div className="flex max-lg:flex-col gap-x-2.5">
+                    <h3 className="font-medium text-sm lg:text-base">
+                      {t("overview.subGoalTarget")}
+                    </h3>
                     <span>
-                      {project?.subGoalReductionAmount}% by{" "}
+                      {project?.subGoalReductionAmount}% {t("overview.by")}{" "}
                       {project?.subGoalDeadline}
                     </span>
                   </div>
                   {school && (
-                    <div className="flex gap-2.5">
-                      <h3 className="font-medium">School Goal:</h3>
+                    <div className="flex max-lg:flex-col gap-x-2.5">
+                      <h3 className="font-medium text-sm lg:text-base">
+                        {t("overview.schoolGoal")}
+                      </h3>
                       <span>
-                        {school.goal}% by {school.deadlineYear}
+                        {school.goal}% {t("overview.by")} {school.deadlineYear}
                       </span>
                     </div>
                   )}
                 </div>
                 {/* Passcode and Buttons in horizontal flex container */}
-                <div className="flex items-center gap-4 mt-5">
+                <div className="flex flex-wrap items-center gap-4 mt-5">
                   {/* Passcode Display */}
                   {project?.passcode && (
                     <div className="flex flex-col items-center gap-2">
                       <button
                         onClick={handlePasscodeClick}
                         className={`cursor-pointer rounded-lg border-2 border-dashed px-3 py-1 text-xl font-bold transition-colors ${
-                          passcodeButtonText === "Copied!"
+                          passcodeButtonText === t("copied")
                             ? "border-green-300 bg-green-50 text-green-600 hover:border-green-400 hover:bg-green-100 hover:text-green-800"
                             : "text-primary border-blue-300 bg-blue-50 hover:border-blue-400 hover:bg-blue-100 hover:text-blue-800"
                         }`}
-                        title="Click to copy passcode"
+                        title={t("overview.clickToCopyPasscode")}
                       >
-                        {passcodeButtonText === "Copied!"
-                          ? "Copied!"
+                        {passcodeButtonText === t("copied")
+                          ? t("copied")
                           : project.passcode}
                       </button>
                     </div>
@@ -518,7 +541,7 @@ const ProjectDetails = () => {
                         className="flex items-center gap-2 btn btn-primary"
                       >
                         <Edit className="w-4 h-4" />
-                        Edit Project
+                        {t("overview.editProject")}
                       </button>
                     )}
                   </div>
@@ -529,11 +552,11 @@ const ProjectDetails = () => {
               <div className="flex flex-col justify-start items-end gap-5">
                 {/* Total Reduction at the top */}
                 <div className="text-center">
-                  <div className="font-bold text-purple-600 text-5xl">
+                  <div className="font-bold text-purple-600 text-2xl lg:text-5xl">
                     {totalReduction.toFixed(1)}%
                   </div>
-                  <div className="font-medium text-purple-800 text-lg">
-                    Total Reduction
+                  <div className="font-medium text-purple-800 text-xs lg:text-lg">
+                    {t("overview.totalReduction")}
                   </div>
                 </div>
               </div>
@@ -603,7 +626,7 @@ const ProjectDetails = () => {
 
               if (!response.ok) {
                 const errorData = await response.json();
-                throw new Error(errorData.error || "Failed to update action");
+                throw new Error(errorData.error || t("failedToUpdateAction"));
               }
 
               // Close modal and refresh data
@@ -612,7 +635,10 @@ const ProjectDetails = () => {
             } catch (error) {
               console.error("Error updating action:", error);
               alert(
-                `Failed to update action: ${error instanceof Error ? error.message : "Unknown error"}`,
+                t("failedToUpdateActionWithError", {
+                  error:
+                    error instanceof Error ? error.message : t("unknownError"),
+                }),
               );
             }
           }}
@@ -649,7 +675,7 @@ const ProjectDetails = () => {
       {isEditModalOpen && (
         <div className="modal modal-open">
           <div className="modal-box">
-            <h3 className="mb-4 font-bold text-lg">Edit Project</h3>
+            <h3 className="mb-4 font-bold text-lg">{t("editModal.title")}</h3>
             <form
               className="space-y-4"
               onSubmit={(e) => {
@@ -659,7 +685,7 @@ const ProjectDetails = () => {
             >
               <div>
                 <label htmlFor="projectName" className="block mb-1 font-medium">
-                  Project Name
+                  {t("editModal.projectName")}
                 </label>
                 <input
                   id="projectName"
@@ -668,8 +694,8 @@ const ProjectDetails = () => {
                   onChange={(e) =>
                     setEditForm((prev) => ({ ...prev, name: e.target.value }))
                   }
-                  className="input-bordered w-full input"
-                  placeholder="Project Name"
+                  className="w-full input-bordered input"
+                  placeholder={t("editModal.projectNamePlaceholder")}
                   required
                 />
               </div>
@@ -679,7 +705,7 @@ const ProjectDetails = () => {
                   htmlFor="subGoalReduction"
                   className="block mb-1 font-medium"
                 >
-                  Sub-goal Reduction (%)
+                  {t("editModal.subGoalReduction")}
                 </label>
                 <input
                   id="subGoalReduction"
@@ -691,7 +717,7 @@ const ProjectDetails = () => {
                       subGoalReductionAmount: Number(e.target.value),
                     }))
                   }
-                  className="input-bordered w-full input"
+                  className="w-full input-bordered input"
                   min="0"
                   max="100"
                   required
@@ -703,7 +729,7 @@ const ProjectDetails = () => {
                   htmlFor="subGoalDeadline"
                   className="block mb-1 font-medium"
                 >
-                  Sub-goal Deadline (Year)
+                  {t("editModal.subGoalDeadline")}
                 </label>
                 <input
                   id="subGoalDeadline"
@@ -715,7 +741,7 @@ const ProjectDetails = () => {
                       subGoalDeadline: e.target.value,
                     }))
                   }
-                  className="input-bordered w-full input"
+                  className="w-full input-bordered input"
                   min={new Date().getFullYear()}
                   max={new Date().getFullYear() + 50}
                   required
@@ -724,7 +750,7 @@ const ProjectDetails = () => {
 
               <div>
                 <label htmlFor="status" className="block mb-1 font-medium">
-                  Status
+                  {t("editModal.status")}
                 </label>
                 <select
                   id="status"
@@ -740,9 +766,9 @@ const ProjectDetails = () => {
                   }
                   className="w-full select-bordered select"
                 >
-                  <option value="active">Active</option>
-                  <option value="pending">Pending</option>
-                  <option value="completed">Completed</option>
+                  <option value="active">{t("status.active")}</option>
+                  <option value="pending">{t("status.pending")}</option>
+                  <option value="completed">{t("status.completed")}</option>
                 </select>
               </div>
 
@@ -752,10 +778,10 @@ const ProjectDetails = () => {
                   className="btn"
                   onClick={() => setIsEditModalOpen(false)}
                 >
-                  Cancel
+                  {t("editModal.cancel")}
                 </button>
                 <button type="submit" className="btn btn-primary">
-                  Save Changes
+                  {t("editModal.saveChanges")}
                 </button>
               </div>
             </form>
