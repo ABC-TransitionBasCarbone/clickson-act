@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState, useMemo } from "react";
+import React, { useEffect, useState, useMemo, useCallback } from "react";
 import { motion } from "framer-motion";
 import { useRouter } from "@/i18n/navigation";
 import { useParams } from "next/navigation";
@@ -70,54 +70,59 @@ const ProjectMonitoring: React.FC = () => {
     })),
   );
 
+  const mapProjectActionToCustom = useCallback(
+    (
+      action: (Action & { calculatedReduction?: number }) & {
+        studentName?: string;
+        dateAdded: string;
+        dateCompleted?: string;
+        selected?: boolean;
+        status?: "Available" | "Selected" | "Completed" | "In Progress";
+      },
+      fallbackDate: string,
+    ): CustomAction => ({
+      ...action,
+      manager: action.manager || action.studentName || "",
+      assignedTo: action.assignedTo || "",
+      nature: action.nature || action.category,
+      objectives: action.objectives || action.description,
+      keyContacts: action.keyContacts || "",
+      steps: action.steps || "",
+      calendar: action.calendar || fallbackDate,
+      indicators: action.indicators || "",
+      monitoring: action.monitoring || "",
+      performance: action.performance || "",
+      effort: action.effort || "medium",
+      timeline: action.timeline || 1,
+      date: (action.date || fallbackDate).split("T")[0],
+      reduction:
+        typeof action.reduction === "number"
+          ? action.reduction
+          : action.calculatedReduction ?? 0,
+      calculatedReduction: action.calculatedReduction ?? action.reduction,
+      selected: action.selected ?? action.status === "Selected",
+    }),
+    [],
+  );
+
   // Memoize converted actions to prevent unnecessary re-renders
   const convertedCompletedActions = useMemo(() => {
     if (!projectCompletedActions || projectCompletedActions.length === 0) {
       return [];
     }
-    return projectCompletedActions.map((action) => ({
-      ...action,
-      selected: false,
-      manager: action.studentName,
-      nature: action.category,
-      objectives: action.description,
-      keyContacts: "",
-      steps: "",
-      calendar: action.dateCompleted || action.dateAdded,
-      indicators: "",
-      monitoring: "",
-      performance: "",
-      effort: "medium", // Default effort level since project actions don't have effort property
-      timeline: 1, // Default timeline
-      date: (action.dateCompleted || action.dateAdded).split("T")[0], // Convert ISO date to YYYY-MM-DD
-      reduction: action.calculatedReduction, // Use calculated reduction as the main reduction value
-      calculatedReduction: action.calculatedReduction, // Also keep it as calculatedReduction
-    })) as CustomAction[];
-  }, [projectCompletedActions]);
+    return projectCompletedActions.map((action) =>
+      mapProjectActionToCustom(action, action.dateCompleted || action.dateAdded),
+    );
+  }, [projectCompletedActions, mapProjectActionToCustom]);
 
   const convertedAvailableActions = useMemo(() => {
     if (!projectAvailableActions || projectAvailableActions.length === 0) {
       return [];
     }
-    return projectAvailableActions.map((action) => ({
-      ...action,
-      selected: false,
-      manager: action.studentName,
-      nature: action.category,
-      objectives: action.description,
-      keyContacts: "",
-      steps: "",
-      calendar: action.dateAdded,
-      indicators: "",
-      monitoring: "",
-      performance: "",
-      effort: "medium", // Default effort level since project actions don't have effort property
-      timeline: action.timeline || 1, // Use existing timeline or default to 1
-      date: action.dateAdded.split("T")[0], // Convert ISO date to YYYY-MM-DD
-      reduction: action.calculatedReduction, // Use calculated reduction as the main reduction value
-      calculatedReduction: action.calculatedReduction, // Also keep it as calculatedReduction
-    })) as CustomAction[];
-  }, [projectAvailableActions]);
+    return projectAvailableActions.map((action) =>
+      mapProjectActionToCustom(action, action.dateAdded),
+    );
+  }, [projectAvailableActions, mapProjectActionToCustom]);
 
   // Update local state when converted actions change
   useEffect(() => {

@@ -9,7 +9,7 @@ import { useToast } from "@/context/ToastContext";
 
 interface CustomAction extends Action {
   selected: boolean;
-  status?: "Completed" | "Selected" | "Available";
+  status?: "Completed" | "Selected" | "Available" | "In Progress";
   assignedTo?: string;
   timeline?: number;
   subcategory?: string;
@@ -144,6 +144,7 @@ const EditActionModal: React.FC<EditActionModalProps> = ({
         reduction: editedAction.reduction,
         effort: editedAction.effort,
         manager: editedAction.manager,
+        assignedTo: editedAction.assignedTo || "",
         nature: editedAction.nature,
         objectives: editedAction.objectives,
         keyContacts: editedAction.keyContacts,

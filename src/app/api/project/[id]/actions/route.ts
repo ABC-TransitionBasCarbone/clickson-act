@@ -27,10 +27,12 @@ interface ProjectAction {
   title: string;
   description: string;
   category: string;
+  subcategory?: string;
   reduction: number; // Original reduction from template
   calculatedReduction: number; // Calculated reduction based on category/subcategory percentages
   effort: string;
   manager: string; // Student name who added the action
+  assignedTo?: string;
   nature: string;
   objectives: string;
   keyContacts: string;
@@ -91,14 +93,7 @@ async function handlePost(req: NextRequest, _context: SecurityContext) {
           value: string;
         }>;
       };
-      customActionData?: {
-        title: string;
-        description: string;
-        reduction: number;
-        category: string;
-        effort: string;
-        timeline: number;
-      };
+      customActionData?: PendingAction["customActionData"];
       isTeacherAction?: boolean;
     };
     const {
@@ -169,6 +164,7 @@ async function handlePost(req: NextRequest, _context: SecurityContext) {
             categoryName: customActionData.category,
           },
           customActionData,
+          subcategory: customActionData.subcategory || "",
         });
 
         const pendingAction: PendingAction = {
@@ -287,10 +283,12 @@ async function handlePost(req: NextRequest, _context: SecurityContext) {
               description:
                 translation.description || actionTemplate?.description || "",
               category: actionTemplate?.category || "",
+              subcategory: actionTemplate?.subcategory || undefined,
               reduction: Number(actionTemplate?.reduction) || 0,
               calculatedReduction: finalReduction,
               effort: actionTemplate?.effort || "",
               manager: studentName.trim(),
+              assignedTo: actionTemplate?.assignedTo || undefined,
               nature: actionTemplate?.nature || "",
               objectives: actionTemplate?.objectives || "",
               keyContacts: actionTemplate?.keyContacts || "",
@@ -345,6 +343,7 @@ async function handlePost(req: NextRequest, _context: SecurityContext) {
                 categoryId: actionTemplate?.category || "",
                 categoryName: actionTemplate?.category || "",
               },
+              subcategory: actionTemplate?.subcategory || "",
             });
 
             const pendingAction: PendingAction = {

@@ -13,7 +13,7 @@ const Modal = ({
 }) => {
   return (
     <dialog id={id} className="modal">
-      <div className="modal-box flex flex-col gap-5">
+      <div className="modal-box flex flex-col gap-5 rounded-lg max-h-[95vh] my-auto">
         <h3 className="text-lg font-bold">{title}</h3>
         <fieldset className="fieldset flex flex-col">{children}</fieldset>
       </div>

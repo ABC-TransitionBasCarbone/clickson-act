@@ -8,7 +8,7 @@ import { useUser } from "@/context/UserContext";
 
 interface CustomAction extends Action {
   selected: boolean;
-  status?: "Completed" | "Selected" | "Available";
+  status?: "Completed" | "Selected" | "Available" | "In Progress";
   assignedTo?: string;
   timeline?: number;
   subcategory?: string;

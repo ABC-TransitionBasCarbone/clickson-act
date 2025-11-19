@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useMemo } from "react";
 import { useUser } from "@/context/UserContext";
+import { Action } from "@/types/Action";
 
 interface ProjectData {
   id: string;
@@ -61,20 +62,17 @@ interface ProjectEmissions {
   count: number;
 }
 
+interface ProjectActionRecord extends Action {
+  calculatedReduction: number;
+  status: "Available" | "Selected" | "In Progress" | "Completed";
+  studentName: string;
+  dateAdded: string;
+  dateCompleted?: string;
+  selected?: boolean;
+}
+
 interface ProjectActions {
-  actions: Array<{
-    id: string;
-    title: string;
-    description: string;
-    category: string;
-    reduction: number;
-    calculatedReduction: number;
-    status: "Available" | "Selected" | "In Progress" | "Completed";
-    studentName: string;
-    dateAdded: string;
-    dateCompleted?: string;
-    timeline?: number; // Number of years the action will take place (default: 1)
-  }>;
+  actions: ProjectActionRecord[];
   count: number;
 }
 

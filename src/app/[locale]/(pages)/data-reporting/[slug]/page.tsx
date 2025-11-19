@@ -187,6 +187,7 @@ const StudentCalculator: React.FC = () => {
             reduction: action.reduction,
             effort: action.effort,
             manager: action.manager,
+              assignedTo: action.assignedTo || "",
             nature: action.nature,
             objectives: action.objectives,
             keyContacts: action.keyContacts,

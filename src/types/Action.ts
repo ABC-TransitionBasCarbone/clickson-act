@@ -6,6 +6,7 @@ export interface Action {
   reduction: number;
   effort: string;
   manager: string;
+  assignedTo?: string;
   nature: string;
   objectives: string;
   keyContacts: string;

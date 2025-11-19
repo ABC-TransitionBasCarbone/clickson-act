@@ -19,23 +19,19 @@ import { useLocale, useTranslations } from "next-intl";
 import { Action } from "@/types/Action";
 
 // Action interface for type safety - matches the data from the hook
-interface ActionData {
-  id: string;
-  title: string;
-  description: string;
-  category: string;
-  reduction: number;
+interface ActionData extends Action {
   calculatedReduction: number;
   status: "Available" | "Selected" | "In Progress" | "Completed";
   studentName: string;
   dateAdded: string;
   dateCompleted?: string;
-  timeline?: number;
+  selected?: boolean;
 }
 
 // Custom action interface that extends Action and adds selected property
 interface CustomAction extends Action {
   selected: boolean;
+  status?: "Available" | "Selected" | "In Progress" | "Completed";
 }
 
 const ProjectDetails = () => {
@@ -297,6 +293,7 @@ const ProjectDetails = () => {
             reduction: newAction.reduction,
             effort: newAction.effort,
             manager: newAction.manager,
+            assignedTo: newAction.assignedTo || "",
             nature: newAction.nature,
             objectives: newAction.objectives,
             keyContacts: newAction.keyContacts,
@@ -375,52 +372,42 @@ const ProjectDetails = () => {
   // Check if user is admin
   const isAdmin = user?.role === "admin";
 
-  // Convert actions to the format expected by the action components
-  const convertedAvailableActions: CustomAction[] = availableActions.map(
-    (action: ActionData) => ({
-      id: action.id,
-      category: action.category,
-      title: action.title,
-      description: action.description,
-      reduction: action.reduction,
-      effort: "medium", // Default value since not in project actions
-      manager: action.studentName,
-      nature: action.category,
-      objectives: action.description,
-      keyContacts: "",
-      steps: "",
-      calendar: action.dateAdded,
-      indicators: "",
-      monitoring: "",
-      performance: "",
-      date: action.dateAdded,
-      timeline: action.timeline || 1,
-      selected: false,
-    }),
-  );
+  const normalizeAction = (action: ActionData): CustomAction => ({
+    id: action.id,
+    category: action.category,
+    subcategory: action.subcategory || "",
+    title: action.title,
+    description: action.description,
+    reduction: action.reduction,
+    effort: action.effort || "medium",
+    manager: action.manager || action.studentName,
+    assignedTo: action.assignedTo || "",
+    nature: action.nature || action.category,
+    objectives: action.objectives || action.description,
+    keyContacts: action.keyContacts || "",
+    steps: action.steps || "",
+    calendar: action.calendar || action.dateAdded,
+    indicators: action.indicators || "",
+    monitoring: action.monitoring || "",
+    performance: action.performance || "",
+    date:
+      (action.date || action.dateAdded)?.includes("T")
+        ? (action.date || action.dateAdded).split("T")[0]
+        : action.date || action.dateAdded,
+    timeline: action.timeline || 1,
+    type: action.type,
+    pendingChanges: action.pendingChanges,
+    needsApproval: action.needsApproval,
+    status: action.status,
+    selected: action.selected ?? action.status === "Selected",
+  });
 
-  const convertedCompletedActions: CustomAction[] = completedActions.map(
-    (action: ActionData) => ({
-      id: action.id,
-      category: action.category,
-      title: action.title,
-      description: action.description,
-      reduction: action.reduction,
-      effort: "medium", // Default value since not in project actions
-      manager: action.studentName,
-      nature: action.category,
-      objectives: action.description,
-      keyContacts: "",
-      steps: "",
-      calendar: action.dateCompleted || action.dateAdded,
-      indicators: "",
-      monitoring: "",
-      performance: "",
-      date: action.dateCompleted || action.dateAdded,
-      timeline: action.timeline || 1,
-      selected: false,
-    }),
-  );
+  // Convert actions to the format expected by the action components
+  const convertedAvailableActions: CustomAction[] =
+    availableActions.map(normalizeAction);
+
+  const convertedCompletedActions: CustomAction[] =
+    completedActions.map(normalizeAction);
 
   if (loading) return <Loading />;
 

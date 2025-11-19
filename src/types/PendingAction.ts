@@ -10,6 +10,7 @@ export interface PendingAction {
   actionDescription: string;
   actionType: "Direct" | "Indirect" | "Custom";
   calculatedReduction: number;
+  subcategory?: string;
 
   // Category and subcategory selection data
   categoryData: {
@@ -27,9 +28,21 @@ export interface PendingAction {
     title: string;
     description: string;
     category: string;
+    subcategory?: string;
     reduction: number;
     effort: string;
+    manager?: string;
+    assignedTo?: string;
+    nature?: string;
+    objectives?: string;
+    keyContacts?: string;
+    steps?: string;
+    calendar?: string;
+    indicators?: string;
+    monitoring?: string;
+    performance?: string;
     timeline: number;
+    type?: "Direct" | "Indirect";
   };
 
   status: "pending" | "approved" | "rejected";
@@ -51,6 +64,7 @@ export function createPendingAction(data: {
   calculatedReduction: number;
   categoryData: PendingAction["categoryData"];
   customActionData?: PendingAction["customActionData"];
+  subcategory?: string;
 }): Omit<PendingAction, "id" | "submittedAt"> {
   return {
     ...data,

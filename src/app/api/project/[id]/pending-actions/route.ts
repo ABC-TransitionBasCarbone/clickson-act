@@ -182,13 +182,23 @@ async function handlePatch(req: NextRequest, _context: SecurityContext) {
         }
       }
 
+      const isCustomAction = pendingAction.actionType === "Custom";
+      const customData = pendingAction.customActionData;
+
+      const resolvedType: "Direct" | "Indirect" =
+        isCustomAction
+          ? customData?.type === "Indirect"
+            ? "Indirect"
+            : "Direct"
+          : pendingAction.actionType === "Indirect"
+            ? "Indirect"
+            : "Direct";
+
       // Create project action with all required fields
       const projectAction = {
         id: projectActionId,
         actionTemplateId:
-          pendingAction.actionType === "Custom"
-            ? "custom"
-            : pendingAction.actionId,
+          isCustomAction ? "custom" : pendingAction.actionId,
         projectId,
         studentId: pendingAction.studentId,
         studentName: pendingAction.studentName,
@@ -205,35 +215,59 @@ async function handlePatch(req: NextRequest, _context: SecurityContext) {
           actionTemplate?.description ||
           "",
         category: pendingAction.categoryData.categoryId,
+        subcategory: isCustomAction
+          ? customData?.subcategory || pendingAction.subcategory || ""
+          : pendingAction.subcategory || actionTemplate?.subcategory || "",
         reduction:
-          pendingAction.actionType === "Custom"
-            ? pendingAction.customActionData?.reduction || 0
+          isCustomAction
+            ? customData?.reduction || 0
             : Number(actionTemplate?.reduction) || 0, // Original template reduction
         calculatedReduction: pendingAction.calculatedReduction, // Calculated reduction based on category/subcategory
         effort:
-          pendingAction.actionType === "Custom"
-            ? pendingAction.customActionData?.effort || "Medium"
-            : actionTemplate?.effort || "Medium",
-        manager: pendingAction.studentName, // Student name as manager
-        nature: pendingAction.categoryData.categoryName,
+          isCustomAction ? customData?.effort || "Medium" : actionTemplate?.effort || "Medium",
+        manager: isCustomAction
+          ? customData?.manager || pendingAction.studentName
+          : pendingAction.studentName,
+        assignedTo: isCustomAction
+          ? customData?.assignedTo || ""
+          : actionTemplate?.assignedTo || "",
+        nature: isCustomAction
+          ? customData?.nature || pendingAction.categoryData.categoryName
+          : actionTemplate?.nature || pendingAction.categoryData.categoryName,
         objectives:
-          pendingAction.actionType === "Custom"
-            ? pendingAction.actionDescription
-            : (translation as ActionTranslation).objectives || "",
-        keyContacts: "",
-        steps: (translation as ActionTranslation).steps || "",
-        calendar: "",
-        indicators: "",
-        monitoring: "",
-        performance: "",
+          isCustomAction
+            ? customData?.objectives || pendingAction.actionDescription
+            : (translation as ActionTranslation).objectives ||
+              actionTemplate?.objectives ||
+              "",
+        keyContacts: isCustomAction
+          ? customData?.keyContacts || ""
+          : actionTemplate?.keyContacts || "",
+        steps: isCustomAction
+          ? customData?.steps || ""
+          : (translation as ActionTranslation).steps ||
+            actionTemplate?.steps ||
+            "",
+        calendar: isCustomAction
+          ? customData?.calendar || currentDate.split("T")[0]
+          : actionTemplate?.calendar || currentDate.split("T")[0],
+        indicators: isCustomAction
+          ? customData?.indicators || ""
+          : actionTemplate?.indicators || "",
+        monitoring: isCustomAction
+          ? customData?.monitoring || ""
+          : actionTemplate?.monitoring || "",
+        performance: isCustomAction
+          ? customData?.performance || ""
+          : actionTemplate?.performance || "",
         date: currentDate.split("T")[0], // Date in YYYY-MM-DD format
         timeline:
-          pendingAction.actionType === "Custom"
-            ? pendingAction.customActionData?.timeline || 1
+          isCustomAction
+            ? customData?.timeline || 1
             : Number(actionTemplate?.timeline) || 1, // Number of years the action will take place
 
         // Project-specific fields
-        type: pendingAction.actionType,
+        type: resolvedType,
         status: "Available",
         selected: false,
         dateAdded: currentDate,
@@ -243,7 +277,18 @@ async function handlePatch(req: NextRequest, _context: SecurityContext) {
         categoryContext: {
           categoryId: pendingAction.categoryData.categoryId,
           categoryName: pendingAction.categoryData.categoryName,
-          subcategoryData: pendingAction.categoryData.subcategoryData || [],
+          subcategoryData:
+            pendingAction.categoryData.subcategoryData?.length
+              ? pendingAction.categoryData.subcategoryData
+              : pendingAction.subcategory
+                ? [
+                    {
+                      subcategoryId: pendingAction.subcategory,
+                      subcategoryName: pendingAction.subcategory,
+                      value: "",
+                    },
+                  ]
+                : [],
         },
       };
 
