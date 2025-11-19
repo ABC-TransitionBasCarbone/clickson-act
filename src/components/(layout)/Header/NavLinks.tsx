@@ -1,9 +1,17 @@
 import { useTranslations } from "next-intl";
 import { Link, usePathname } from "@/i18n/navigation";
+import { useUser } from "@/context/UserContext";
 
-const NavLinks = ({ className }: { className?: string }) => {
+const NavLinks = ({
+  className,
+  onProtectedRouteClick,
+}: {
+  className?: string;
+  onProtectedRouteClick?: () => void;
+}) => {
   const pathname = usePathname();
   const t = useTranslations();
+  const { user } = useUser();
 
   const navLinks = [
     { key: "Header.home", path: "/" },
@@ -30,6 +38,14 @@ const NavLinks = ({ className }: { className?: string }) => {
                     ? "text-secondary font-bold"
                     : "group-hover:text-primary"
               }`}
+              onClick={(e) => {
+                // If user is not logged in and clicks a protected route,
+                // prevent navigation and open the auth modal instead.
+                if (!user && path !== "/") {
+                  e.preventDefault();
+                  onProtectedRouteClick?.();
+                }
+              }}
             >
               {t(key)}
             </Link>

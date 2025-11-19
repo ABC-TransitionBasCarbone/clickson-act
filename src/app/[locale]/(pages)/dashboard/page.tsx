@@ -26,7 +26,7 @@ import LoadingState from "@/components/ui/LoadingState";
 
 const TeacherDashboard: React.FC = () => {
   const t = useTranslations("TeacherDashboard");
-  const { user } = useUser();
+  const { user, isLoaded } = useUser();
   const router = useRouter();
 
   const [projects, setProjects] = useState<Project[]>([]);
@@ -259,22 +259,15 @@ const TeacherDashboard: React.FC = () => {
     );
   }
 
-  // If not logged in
+  // If not logged in and user context is fully loaded, redirect to home & open auth modal
+  useEffect(() => {
+    if (isLoaded && !user) {
+      router.push("/?auth=login");
+    }
+  }, [isLoaded, user, router]);
+
   if (!user) {
-    return (
-      <div className="container mx-auto px-6 py-8">
-        <div className="text-center">
-          <h1 className="mb-4 text-2xl font-bold">{t("pleaseLogIn")}</h1>
-          <p className="mb-4 text-gray-600">{t("pleaseLogInMessage")}</p>
-          <button
-            onClick={() => router.push("/data-reporting")}
-            className="btn btn-primary"
-          >
-            {t("goToLogin")}
-          </button>
-        </div>
-      </div>
-    );
+    return null;
   }
 
   if (loading) {

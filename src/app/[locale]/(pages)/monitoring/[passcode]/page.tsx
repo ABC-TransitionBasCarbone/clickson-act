@@ -19,7 +19,7 @@ import LoadingState from "@/components/ui/LoadingState";
 const ProjectMonitoring: React.FC = () => {
   const router = useRouter();
   const params = useParams();
-  const { user } = useUser();
+  const { user, isLoaded } = useUser();
   const tMonitoring = useTranslations("MonitoringPage");
   const tAction = useTranslations("Action");
 
@@ -133,12 +133,12 @@ const ProjectMonitoring: React.FC = () => {
     setAvailableActions(convertedAvailableActions);
   }, [convertedAvailableActions]);
 
-  // Only redirect if no user and not loading
+  // Redirect to home & open auth modal only if user context is fully loaded and no user is present
   useEffect(() => {
-    if (user !== undefined && !user && !loading) {
-      router.push("/");
+    if (isLoaded && !user) {
+      router.push("/?auth=login");
     }
-  }, [user, router, loading]);
+  }, [user, isLoaded, router]);
 
   const handleEditClick = (
     action: CustomAction,
@@ -165,47 +165,44 @@ const ProjectMonitoring: React.FC = () => {
   const handleSubmitCreate = async (newAction: CustomAction) => {
     try {
       // Submit custom action to the project identified by passcode
-      const response = await fetch(
-        `/api/project/${passcode}/actions`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            customActionData: {
-              title: newAction.title,
-              description: newAction.description,
-              category: newAction.category,
-              subcategory: newAction.subcategory || "",
-              reduction: newAction.reduction,
-              effort: newAction.effort,
-              manager: newAction.manager,
-              assignedTo: newAction.assignedTo || "",
-              nature: newAction.nature,
-              objectives: newAction.objectives,
-              keyContacts: newAction.keyContacts,
-              steps: newAction.steps,
-              calendar: newAction.calendar,
-              indicators: newAction.indicators,
-              monitoring: newAction.monitoring,
-              performance: newAction.performance,
-              timeline: newAction.timeline || 1,
-              type: newAction.type || "Direct",
-            },
-            studentName: user?.username || "",
-            studentId: user?.studentId || user?.uid || "",
-            calculatedReduction: newAction.reduction,
-            actionType: newAction.type || "Direct",
-            categoryData: {
-              categoryId: newAction.category,
-              categoryName: newAction.category,
-            },
-            // If a teacher is using this monitoring view, auto‑approve
-            isTeacherAction: user?.role === "teacher" || user?.role === "admin",
-          }),
+      const response = await fetch(`/api/project/${passcode}/actions`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
         },
-      );
+        body: JSON.stringify({
+          customActionData: {
+            title: newAction.title,
+            description: newAction.description,
+            category: newAction.category,
+            subcategory: newAction.subcategory || "",
+            reduction: newAction.reduction,
+            effort: newAction.effort,
+            manager: newAction.manager,
+            assignedTo: newAction.assignedTo || "",
+            nature: newAction.nature,
+            objectives: newAction.objectives,
+            keyContacts: newAction.keyContacts,
+            steps: newAction.steps,
+            calendar: newAction.calendar,
+            indicators: newAction.indicators,
+            monitoring: newAction.monitoring,
+            performance: newAction.performance,
+            timeline: newAction.timeline || 1,
+            type: newAction.type || "Direct",
+          },
+          studentName: user?.username || "",
+          studentId: user?.studentId || user?.uid || "",
+          calculatedReduction: newAction.reduction,
+          actionType: newAction.type || "Direct",
+          categoryData: {
+            categoryId: newAction.category,
+            categoryName: newAction.category,
+          },
+          // If a teacher is using this monitoring view, auto‑approve
+          isTeacherAction: user?.role === "teacher" || user?.role === "admin",
+        }),
+      });
 
       if (!response.ok) {
         const errorData = await response.json();
@@ -218,18 +215,16 @@ const ProjectMonitoring: React.FC = () => {
         );
       }
 
+      // Consume response body to allow proper connection cleanup
+      await response.json();
+
       // After successful creation, refresh actions from backend
       await refetch();
 
       setShowCreateModal(false);
     } catch (error) {
-      console.error("Error creating custom action:", error);
-      alert(
-        tAction("failedToCreateAction", {
-          error:
-            error instanceof Error ? error.message : tAction("unknown"),
-        }),
-      );
+      // Let ActionModal handle displaying the error to the user
+      throw error;
     }
   };
 

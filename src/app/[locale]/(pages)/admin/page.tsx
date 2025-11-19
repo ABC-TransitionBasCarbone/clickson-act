@@ -36,7 +36,16 @@ const AdminDashboard: React.FC = () => {
 
   // Check if user is admin
   useEffect(() => {
-    if (isLoaded && (!user || user.role !== "admin")) {
+    if (!isLoaded) return;
+
+    // Not logged in: redirect to home and open auth modal
+    if (!user) {
+      router.push("/?auth=login");
+      return;
+    }
+
+    // Logged in but not admin: redirect to home
+    if (user.role !== "admin") {
       router.push("/");
     }
   }, [user, isLoaded, router]);

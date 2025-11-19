@@ -31,7 +31,10 @@ const MobileMenu = ({
         onClick={onClose}
       >
         <div className="flex flex-col h-full">
-          <NavLinks className="flex-col" />
+          <NavLinks
+            className="flex-col"
+            onProtectedRouteClick={onOpenAuthModal}
+          />
 
           {/* User/Auth section at bottom */}
           {user ? (

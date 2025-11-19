@@ -3,6 +3,7 @@ import Image from "next/image";
 import { motion } from "motion/react";
 import React, { useState, useRef, useEffect } from "react";
 import { Link, usePathname } from "@/i18n/navigation";
+import { useSearchParams } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { useUser } from "@/context/UserContext";
 import {
@@ -27,6 +28,7 @@ const Header = () => {
   const [showUserDropdown, setShowUserDropdown] = useState(false);
   const [showAuthModal, setShowAuthModal] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
+  const searchParams = useSearchParams();
 
   const handleLogout = () => {
     setUser(null);
@@ -51,6 +53,14 @@ const Header = () => {
     };
   }, []);
 
+  // Open auth modal automatically when redirected with auth query parameter
+  useEffect(() => {
+    const auth = searchParams.get("auth");
+    if (auth === "login") {
+      setShowAuthModal(true);
+    }
+  }, [searchParams]);
+
   return (
     <>
       <motion.header
@@ -73,7 +83,10 @@ const Header = () => {
           </Link>
 
           {/* Desktop Navigation */}
-          <NavLinks className="hidden w-full justify-center lg:flex" />
+          <NavLinks
+            className="hidden w-full justify-center lg:flex"
+            onProtectedRouteClick={() => setShowAuthModal(true)}
+          />
 
           {/* Right side items */}
           <div className="flex items-center gap-3">

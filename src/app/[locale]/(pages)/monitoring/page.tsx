@@ -24,7 +24,7 @@ interface CustomAction extends Action {
 
 const Monitoring: React.FC = () => {
   const router = useRouter();
-  const { user } = useUser();
+  const { user, isLoaded } = useUser();
   const t = useTranslations("TeacherDashboard");
   const tMonitoring = useTranslations("MonitoringPage");
   const tAction = useTranslations("Action");
@@ -135,12 +135,12 @@ const Monitoring: React.FC = () => {
     setAvailableActions(convertedAvailableActions);
   }, [convertedAvailableActions]);
 
-  // Redirect to login if no user - only after user context is loaded and we're not loading project data
+  // Redirect to home & open auth modal if no user - only after user context is fully loaded
   useEffect(() => {
-    if (user !== undefined && !user && !loading) {
-      router.push("/");
+    if (isLoaded && !user) {
+      router.push("/?auth=login");
     }
-  }, [user, router, loading]);
+  }, [user, isLoaded, router]);
 
   // Fetch teacher's projects
   const fetchProjects = useCallback(async () => {
@@ -326,47 +326,44 @@ const Monitoring: React.FC = () => {
       }
 
       // Submit custom action to the project
-      const response = await fetch(
-        `/api/project/${user.passcode}/actions`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            customActionData: {
-              title: newAction.title,
-              description: newAction.description,
-              category: newAction.category,
-              subcategory: newAction.subcategory || "",
-              reduction: newAction.reduction,
-              effort: newAction.effort,
-              manager: newAction.manager,
-              assignedTo: newAction.assignedTo || "",
-              nature: newAction.nature,
-              objectives: newAction.objectives,
-              keyContacts: newAction.keyContacts,
-              steps: newAction.steps,
-              calendar: newAction.calendar,
-              indicators: newAction.indicators,
-              monitoring: newAction.monitoring,
-              performance: newAction.performance,
-              timeline: newAction.timeline || 1,
-              type: newAction.type || "Direct",
-            },
-            studentName: user?.username || "",
-            studentId: user?.studentId || user?.uid || "",
-            calculatedReduction: newAction.reduction,
-            actionType: newAction.type || "Direct",
-            categoryData: {
-              categoryId: newAction.category,
-              categoryName: newAction.category,
-            },
-            // Teachers' custom actions are auto‑approved, students go to pending
-            isTeacherAction: user?.role === "teacher" || user?.role === "admin",
-          }),
+      const response = await fetch(`/api/project/${user.passcode}/actions`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
         },
-      );
+        body: JSON.stringify({
+          customActionData: {
+            title: newAction.title,
+            description: newAction.description,
+            category: newAction.category,
+            subcategory: newAction.subcategory || "",
+            reduction: newAction.reduction,
+            effort: newAction.effort,
+            manager: newAction.manager,
+            assignedTo: newAction.assignedTo || "",
+            nature: newAction.nature,
+            objectives: newAction.objectives,
+            keyContacts: newAction.keyContacts,
+            steps: newAction.steps,
+            calendar: newAction.calendar,
+            indicators: newAction.indicators,
+            monitoring: newAction.monitoring,
+            performance: newAction.performance,
+            timeline: newAction.timeline || 1,
+            type: newAction.type || "Direct",
+          },
+          studentName: user?.username || "",
+          studentId: user?.studentId || user?.uid || "",
+          calculatedReduction: newAction.reduction,
+          actionType: newAction.type || "Direct",
+          categoryData: {
+            categoryId: newAction.category,
+            categoryName: newAction.category,
+          },
+          // Teachers' custom actions are auto‑approved, students go to pending
+          isTeacherAction: user?.role === "teacher" || user?.role === "admin",
+        }),
+      });
 
       if (!response.ok) {
         const errorData = await response.json();
@@ -379,18 +376,16 @@ const Monitoring: React.FC = () => {
         );
       }
 
+      // Consume response body to allow proper connection cleanup
+      await response.json();
+
       // Optionally we could use the returned action; for now just refetch
       await refetch();
 
       setShowCreateModal(false);
     } catch (error) {
-      console.error("Error creating custom action:", error);
-      alert(
-        tAction("failedToCreateAction", {
-          error:
-            error instanceof Error ? error.message : tAction("unknown"),
-        }),
-      );
+      // Let ActionModal handle displaying the error to the user
+      throw error;
     }
   };
 
