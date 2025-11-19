@@ -241,6 +241,13 @@ const TeacherDashboard: React.FC = () => {
     setIsEditing(false);
   };
 
+  // If not logged in and user context is fully loaded, redirect to home & open auth modal
+  useEffect(() => {
+    if (isLoaded && !user) {
+      router.push("/?auth=login");
+    }
+  }, [isLoaded, user, router]);
+
   // If user is a student, redirect them
   if (user && user.passcode) {
     return (
@@ -258,13 +265,6 @@ const TeacherDashboard: React.FC = () => {
       </div>
     );
   }
-
-  // If not logged in and user context is fully loaded, redirect to home & open auth modal
-  useEffect(() => {
-    if (isLoaded && !user) {
-      router.push("/?auth=login");
-    }
-  }, [isLoaded, user, router]);
 
   if (!user) {
     return null;
