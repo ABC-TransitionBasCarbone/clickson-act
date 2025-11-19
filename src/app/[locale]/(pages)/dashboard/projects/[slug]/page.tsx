@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useParams } from "next/navigation";
 
 import Loading from "@/components/(dashboard)/ProjectDetails/Loading";
@@ -276,63 +276,64 @@ const ProjectDetails = () => {
     }, 0);
   };
 
-  const handleSubmitCreate = async (newAction: CustomAction) => {
-    try {
-      // Submit action directly without approval since teacher is creating it
-      const response = await fetch(`/api/project/${projectId}/actions`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
+  const handleSubmitCreate = useCallback(
+    async (newAction: CustomAction) => {
+      try {
+        // Submit action directly without approval since teacher is creating it
+        const response = await fetch(`/api/project/${projectId}/actions`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        customActionData: {
+          title: newAction.title,
+          description: newAction.description,
+          category: newAction.category,
+          subcategory: newAction.subcategory || "",
+          reduction: newAction.reduction,
+          effort: newAction.effort,
+          manager: newAction.manager,
+          assignedTo: newAction.assignedTo || "",
+          nature: newAction.nature,
+          objectives: newAction.objectives,
+          keyContacts: newAction.keyContacts,
+          steps: newAction.steps,
+          calendar: newAction.calendar,
+          indicators: newAction.indicators,
+          monitoring: newAction.monitoring,
+          performance: newAction.performance,
+          timeline: newAction.timeline || 1,
+          type: newAction.type || "Direct",
         },
-        body: JSON.stringify({
-          customActionData: {
-            title: newAction.title,
-            description: newAction.description,
-            category: newAction.category,
-            subcategory: newAction.subcategory || "",
-            reduction: newAction.reduction,
-            effort: newAction.effort,
-            manager: newAction.manager,
-            assignedTo: newAction.assignedTo || "",
-            nature: newAction.nature,
-            objectives: newAction.objectives,
-            keyContacts: newAction.keyContacts,
-            steps: newAction.steps,
-            calendar: newAction.calendar,
-            indicators: newAction.indicators,
-            monitoring: newAction.monitoring,
-            performance: newAction.performance,
-            timeline: newAction.timeline || 1,
-            type: newAction.type || "Direct",
-          },
-          studentName: user?.username || t("teacher"),
-          studentId: user?.uid || "",
-          calculatedReduction: newAction.reduction,
-          actionType: newAction.type || "Direct",
-          categoryData: {
-            categoryId: newAction.category,
-            categoryName: newAction.category,
-          },
+        studentName: user?.username || t("teacher"),
+        studentId: user?.uid || "",
+        calculatedReduction: newAction.reduction,
+        actionType: newAction.type || "Direct",
+        categoryData: {
+          categoryId: newAction.category,
+          categoryName: newAction.category,
+        },
           isTeacherAction: true, // Teacher action doesn't need approval
         }),
-      });
+        });
 
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || t("failedToCreateAction"));
+        if (!response.ok) {
+          const errorData = await response.json();
+          throw new Error(errorData.error || t("failedToCreateAction"));
+        }
+
+        await response.json();
+
+        setShowCreateModal(false);
+        await refetch(); // Refresh the project data
+      } catch (error) {
+        // Let ActionModal show a user-friendly alert
+        throw error;
       }
-
-      setShowCreateModal(false);
-      refetch(); // Refresh the project data
-    } catch (error) {
-      console.error("Error creating action:", error);
-      alert(
-        t("failedToCreateActionWithError", {
-          error: error instanceof Error ? error.message : t("unknownError"),
-        }),
-      );
-    }
-  };
+    },
+    [projectId, t, refetch],
+  );
 
   // Handle share URL copy
   const handleShareClick = () => {

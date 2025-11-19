@@ -147,41 +147,97 @@ async function handlePost(req: NextRequest, _context: SecurityContext) {
     // Handle custom action submission
     if (customActionData) {
       try {
-        const pendingActionId = uuidv4();
+        const actionId_generated = uuidv4();
         const currentDate = new Date().toISOString();
 
-        const pendingActionData = createPendingAction({
-          projectId,
-          studentId: studentId || "",
-          studentName: studentName.trim(),
-          actionId: "custom", // Special ID for custom actions
-          actionTitle: customActionData.title,
-          actionDescription: customActionData.description,
-          actionType: "Custom",
-          calculatedReduction: customActionData.reduction,
-          categoryData: {
-            categoryId: customActionData.category,
-            categoryName: customActionData.category,
-          },
-          customActionData,
-          subcategory: customActionData.subcategory || "",
-        });
+        if (isTeacherAction) {
+          // For teachers, add directly to project actions (auto-approved)
+          const projectAction: ProjectAction = {
+            id: actionId_generated,
+            actionTemplateId: "custom", // Special ID for custom actions
+            projectId,
+            studentId: studentId || "",
+            studentName: studentName.trim(),
+            title: customActionData.title,
+            description: customActionData.description,
+            category: customActionData.category,
+            subcategory: customActionData.subcategory || undefined,
+            reduction: customActionData.reduction,
+            calculatedReduction: customActionData.reduction,
+            effort: customActionData.effort,
+            manager: studentName.trim(),
+            assignedTo: customActionData.assignedTo || undefined,
+            nature: customActionData.nature || "",
+            objectives: customActionData.objectives || "",
+            keyContacts: customActionData.keyContacts || "",
+            steps: customActionData.steps || "",
+            calendar: customActionData.calendar || "",
+            indicators: customActionData.indicators || "",
+            monitoring: customActionData.monitoring || "",
+            performance: customActionData.performance || "",
+            date: currentDate,
+            timeline: customActionData.timeline || 1,
+            type: (customActionData.type as "Direct" | "Indirect") || "Direct",
+            status: "Available",
+            selected: false,
+            dateAdded: currentDate,
+            categoryContext: categoryData
+              ? {
+                  categoryId: categoryData.categoryId,
+                  categoryName: categoryData.categoryName,
+                  subcategoryData:
+                    categoryData.subcategoryData?.map((sub) => ({
+                      id: sub.subcategoryId,
+                      name: sub.subcategoryName,
+                      value: sub.value,
+                    })) || [],
+                }
+              : undefined,
+          };
 
-        const pendingAction: PendingAction = {
-          id: pendingActionId,
-          submittedAt: currentDate,
-          ...pendingActionData,
-        };
+          // Add to project's actions subcollection
+          await adminDb
+            .collection("projects")
+            .doc(projectId)
+            .collection("actions")
+            .doc(actionId_generated)
+            .set(projectAction);
+          approvedActions.push(projectAction);
+        } else {
+          // For students, create pending action for teacher approval
+          const pendingActionData = createPendingAction({
+            projectId,
+            studentId: studentId || "",
+            studentName: studentName.trim(),
+            actionId: "custom", // Special ID for custom actions
+            actionTitle: customActionData.title,
+            actionDescription: customActionData.description,
+            actionType: "Custom",
+            calculatedReduction: customActionData.reduction,
+            categoryData: {
+              categoryId: customActionData.category,
+              categoryName: customActionData.category,
+            },
+            customActionData,
+            subcategory: customActionData.subcategory || "",
+          });
 
-        // Add to project's pending actions subcollection
-        await adminDb
-          .collection("projects")
-          .doc(projectId)
-          .collection("pendingActions")
-          .doc(pendingActionId)
-          .set(pendingAction);
+          const pendingAction: PendingAction = {
+            id: actionId_generated,
+            submittedAt: currentDate,
+            ...pendingActionData,
+          };
 
-        pendingActions.push(pendingAction);
+          // Add to project's pending actions subcollection
+          await adminDb
+            .collection("projects")
+            .doc(projectId)
+            .collection("pendingActions")
+            .doc(actionId_generated)
+            .set(pendingAction);
+
+          pendingActions.push(pendingAction);
+        }
       } catch (error) {
         console.error("Error processing custom action:", error);
         errors.push("Failed to submit custom action");

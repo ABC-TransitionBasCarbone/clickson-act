@@ -25,7 +25,7 @@ interface CustomAction extends Action {
 
 interface ActionModalProps {
   mode: "create" | "edit";
-  onSubmit: (action: CustomAction) => void;
+  onSubmit: (action: CustomAction) => void | Promise<void>;
   categories: { value: string; label: string }[];
   effortCategories: { value: string; label: string }[];
   subcategoryOptions?: { value: string; label: string; categoryId?: string }[];
@@ -101,47 +101,60 @@ const ActionModal: React.FC<ActionModalProps> = ({
     }
   }, [initialAction, mode]);
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (!newAction.category || !newAction.title || !newAction.reduction) return;
 
-    if (isTeacher || allowAllFieldsEdit) {
-      // Teachers and data reporting screen can directly submit changes
-      onSubmit({
-        ...newAction,
-        id:
-          mode === "edit" && initialAction
-            ? initialAction.id
-            : Date.now().toString(),
-        selected: initialAction?.selected ?? false,
-        date:
-          mode === "edit" && initialAction
-            ? initialAction.date
-            : new Date().toISOString(),
-      });
-    } else {
-      // Students submit pending changes for approval
-      onSubmit({
-        ...newAction,
-        id:
-          mode === "edit" && initialAction
-            ? initialAction.id
-            : Date.now().toString(),
-        selected: initialAction?.selected ?? false,
-        date:
-          mode === "edit" && initialAction
-            ? initialAction.date
-            : new Date().toISOString(),
-        pendingChanges: {
-          ...pendingChanges,
-          changedBy: user?.username || "",
-          changedAt: new Date().toISOString(),
-        },
-        needsApproval: true,
-      });
-    }
+    try {
+      if (isTeacher || allowAllFieldsEdit) {
+        // Teachers and data reporting screen can directly submit changes
+        await onSubmit({
+          ...newAction,
+          id:
+            mode === "edit" && initialAction
+              ? initialAction.id
+              : Date.now().toString(),
+          selected: initialAction?.selected ?? false,
+          date:
+            mode === "edit" && initialAction
+              ? initialAction.date
+              : new Date().toISOString(),
+        });
+      } else {
+        // Students submit pending changes for approval
+        await onSubmit({
+          ...newAction,
+          id:
+            mode === "edit" && initialAction
+              ? initialAction.id
+              : Date.now().toString(),
+          selected: initialAction?.selected ?? false,
+          date:
+            mode === "edit" && initialAction
+              ? initialAction.date
+              : new Date().toISOString(),
+          pendingChanges: {
+            ...pendingChanges,
+            changedBy: user?.username || "",
+            changedAt: new Date().toISOString(),
+          },
+          needsApproval: true,
+        });
+      }
 
-    const modal = document.getElementById("custom_action") as HTMLDialogElement;
-    if (modal) modal.close();
+      const modal = document.getElementById(
+        "custom_action",
+      ) as HTMLDialogElement;
+      if (modal) modal.close();
+    } catch (error) {
+      console.error("Error submitting action:", error);
+      // Show error to user
+      alert(
+        error instanceof Error
+          ? error.message
+          : "Failed to save action. Please try again.",
+      );
+      // Don't close modal on error so user can retry
+    }
   };
 
   const handleCancel = () => {

@@ -319,9 +319,79 @@ const Monitoring: React.FC = () => {
     }, 0);
   };
 
-  const handleSubmitCreate = (newAction: CustomAction) => {
-    setAvailableActions((prev) => [...prev, newAction]);
-    setShowCreateModal(false);
+  const handleSubmitCreate = async (newAction: CustomAction) => {
+    try {
+      if (!user?.passcode) {
+        throw new Error(tAction("noProjectPasscodeAvailable"));
+      }
+
+      // Submit custom action to the project
+      const response = await fetch(
+        `/api/project/${user.passcode}/actions`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            customActionData: {
+              title: newAction.title,
+              description: newAction.description,
+              category: newAction.category,
+              subcategory: newAction.subcategory || "",
+              reduction: newAction.reduction,
+              effort: newAction.effort,
+              manager: newAction.manager,
+              assignedTo: newAction.assignedTo || "",
+              nature: newAction.nature,
+              objectives: newAction.objectives,
+              keyContacts: newAction.keyContacts,
+              steps: newAction.steps,
+              calendar: newAction.calendar,
+              indicators: newAction.indicators,
+              monitoring: newAction.monitoring,
+              performance: newAction.performance,
+              timeline: newAction.timeline || 1,
+              type: newAction.type || "Direct",
+            },
+            studentName: user?.username || "",
+            studentId: user?.studentId || user?.uid || "",
+            calculatedReduction: newAction.reduction,
+            actionType: newAction.type || "Direct",
+            categoryData: {
+              categoryId: newAction.category,
+              categoryName: newAction.category,
+            },
+            // Teachers' custom actions are auto‑approved, students go to pending
+            isTeacherAction: user?.role === "teacher" || user?.role === "admin",
+          }),
+        },
+      );
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(
+          errorData.error ||
+            tAction("failedToCreateAction").replace(
+              "{error}",
+              errorData.error || "",
+            ),
+        );
+      }
+
+      // Optionally we could use the returned action; for now just refetch
+      await refetch();
+
+      setShowCreateModal(false);
+    } catch (error) {
+      console.error("Error creating custom action:", error);
+      alert(
+        tAction("failedToCreateAction", {
+          error:
+            error instanceof Error ? error.message : tAction("unknown"),
+        }),
+      );
+    }
   };
 
   const handleSubmitEdit = async (updatedAction: CustomAction) => {
