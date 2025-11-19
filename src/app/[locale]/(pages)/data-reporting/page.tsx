@@ -19,15 +19,21 @@ const DataReportingIndex: React.FC = () => {
 
   useEffect(() => {
     const fetchProjects = async () => {
-      if (!isLoaded) return;
-
-      if (!user) {
-        // Not logged in: redirect to home & open auth modal
-        router.push("/?auth=login");
+      if (!isLoaded) {
+        setLoading(true);
         return;
       }
 
+      setLoading(true);
+      setError(null);
+
       try {
+        if (!user) {
+          // Not logged in: redirect to home & open auth modal
+          router.push("/?auth=login");
+          return;
+        }
+
         // If user has passcode (student), redirect directly to their project
         if (user.passcode) {
           router.push(`/data-reporting/${user.passcode}`);
@@ -54,7 +60,9 @@ const DataReportingIndex: React.FC = () => {
     fetchProjects();
   }, [user, isLoaded, router]);
 
-  if (loading) {
+  const shouldShowLoading = loading || !isLoaded;
+
+  if (shouldShowLoading) {
     return (
       <LoadingState 
         messageKey="loadingProjects"
@@ -165,15 +173,6 @@ const DataReportingIndex: React.FC = () => {
             </div>
           ))}
         </div>
-
-        {projects.length === 0 && (
-          <div className="py-12 text-center">
-            <h2 className="mb-2 font-semibold text-xl">
-              {t("noProjectsFound")}
-            </h2>
-            <p className="mb-4 text-gray-600">{t("noProjectsDescription")}</p>
-          </div>
-        )}
       </motion.div>
     </div>
   );
