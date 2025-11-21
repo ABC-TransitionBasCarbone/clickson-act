@@ -77,10 +77,12 @@ const EmissionDataManager: React.FC<EmissionDataManagerProps> = ({
                     },
                   );
 
-                  return {
-                    ...schoolCat,
-                    categoryName: globalCat.name, // Update category name too
-                    subcategories: schoolCat.subcategories.map((schoolSub) => {
+                  // Update existing subcategories and find missing ones
+                  const existingSubcategoryIds = new Set(
+                    schoolCat.subcategories.map((sub) => sub.subcategoryId),
+                  );
+                  const updatedSubcategories = schoolCat.subcategories.map(
+                    (schoolSub) => {
                       const globalSub = globalCat.subcategories?.find(
                         (gs: TranslatedSubcategory) =>
                           gs.id === schoolSub.subcategoryId,
@@ -101,13 +103,103 @@ const EmissionDataManager: React.FC<EmissionDataManagerProps> = ({
                         };
                       }
                       return schoolSub;
-                    }),
+                    },
+                  );
+
+                  // Add missing subcategories from global category
+                  const missingSubcategories =
+                    globalCat.subcategories
+                      ?.filter(
+                        (globalSub: TranslatedSubcategory) =>
+                          !existingSubcategoryIds.has(globalSub.id),
+                      )
+                      .map((globalSub: TranslatedSubcategory) => {
+                        console.log(
+                          `Adding missing subcategory ${globalSub.id} to category ${schoolCat.categoryId}:`,
+                          {
+                            name: globalSub.name,
+                            subcategoryTitle: globalSub.subcategoryTitle,
+                            description: globalSub.description,
+                          },
+                        );
+
+                        return {
+                          subcategoryId: globalSub.id,
+                          subcategoryName:
+                            globalSub.name ||
+                            globalSub.subcategoryTitle ||
+                            `Fallback-${globalSub.id}`,
+                          amount: 0,
+                          updatedAt: new Date().toISOString(),
+                        };
+                      }) || [];
+
+                  return {
+                    ...schoolCat,
+                    categoryName: globalCat.name, // Update category name too
+                    subcategories: [
+                      ...updatedSubcategories,
+                      ...missingSubcategories,
+                    ],
                   };
                 }
                 return schoolCat;
               });
 
-            setSchoolCategories(updatedCategories);
+            // Find missing categories that exist in global but not in school
+            const existingCategoryIds = new Set(
+              updatedCategories.map((cat) => cat.categoryId),
+            );
+            const missingCategories: SchoolEmissionCategory[] = data.categories
+              .filter(
+                (globalCat: TranslatedCategory) =>
+                  !existingCategoryIds.has(globalCat.id),
+              )
+              .map((globalCat: TranslatedCategory) => {
+                console.log(
+                  `Adding missing category ${globalCat.id}:`,
+                  {
+                    name: globalCat.name,
+                    subcategories: globalCat.subcategories?.map(
+                      (sub: TranslatedSubcategory) => ({
+                        id: sub.id,
+                        name: sub.name,
+                        subcategoryTitle: sub.subcategoryTitle,
+                      }),
+                    ),
+                  },
+                );
+
+                return {
+                  categoryId: globalCat.id,
+                  categoryName: globalCat.name,
+                  amount: 0,
+                  subcategories: (globalCat.subcategories || []).map(
+                    (sub: TranslatedSubcategory) => {
+                      console.log(`Initializing missing subcategory ${sub.id}:`, {
+                        name: sub.name,
+                        subcategoryTitle: sub.subcategoryTitle,
+                        description: sub.description,
+                      });
+
+                      return {
+                        subcategoryId: sub.id,
+                        subcategoryName:
+                          sub.name ||
+                          sub.subcategoryTitle ||
+                          `Fallback-${sub.id}`,
+                        amount: 0,
+                        updatedAt: new Date().toISOString(),
+                      };
+                    },
+                  ),
+                  updatedAt: new Date().toISOString(),
+                };
+              });
+
+            // Combine updated categories with missing categories
+            const allCategories = [...updatedCategories, ...missingCategories];
+            setSchoolCategories(allCategories);
           } else {
             // If school has no emission data, initialize with global categories
             const initialCategories: SchoolEmissionCategory[] =
