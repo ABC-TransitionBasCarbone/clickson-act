@@ -14,7 +14,7 @@ import { useProjectData } from "@/hooks/useProjectData";
 import { useEmissionCategories } from "@/hooks/useEmissionCategories";
 import { Edit, Share2, ArrowLeft } from "lucide-react";
 import { useUser } from "@/context/UserContext";
-import { usePathname, useRouter } from "@/i18n/navigation";
+import { useRouter } from "@/i18n/navigation";
 import { useLocale, useTranslations } from "next-intl";
 import { Action } from "@/types/Action";
 
@@ -37,7 +37,6 @@ interface CustomAction extends Action {
 const ProjectDetails = () => {
   const { slug: projectId } = useParams<{ slug: string }>();
   const { user } = useUser();
-  const pathname = usePathname();
   const router = useRouter();
   const locale = useLocale();
   const t = useTranslations("ProjectDetails");
@@ -332,7 +331,7 @@ const ProjectDetails = () => {
         throw error;
       }
     },
-    [projectId, t, refetch],
+    [projectId, t, refetch, user?.uid, user?.username],
   );
 
   // Handle share URL copy - use project ID instead of passcode

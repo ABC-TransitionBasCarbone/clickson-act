@@ -527,7 +527,13 @@
     "noSubcategories": "No subcategories",
     "subcategories": "subcategories",
     "expand": "Expand",
-    "collapse": "Collapse"
+    "collapse": "Collapse",
+    "failedToCreateCategory": "Failed to create category",
+    "failedToCreateSubcategory": "Failed to create subcategory",
+    "enterCategoryName": "Enter category name",
+    "enterDescription": "Enter description",
+    "enterSubcategoryName": "Enter subcategory name",
+    "saving": "Saving..."
   },
 
   "Common": {
@@ -595,14 +601,5 @@
     "rejectedSuccessfully": "rejected successfully",
     "failedTo": "Failed to",
     "action": "action"
-  },
-
-  "CategoriesManager": {
-    "failedToCreateCategory": "Failed to create category",
-    "failedToCreateSubcategory": "Failed to create subcategory",
-    "enterCategoryName": "Enter category name",
-    "enterDescription": "Enter description",
-    "enterSubcategoryName": "Enter subcategory name",
-    "saving": "Saving..."
   }
 }

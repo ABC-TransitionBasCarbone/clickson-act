@@ -213,7 +213,7 @@ async function handlePost(req: NextRequest, _context: SecurityContext) {
         } else {
           // For students, create pending action for teacher approval
           const pendingActionData = createPendingAction({
-            resolvedProjectId,
+            projectId: resolvedProjectId,
             studentId: studentId || "",
             studentName: studentName.trim(),
             actionId: "custom", // Special ID for custom actions
@@ -392,7 +392,7 @@ async function handlePost(req: NextRequest, _context: SecurityContext) {
           } else {
             // For students, create pending action for teacher approval
             const pendingActionData = createPendingAction({
-              resolvedProjectId,
+              projectId: resolvedProjectId,
               studentId: studentId || "",
               studentName: studentName.trim(),
               actionId,

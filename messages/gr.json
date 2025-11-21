@@ -413,7 +413,13 @@
     "noSubcategories": "Δεν υπάρχουν υποκατηγορίες",
     "subcategories": "υποκατηγορίες",
     "expand": "Ανάπτυξη",
-    "collapse": "Σύμπτυξη"
+    "collapse": "Σύμπτυξη",
+    "failedToCreateCategory": "Αποτυχία δημιουργίας κατηγορίας",
+    "failedToCreateSubcategory": "Αποτυχία δημιουργίας υποκατηγορίας",
+    "enterCategoryName": "Εισάγετε όνομα κατηγορίας",
+    "enterDescription": "Εισάγετε περιγραφή",
+    "enterSubcategoryName": "Εισάγετε όνομα υποκατηγορίας",
+    "saving": "Αποθήκευση..."
   },
 
   "currentActions": {
@@ -495,14 +501,5 @@
     "rejectedSuccessfully": "απορρίφθηκε με επιτυχία",
     "failedTo": "Αποτυχία",
     "action": "ενέργεια"
-  },
-
-  "CategoriesManager": {
-    "failedToCreateCategory": "Αποτυχία δημιουργίας κατηγορίας",
-    "failedToCreateSubcategory": "Αποτυχία δημιουργίας υποκατηγορίας",
-    "enterCategoryName": "Εισάγετε όνομα κατηγορίας",
-    "enterDescription": "Εισάγετε περιγραφή",
-    "enterSubcategoryName": "Εισάγετε όνομα υποκατηγορίας",
-    "saving": "Αποθήκευση..."
   }
 }
