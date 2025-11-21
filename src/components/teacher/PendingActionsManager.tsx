@@ -164,7 +164,7 @@ const PendingActionsManager: React.FC<PendingActionsManagerProps> = ({
         {pendingActions.map((action) => (
           <div
             key={action.id}
-            className="bg-yellow-50 p-4 border border-yellow-200 rounded-lg"
+            className="border p-4 rounded-lg"
           >
             <div className="flex justify-between items-start mb-3">
               <div className="flex-1">
@@ -184,24 +184,6 @@ const PendingActionsManager: React.FC<PendingActionsManagerProps> = ({
 
             <div className="mb-4">
               <p className="mb-2 text-gray-700">{action.actionDescription}</p>
-
-              <div className="text-gray-600 text-sm">
-                <div>
-                  <strong>{t("categoryColon")}</strong> {action.categoryData.categoryName}
-                </div>
-                {action.categoryData.subcategoryData &&
-                  action.categoryData.subcategoryData.length > 0 && (
-                    <div>
-                      <strong>{t("subcategoriesColon")}</strong>{" "}
-                      {action.categoryData.subcategoryData
-                        .map((sub) => sub.subcategoryName)
-                        .join(", ")}
-                    </div>
-                  )}
-                <div>
-                  <strong>{t("typeOfImpactColon")}</strong> {action.actionType}
-                </div>
-              </div>
             </div>
 
             {action.actionType === "Custom" && action.customActionData && (
@@ -226,18 +208,7 @@ const PendingActionsManager: React.FC<PendingActionsManagerProps> = ({
             )}
 
             <div className="flex items-center space-x-3">
-              <button
-                onClick={() => handleReviewAction(action.id, "approve")}
-                disabled={reviewingActions.has(action.id)}
-                className="btn btn-success btn-sm"
-              >
-                {reviewingActions.has(action.id) ? (
-                  <div className="loading loading-spinner loading-xs"></div>
-                ) : (
-                  t("approve")
-                )}
-              </button>
-              <button
+            <button
                 onClick={() =>
                   handleReviewAction(
                     action.id,
@@ -246,12 +217,23 @@ const PendingActionsManager: React.FC<PendingActionsManagerProps> = ({
                   )
                 }
                 disabled={reviewingActions.has(action.id)}
-                className="btn btn-error btn-sm"
+                className="btn btn-error btn-sm text-white"
               >
                 {reviewingActions.has(action.id) ? (
                   <div className="loading loading-spinner loading-xs"></div>
                 ) : (
                   t("reject")
+                )}
+              </button>
+              <button
+                onClick={() => handleReviewAction(action.id, "approve")}
+                disabled={reviewingActions.has(action.id)}
+                className="btn btn-success btn-sm text-white"
+              >
+                {reviewingActions.has(action.id) ? (
+                  <div className="loading loading-spinner loading-xs"></div>
+                ) : (
+                  t("approve")
                 )}
               </button>
             </div>

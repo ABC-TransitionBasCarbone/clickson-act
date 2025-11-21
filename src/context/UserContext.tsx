@@ -10,6 +10,7 @@ type UserData = {
   token?: string;
   role?: string;
   tokenExpiry?: number; // Add token expiry tracking
+  schoolId?: string; // School ID for teachers
 };
 
 type UserContextType = {
@@ -84,6 +85,7 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
       const storedStudentId = localStorage.getItem("studentId");
       const storedUid = localStorage.getItem("uid");
       const storedRole = localStorage.getItem("role");
+      const storedSchoolId = localStorage.getItem("schoolId");
 
       // Get token from secure storage
       const storedToken = secureStorage.getToken();
@@ -109,6 +111,7 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
           token: storedToken || undefined,
           role: storedRole || undefined,
           tokenExpiry: tokenExpiry,
+          schoolId: storedSchoolId || undefined,
         };
 
         // If user has a token (teacher or admin), validate it
@@ -157,6 +160,7 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
       localStorage.removeItem("studentId");
       localStorage.removeItem("uid");
       localStorage.removeItem("role");
+      localStorage.removeItem("schoolId");
 
       // Clear secure storage
       secureStorage.removeToken();
@@ -187,6 +191,11 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
           localStorage.setItem("role", newUser.role);
         } else {
           localStorage.removeItem("role");
+        }
+        if (newUser.schoolId) {
+          localStorage.setItem("schoolId", newUser.schoolId);
+        } else {
+          localStorage.removeItem("schoolId");
         }
 
         // Store sensitive data (token) in sessionStorage

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { adminDb } from "../../../../../firebaseAdmin";
+import { resolveProjectId } from "../../../../../lib/project-utils";
 
 // Interface for project emissions data
 interface ProjectEmissions {
@@ -39,12 +40,9 @@ export async function POST(
       );
     }
 
-    // Verify project exists
-    const projectDoc = await adminDb
-      .collection("projects")
-      .doc(projectId)
-      .get();
-    if (!projectDoc.exists) {
+    // Resolve project ID from UUID or passcode
+    const resolvedProjectId = await resolveProjectId(projectId);
+    if (!resolvedProjectId) {
       return NextResponse.json({ error: "Project not found" }, { status: 404 });
     }
 
@@ -52,7 +50,7 @@ export async function POST(
 
     // Create emissions document
     const emissionsData: ProjectEmissions = {
-      projectId,
+      projectId: resolvedProjectId,
       studentId: studentId || undefined,
       studentName: studentName || "Anonymous",
       emissions: emissions.map((emission: Record<string, unknown>) => ({
@@ -78,7 +76,7 @@ export async function POST(
 
     await adminDb
       .collection("projects")
-      .doc(projectId)
+      .doc(resolvedProjectId)
       .collection("emissions")
       .doc(emissionsDocId)
       .set(emissionsData);
@@ -86,7 +84,7 @@ export async function POST(
     // Also update the project document with aggregated emissions if needed
     const updatedEmissions = totalEmissions || 0;
 
-    await adminDb.collection("projects").doc(projectId).update({
+    await adminDb.collection("projects").doc(resolvedProjectId).update({
       emissions: updatedEmissions,
       lastEmissionsUpdate: currentDate,
     });
@@ -123,10 +121,16 @@ export async function GET(
       );
     }
 
+    // Resolve project ID from UUID or passcode
+    const resolvedProjectId = await resolveProjectId(projectId);
+    if (!resolvedProjectId) {
+      return NextResponse.json({ error: "Project not found" }, { status: 404 });
+    }
+    
     // Verify project exists
     const projectDoc = await adminDb
       .collection("projects")
-      .doc(projectId)
+      .doc(resolvedProjectId)
       .get();
     if (!projectDoc.exists) {
       return NextResponse.json({ error: "Project not found" }, { status: 404 });
@@ -137,7 +141,7 @@ export async function GET(
     // Get emissions data from project's emissions subcollection
     let emissionsQuery = adminDb
       .collection("projects")
-      .doc(projectId)
+      .doc(resolvedProjectId)
       .collection("emissions");
 
     // If studentId is provided, filter by student
@@ -183,7 +187,7 @@ export async function GET(
 
     return NextResponse.json({
       success: true,
-      projectId,
+      projectId: resolvedProjectId,
       projectName: projectData?.name,
       projectEmissions: projectData?.emissions || 0,
       totalCalculatedEmissions: totalProjectEmissions,

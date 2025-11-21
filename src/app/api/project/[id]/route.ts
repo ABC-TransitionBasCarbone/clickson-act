@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { adminDb } from "../../../../firebaseAdmin";
+import { resolveProjectId } from "../../../../lib/project-utils";
 
 // Get project details by ID
 export async function GET(
@@ -16,8 +17,14 @@ export async function GET(
       );
     }
 
+    // Resolve project ID from UUID or passcode
+    const resolvedProjectId = await resolveProjectId(id);
+    if (!resolvedProjectId) {
+      return NextResponse.json({ error: "Project not found" }, { status: 404 });
+    }
+
     // Get project document
-    const projectDoc = await adminDb.collection("projects").doc(id).get();
+    const projectDoc = await adminDb.collection("projects").doc(resolvedProjectId).get();
 
     if (!projectDoc.exists) {
       return NextResponse.json({ error: "Project not found" }, { status: 404 });

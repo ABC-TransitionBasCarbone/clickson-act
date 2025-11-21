@@ -104,6 +104,7 @@ const LoginForm: React.FC<LoginFormProps> = ({
         tokenExpiry: data.expiresIn
           ? Date.now() + data.expiresIn * 1000
           : undefined,
+        schoolId: data.user.schoolId || undefined,
       });
 
       // Call success callback if provided

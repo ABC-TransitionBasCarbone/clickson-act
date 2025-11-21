@@ -153,6 +153,7 @@ async function loginHandler(req: NextRequest) {
           name:
             userData?.name || `${userData?.firstName} ${userData?.lastName}`,
           role: userData?.role || "teacher",
+          schoolId: userData?.schoolId || undefined,
         },
         message: "Login successful",
       });

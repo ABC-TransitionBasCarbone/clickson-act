@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { adminDb } from "../../../firebaseAdmin";
+import { v4 as uuidv4 } from "uuid";
 
 interface ProjectData {
   id: string;
@@ -87,18 +88,22 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    // Generate UUID for project ID
+    const projectId = uuidv4();
+
     // Generate unique passcode
     let passcode = generatePasscode();
     let isUnique = false;
     let attempts = 0;
 
-    // Ensure passcode is unique (max 10 attempts)
+    // Ensure passcode is unique by querying passcode field (max 10 attempts)
     while (!isUnique && attempts < 10) {
-      const existingProject = await adminDb
+      const existingProjectQuery = await adminDb
         .collection("projects")
-        .doc(passcode)
+        .where("passcode", "==", passcode)
+        .limit(1)
         .get();
-      if (!existingProject.exists) {
+      if (existingProjectQuery.empty) {
         isUnique = true;
       } else {
         passcode = generatePasscode();
@@ -113,9 +118,9 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Create project document with passcode as ID
+    // Create project document with UUID as ID
     const projectData = {
-      id: passcode,
+      id: projectId,
       name: sanitizedName,
       schoolId: schoolId,
       schoolName: schoolName,
@@ -129,7 +134,7 @@ export async function POST(req: NextRequest) {
       passcode,
     };
 
-    await adminDb.collection("projects").doc(passcode).set(projectData);
+    await adminDb.collection("projects").doc(projectId).set(projectData);
 
     return NextResponse.json({
       success: true,

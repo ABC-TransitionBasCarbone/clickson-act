@@ -250,6 +250,7 @@ async function registerHandler(req: NextRequest) {
         username: sanitizedData.name,
         name: sanitizedData.name,
         role: role,
+        schoolId: schoolId || undefined,
       },
     });
   } catch (error: unknown) {

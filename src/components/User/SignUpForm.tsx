@@ -329,6 +329,7 @@ const SignUpForm: React.FC<SignUpFormProps> = ({
         uid: data.user.uid,
         token: data.token,
         role: data.user.role,
+        schoolId: data.user.schoolId || undefined,
       });
 
       // Call success callback if provided

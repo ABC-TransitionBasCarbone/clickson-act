@@ -335,9 +335,15 @@ const ProjectDetails = () => {
     [projectId, t, refetch],
   );
 
-  // Handle share URL copy
+  // Handle share URL copy - use project ID instead of passcode
   const handleShareClick = () => {
-    const fullUrl = `${window.location.origin}/${locale}${pathname}`;
+    // Use project ID (UUID) in the URL, not passcode
+    const projectId = project?.id;
+    if (!projectId) {
+      alert(t("error") || "Project ID not available");
+      return;
+    }
+    const fullUrl = `${window.location.origin}/${locale}/dashboard/projects/${projectId}`;
     navigator.clipboard
       .writeText(fullUrl)
       .then(() => {
@@ -372,6 +378,13 @@ const ProjectDetails = () => {
 
   // Check if user is admin
   const isAdmin = user?.role === "admin";
+  
+  // Check if user is the project owner
+  // Owner is: teacher from same school, admin, or the creator
+  const isProjectOwner = 
+    isAdmin || 
+    user?.uid === project?.teacherId || 
+    (user?.schoolId && project?.schoolId && user.schoolId === project.schoolId);
 
   const normalizeAction = (action: ActionData): CustomAction => ({
     id: action.id,
@@ -491,49 +504,51 @@ const ProjectDetails = () => {
                   )}
                 </div>
                 {/* Passcode and Buttons in horizontal flex container */}
-                <div className="flex flex-wrap items-center gap-4 mt-5">
-                  {/* Passcode Display */}
-                  {project?.passcode && (
-                    <div className="flex flex-col items-center gap-2">
-                      <button
-                        onClick={handlePasscodeClick}
-                        className={`cursor-pointer rounded-lg border-2 border-dashed px-3 py-1 text-xl font-bold transition-colors ${
-                          passcodeButtonText === t("copied")
-                            ? "border-green-300 bg-green-50 text-green-600 hover:border-green-400 hover:bg-green-100 hover:text-green-800"
-                            : "text-primary border-blue-300 bg-blue-50 hover:border-blue-400 hover:bg-blue-100 hover:text-blue-800"
-                        }`}
-                        title={t("overview.clickToCopyPasscode")}
-                      >
-                        {passcodeButtonText === t("copied")
-                          ? t("copied")
-                          : project.passcode}
-                      </button>
-                    </div>
-                  )}
-
-                  {/* Action Buttons */}
-                  <div className="flex items-center gap-2">
-                    {/* Share Button */}
-                    <button
-                      onClick={handleShareClick}
-                      className="flex items-center gap-2 btn btn-secondary"
-                    >
-                      <Share2 className="w-4 h-4" />
-                      {shareButtonText}
-                    </button>
-
-                    {/* Admin-only Edit Button */}
-                    {isAdmin && (
-                      <button
-                        onClick={() => setIsEditModalOpen(true)}
-                        className="flex items-center gap-2 btn btn-primary"
-                      >
-                        <Edit className="w-4 h-4" />
-                        {t("overview.editProject")}
-                      </button>
+                {isProjectOwner && (
+                  <div className="flex flex-wrap items-center gap-4 mt-5">
+                    {/* Passcode Display */}
+                    {project?.passcode && (
+                      <div className="flex flex-col items-center gap-2">
+                        <button
+                          onClick={handlePasscodeClick}
+                          className={`cursor-pointer rounded-lg border-2 border-dashed px-3 py-1 text-xl font-bold transition-colors ${
+                            passcodeButtonText === t("copied")
+                              ? "border-green-300 bg-green-50 text-green-600 hover:border-green-400 hover:bg-green-100 hover:text-green-800"
+                              : "text-primary border-blue-300 bg-blue-50 hover:border-blue-400 hover:bg-blue-100 hover:text-blue-800"
+                          }`}
+                          title={t("overview.clickToCopyPasscode")}
+                        >
+                          {passcodeButtonText === t("copied")
+                            ? t("copied")
+                            : project.passcode}
+                        </button>
+                      </div>
                     )}
+
+                    {/* Action Buttons */}
+                    <div className="flex items-center gap-2">
+                      {/* Share Button */}
+                      <button
+                        onClick={handleShareClick}
+                        className="flex items-center gap-2 btn btn-secondary"
+                      >
+                        <Share2 className="w-4 h-4" />
+                        {shareButtonText}
+                      </button>
+
+                      {/* Admin-only Edit Button */}
+                      {isAdmin && (
+                        <button
+                          onClick={() => setIsEditModalOpen(true)}
+                          className="flex items-center gap-2 btn btn-primary"
+                        >
+                          <Edit className="w-4 h-4" />
+                          {t("overview.editProject")}
+                        </button>
+                      )}
+                    </div>
                   </div>
-                </div>
+                )}
               </div>
 
               {/* Total Reduction Display and Actions */}

@@ -27,19 +27,25 @@ async function studentLoginHandler(req: NextRequest) {
       return NextResponse.json({ error: "Invalid passcode" }, { status: 400 });
     }
 
-    // Find project with this passcode
-    const projectDoc = await adminDb
+    // Find project with this passcode (query by passcode field)
+    const projectQuery = await adminDb
       .collection("projects")
-      .doc(sanitizedPasscode)
+      .where("passcode", "==", sanitizedPasscode)
+      .limit(1)
       .get();
-    if (!projectDoc.exists) {
+    
+    if (projectQuery.empty) {
       return NextResponse.json({ error: "Invalid passcode" }, { status: 404 });
     }
+    
+    const projectDoc = projectQuery.docs[0];
+    const projectId = projectDoc.id; // Get the project ID (UUID)
+    
     // Register student under this project
     const studentId = uuidv4();
     await adminDb
       .collection("projects")
-      .doc(sanitizedPasscode)
+      .doc(projectId)
       .collection("students")
       .doc(studentId)
       .set({
@@ -50,7 +56,7 @@ async function studentLoginHandler(req: NextRequest) {
     return NextResponse.json({
       studentId,
       name: sanitizedName,
-      projectId: sanitizedPasscode,
+      projectId: projectId,
     });
   } catch (error: unknown) {
     console.error("Student login error:", error);

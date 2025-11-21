@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { adminDb } from "../../../../../firebaseAdmin";
 import { v4 as uuidv4 } from "uuid";
+import { resolveProjectId } from "../../../../../lib/project-utils";
 import {
   PendingAction,
   createPendingAction,
@@ -19,7 +20,7 @@ import {
 interface ProjectAction {
   id: string;
   actionTemplateId: string; // Reference to the action template
-  projectId: string;
+  resolvedProjectId: string;
   studentId?: string; // Student who added the action
   studentName: string; // Name of the student (manager)
 
@@ -115,6 +116,12 @@ async function handlePost(req: NextRequest, _context: SecurityContext) {
       );
     }
 
+    // Resolve project ID from UUID or passcode
+    const resolvedProjectId = await resolveProjectId(projectId);
+    if (!resolvedProjectId) {
+      return NextResponse.json({ error: "Project not found" }, { status: 404 });
+    }
+
     // Validate student name
     if (!studentName || !validateStudentName(studentName)) {
       return NextResponse.json(
@@ -134,7 +141,7 @@ async function handlePost(req: NextRequest, _context: SecurityContext) {
     // Verify project exists
     const projectDoc = await adminDb
       .collection("projects")
-      .doc(projectId)
+      .doc(resolvedProjectId)
       .get();
     if (!projectDoc.exists) {
       return NextResponse.json({ error: "Project not found" }, { status: 404 });
@@ -155,7 +162,7 @@ async function handlePost(req: NextRequest, _context: SecurityContext) {
           const projectAction: ProjectAction = {
             id: actionId_generated,
             actionTemplateId: "custom", // Special ID for custom actions
-            projectId,
+            resolvedProjectId,
             studentId: studentId || "",
             studentName: studentName.trim(),
             title: customActionData.title,
@@ -198,7 +205,7 @@ async function handlePost(req: NextRequest, _context: SecurityContext) {
           // Add to project's actions subcollection
           await adminDb
             .collection("projects")
-            .doc(projectId)
+            .doc(resolvedProjectId)
             .collection("actions")
             .doc(actionId_generated)
             .set(projectAction);
@@ -206,7 +213,7 @@ async function handlePost(req: NextRequest, _context: SecurityContext) {
         } else {
           // For students, create pending action for teacher approval
           const pendingActionData = createPendingAction({
-            projectId,
+            resolvedProjectId,
             studentId: studentId || "",
             studentName: studentName.trim(),
             actionId: "custom", // Special ID for custom actions
@@ -231,7 +238,7 @@ async function handlePost(req: NextRequest, _context: SecurityContext) {
           // Add to project's pending actions subcollection
           await adminDb
             .collection("projects")
-            .doc(projectId)
+            .doc(resolvedProjectId)
             .collection("pendingActions")
             .doc(actionId_generated)
             .set(pendingAction);
@@ -293,7 +300,7 @@ async function handlePost(req: NextRequest, _context: SecurityContext) {
           // Check if this action is already pending, approved, or exists in project actions
           const existingPendingQuery = await adminDb
             .collection("projects")
-            .doc(projectId)
+            .doc(resolvedProjectId)
             .collection("pendingActions")
             .where("actionId", "==", actionId)
             .where("status", "in", ["pending", "approved"])
@@ -302,7 +309,7 @@ async function handlePost(req: NextRequest, _context: SecurityContext) {
 
           const existingActionQuery = await adminDb
             .collection("projects")
-            .doc(projectId)
+            .doc(resolvedProjectId)
             .collection("actions")
             .where("actionTemplateId", "==", actionId)
             .limit(1)
@@ -331,7 +338,7 @@ async function handlePost(req: NextRequest, _context: SecurityContext) {
             const projectAction: ProjectAction = {
               id: actionId_generated,
               actionTemplateId: actionId,
-              projectId,
+              resolvedProjectId,
               studentId: studentId || "",
               studentName: studentName.trim(),
               title:
@@ -376,7 +383,7 @@ async function handlePost(req: NextRequest, _context: SecurityContext) {
             // Add to project's actions subcollection
             await adminDb
               .collection("projects")
-              .doc(projectId)
+              .doc(resolvedProjectId)
               .collection("actions")
               .doc(actionId_generated)
               .set(projectAction);
@@ -385,7 +392,7 @@ async function handlePost(req: NextRequest, _context: SecurityContext) {
           } else {
             // For students, create pending action for teacher approval
             const pendingActionData = createPendingAction({
-              projectId,
+              resolvedProjectId,
               studentId: studentId || "",
               studentName: studentName.trim(),
               actionId,
@@ -411,7 +418,7 @@ async function handlePost(req: NextRequest, _context: SecurityContext) {
             // Add to project's pending actions subcollection
             await adminDb
               .collection("projects")
-              .doc(projectId)
+              .doc(resolvedProjectId)
               .collection("pendingActions")
               .doc(actionId_generated)
               .set(pendingAction);
@@ -457,10 +464,16 @@ async function handleGet(req: NextRequest, _context: SecurityContext) {
     const pathParts = url.pathname.split("/");
     const projectId = pathParts[pathParts.length - 2]; // Get the project ID from the URL
 
+    // Resolve project ID from UUID or passcode
+    const resolvedProjectId = await resolveProjectId(projectId);
+    if (!resolvedProjectId) {
+      return NextResponse.json({ error: "Project not found" }, { status: 404 });
+    }
+
     // Get all actions for this project
     const actionsSnapshot = await adminDb
       .collection("projects")
-      .doc(projectId)
+      .doc(resolvedProjectId)
       .collection("actions")
       .orderBy("dateAdded", "desc")
       .get();
@@ -506,6 +519,12 @@ async function handlePut(req: NextRequest, _context: SecurityContext) {
       );
     }
 
+    // Resolve project ID from UUID or passcode
+    const resolvedProjectId = await resolveProjectId(projectId);
+    if (!resolvedProjectId) {
+      return NextResponse.json({ error: "Project not found" }, { status: 404 });
+    }
+
     if (!sanitizedData.id) {
       return NextResponse.json(
         { error: "Action ID is required" },
@@ -516,7 +535,7 @@ async function handlePut(req: NextRequest, _context: SecurityContext) {
     // Verify project exists
     const projectDoc = await adminDb
       .collection("projects")
-      .doc(projectId)
+      .doc(resolvedProjectId)
       .get();
     if (!projectDoc.exists) {
       return NextResponse.json({ error: "Project not found" }, { status: 404 });
@@ -525,7 +544,7 @@ async function handlePut(req: NextRequest, _context: SecurityContext) {
     // Check if action exists in project
     const actionDoc = await adminDb
       .collection("projects")
-      .doc(projectId)
+      .doc(resolvedProjectId)
       .collection("actions")
       .doc(updateData.id)
       .get();
@@ -537,7 +556,7 @@ async function handlePut(req: NextRequest, _context: SecurityContext) {
     // Update the action in the project
     await adminDb
       .collection("projects")
-      .doc(projectId)
+      .doc(resolvedProjectId)
       .collection("actions")
       .doc(updateData.id)
       .update(updateData);
@@ -573,6 +592,12 @@ export async function DELETE(
       );
     }
 
+    // Resolve project ID from UUID or passcode
+    const resolvedProjectId = await resolveProjectId(projectId);
+    if (!resolvedProjectId) {
+      return NextResponse.json({ error: "Project not found" }, { status: 404 });
+    }
+
     if (!actionId) {
       return NextResponse.json(
         { error: "Action ID is required" },
@@ -583,7 +608,7 @@ export async function DELETE(
     // Verify project exists
     const projectDoc = await adminDb
       .collection("projects")
-      .doc(projectId)
+      .doc(resolvedProjectId)
       .get();
     if (!projectDoc.exists) {
       return NextResponse.json({ error: "Project not found" }, { status: 404 });
@@ -592,7 +617,7 @@ export async function DELETE(
     // Check if action exists in project
     const actionDoc = await adminDb
       .collection("projects")
-      .doc(projectId)
+      .doc(resolvedProjectId)
       .collection("actions")
       .doc(actionId)
       .get();
@@ -604,7 +629,7 @@ export async function DELETE(
     // Delete the action from the project
     await adminDb
       .collection("projects")
-      .doc(projectId)
+      .doc(resolvedProjectId)
       .collection("actions")
       .doc(actionId)
       .delete();
