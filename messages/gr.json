@@ -45,7 +45,8 @@
     "withPasscode": "με κωδικό",
     "continueToCalculator": "Συνέχεια στον Υπολογιστή",
     "loadingSchools": "Φόρτωση σχολείων...",
-    "other": "Άλλο"
+    "other": "Άλλο",
+    "loading": "Φόρτωση..."
   },
 
   "HomePage": {

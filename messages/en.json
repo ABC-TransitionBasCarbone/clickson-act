@@ -45,7 +45,8 @@
     "withPasscode": "with passcode",
     "continueToCalculator": "Continue to Calculator",
     "loadingSchools": "Loading schools...",
-    "other": "Other"
+    "other": "Other",
+    "loading": "Loading..."
   },
 
   "HomePage": {

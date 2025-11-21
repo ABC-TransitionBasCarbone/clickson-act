@@ -452,13 +452,13 @@ const ActionModal: React.FC<ActionModalProps> = ({
           {/* Nature */}
           <div className="grid gap-2">
             <label htmlFor="nature">{t("nature")}</label>
-            <input
+            <textarea
               id="nature"
               value={newAction.nature}
               onChange={(e) =>
                 setNewAction({ ...newAction, nature: e.target.value })
               }
-              className="input w-full"
+              className="textarea w-full"
               disabled={fieldDisabled || !canEditField("nature")}
             />
           </div>

@@ -20,6 +20,7 @@ const PassCodeForm: React.FC<PassCodeFormProps> = ({
   const { user, setUser } = useUser();
   const [formData, setFormData] = useState({ passcode: "", username: "" });
   const [error, setError] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
 
   // Check if user is already logged in when component mounts
   useEffect(() => {
@@ -49,6 +50,7 @@ const PassCodeForm: React.FC<PassCodeFormProps> = ({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
+    setLoading(true);
     try {
       const res = await fetch("/api/auth/student-login", {
         method: "POST",
@@ -81,6 +83,8 @@ const PassCodeForm: React.FC<PassCodeFormProps> = ({
         message = err.message;
       }
       setError(message);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -134,8 +138,8 @@ const PassCodeForm: React.FC<PassCodeFormProps> = ({
 
       {error && <div className="text-red-500">{error}</div>}
 
-      <button type="submit" className="btn btn-primary capitalize">
-        {t("DataReporting.joinPasscode")}
+      <button type="submit" className="btn btn-primary capitalize" disabled={loading}>
+        {loading ? t("User.loading") || "Loading..." : t("DataReporting.joinPasscode")}
       </button>
     </form>
   );

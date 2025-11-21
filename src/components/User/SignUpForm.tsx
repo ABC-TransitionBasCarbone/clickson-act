@@ -236,6 +236,7 @@ const SignUpForm: React.FC<SignUpFormProps> = ({
     Array<{ id: string; name: string; goal: number; deadlineYear: string }>
   >([]);
   const [loading, setLoading] = useState(true);
+  const [submitting, setSubmitting] = useState(false);
 
   // Fetch schools from database
   useEffect(() => {
@@ -297,6 +298,7 @@ const SignUpForm: React.FC<SignUpFormProps> = ({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
+    setSubmitting(true);
     try {
       const res = await fetch("/api/auth/register", {
         method: "POST",
@@ -347,6 +349,8 @@ const SignUpForm: React.FC<SignUpFormProps> = ({
         message = err.message;
       }
       setError(message);
+    } finally {
+      setSubmitting(false);
     }
   };
 
@@ -556,8 +560,8 @@ const SignUpForm: React.FC<SignUpFormProps> = ({
 
       {error && <div className="text-red-500">{error}</div>}
 
-      <button type="submit" className="btn btn-primary capitalize">
-        {t("User.signup")}
+      <button type="submit" className="btn btn-primary capitalize" disabled={submitting}>
+        {submitting ? t("User.loading") || "Loading..." : t("User.signup")}
       </button>
 
       {!onStayOnPage && (

@@ -25,6 +25,7 @@ const LoginForm: React.FC<LoginFormProps> = ({
   const { user, setUser } = useUser();
   const [formData, setFormData] = useState({ email: "", password: "" });
   const [error, setError] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
 
   // Check if user is already logged in when component mounts
   useEffect(() => {
@@ -62,6 +63,7 @@ const LoginForm: React.FC<LoginFormProps> = ({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
+    setLoading(true);
     try {
       const res = await fetch("/api/auth/login", {
         method: "POST",
@@ -122,6 +124,8 @@ const LoginForm: React.FC<LoginFormProps> = ({
         message = err.message;
       }
       setError(message);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -215,8 +219,8 @@ const LoginForm: React.FC<LoginFormProps> = ({
       {error && <div className="text-red-500">{error}</div>}
 
       <div className="flex flex-col">
-        <button type="submit" className="btn btn-primary capitalize">
-          {t("User.login")}
+        <button type="submit" className="btn btn-primary capitalize" disabled={loading}>
+          {loading ? t("User.loading") || "Loading..." : t("User.login")}
         </button>
 
         {!onStayOnPage && (
