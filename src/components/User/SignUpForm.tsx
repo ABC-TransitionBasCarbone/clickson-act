@@ -228,8 +228,6 @@ const SignUpForm: React.FC<SignUpFormProps> = ({
     postalCode: "",
     school: "",
     customSchool: "",
-    goal: 50,
-    deadlineYear: "2030",
   });
   const [error, setError] = useState<string | null>(null);
   const [schools, setSchools] = useState<
@@ -316,9 +314,6 @@ const SignUpForm: React.FC<SignUpFormProps> = ({
             formData.school === "Other"
               ? formData.customSchool
               : formData.school,
-          goal: formData.school === "Other" ? formData.goal : null,
-          deadlineYear:
-            formData.school === "Other" ? formData.deadlineYear : null,
         }),
       });
       const data = await res.json();
@@ -511,51 +506,6 @@ const SignUpForm: React.FC<SignUpFormProps> = ({
             onChange={handleChange}
           />
         </label>
-      )}
-
-      {/* Goal and Deadline Fields - Only show when creating new school */}
-      {formData.school === "Other" && (
-        <>
-          {/* Goal Field */}
-          <div className="w-full">
-            <label className="input validator w-full">
-              <span className="text-gray-600">%</span>
-              <input
-                type="number"
-                name="goal"
-                required
-                placeholder={t("User.schoolGoal") + " *"}
-                value={formData.goal}
-                onChange={handleChange}
-                min="0"
-                max="100"
-              />
-            </label>
-            <p className="mt-1 text-gray-500 text-xs">
-              {t("User.schoolGoalHelp")}
-            </p>
-          </div>
-
-          {/* Deadline Year Field */}
-          <div className="w-full">
-            <label className="input validator w-full">
-              <span className="text-gray-600">{t("User.deadlineYear")}</span>
-              <input
-                type="number"
-                name="deadlineYear"
-                required
-                placeholder={t("User.deadlineYear") + " *"}
-                value={formData.deadlineYear}
-                onChange={handleChange}
-                min={new Date().getFullYear()}
-                max={new Date().getFullYear() + 50}
-              />
-            </label>
-            <p className="mt-1 text-gray-500 text-xs">
-              {t("User.deadlineYearHelp")}
-            </p>
-          </div>
-        </>
       )}
 
       {error && <div className="text-red-500">{error}</div>}
