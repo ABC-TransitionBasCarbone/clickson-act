@@ -55,8 +55,8 @@ const generateChartDataFromActions = (
 ) => {
   const data = [];
 
-  // Get current year for goal line calculations
-  const currentYear = new Date().getFullYear();
+  // Paris Agreement target year (carbon neutrality by 2050)
+  const parisAgreementYear = 2050;
 
   // Create a map to track cumulative reduction achieved by each year
   const cumulativeReductions = new Map<number, number>();
@@ -68,11 +68,18 @@ const generateChartDataFromActions = (
 
   // Process ONLY completed actions to show their cumulative impact
   // Available actions should not affect the graph until they are completed
+  // Only count actions from startYear onwards to ensure all trajectories start at the same point
   completedActions.forEach((action) => {
     // Use dateCompleted if available, otherwise fall back to dateAdded
     const completionDate = action.dateCompleted || action.dateAdded;
     const actionStartYear = new Date(completionDate).getFullYear();
     const timeline = action.timeline || 1; // Default to 1 year if not specified
+
+    // Only process actions that start from startYear onwards
+    // This ensures all trajectories start at totalEmissions in startYear
+    if (actionStartYear < startYear) {
+      return; // Skip actions completed before startYear
+    }
 
     // For each year, add the reduction from this action during its timeline period
     for (let year = startYear; year <= endYear; year++) {
@@ -93,68 +100,57 @@ const generateChartDataFromActions = (
   for (let year = startYear; year <= endYear; year++) {
     const cumulativeReductionPercentage = cumulativeReductions.get(year) || 0;
 
-    // Calculate current emissions after cumulative reduction
-    const currentEmissions =
+    // Calculate actual emissions after cumulative reduction (purple line)
+    // Starts at totalEmissions in startYear and decreases based on actions from that point
+    const actualEmissions =
       totalEmissions * (1 - cumulativeReductionPercentage / 100);
 
-    // Calculate sub-goal progression line (smooth linear progression from current year to sub-goal)
-    let subGoalReductionPercentage = 0;
-    if (year >= currentYear && subGoalYear > currentYear) {
-      if (year <= subGoalYear) {
-        // Linear progression from current year (0%) to sub-goal
-        // Calculate the fraction of progress from current year to sub-goal year
-        const progressFraction =
-          (year - currentYear) / (subGoalYear - currentYear);
-        subGoalReductionPercentage = subGoal * progressFraction;
-      } else {
-        // After sub-goal year, maintain sub-goal level
-        subGoalReductionPercentage = subGoal;
-      }
+    // Calculate Paris Agreement trajectory (green line)
+    // Goes from totalEmissions at startYear to 0 (carbon neutrality) by 2050
+    let parisAgreementEmissions = totalEmissions;
+    const targetYear = Math.min(parisAgreementYear, endYear);
+    if (year >= startYear && year <= targetYear) {
+      // Linear progression from startYear to targetYear (0 emissions)
+      const progressFraction = (year - startYear) / (targetYear - startYear);
+      parisAgreementEmissions = totalEmissions * (1 - progressFraction);
+    } else if (year > targetYear) {
+      // After target year, maintain at 0
+      parisAgreementEmissions = 0;
     }
 
-    // Calculate final goal progression line (smooth linear progression from current year to final goal)
-    let finalGoalReductionPercentage = 0;
-    if (year >= currentYear && finalGoalYear > currentYear) {
-      if (subGoalYear > currentYear && year <= subGoalYear) {
-        // First phase: linear progression from current year to sub-goal
-        const progressFraction =
-          (year - currentYear) / (subGoalYear - currentYear);
-        finalGoalReductionPercentage = subGoal * progressFraction;
-      } else if (
-        subGoalYear > currentYear &&
-        year > subGoalYear &&
-        finalGoalYear > subGoalYear
-      ) {
+    // Calculate School's trajectory (orange line) - using goal & subgoal
+    // Starts at totalEmissions and follows the school's goal progression
+    let schoolTrajectoryEmissions = totalEmissions;
+    
+    if (year >= startYear) {
+      let schoolReductionPercentage = 0;
+      
+      if (subGoalYear > startYear && year <= subGoalYear) {
+        // First phase: linear progression from startYear to sub-goal
+        const progressFraction = (year - startYear) / (subGoalYear - startYear);
+        schoolReductionPercentage = subGoal * progressFraction;
+      } else if (year > subGoalYear && finalGoalYear > subGoalYear) {
         // Second phase: linear progression from sub-goal to final goal
         const progressFraction =
           (year - subGoalYear) / (finalGoalYear - subGoalYear);
-        finalGoalReductionPercentage =
+        schoolReductionPercentage =
           subGoal + (finalGoal - subGoal) * progressFraction;
-      } else if (subGoalYear <= currentYear && finalGoalYear > currentYear) {
-        // Direct linear progression from current year to final goal (skip sub-goal if it's in the past)
-        const progressFraction =
-          (year - currentYear) / (finalGoalYear - currentYear);
-        finalGoalReductionPercentage = finalGoal * progressFraction;
+      } else if (subGoalYear <= startYear && finalGoalYear > startYear) {
+        // Direct linear progression from startYear to final goal (skip sub-goal if it's in the past)
+        const progressFraction = (year - startYear) / (finalGoalYear - startYear);
+        schoolReductionPercentage = finalGoal * progressFraction;
       }
+      
+      schoolTrajectoryEmissions =
+        totalEmissions * (1 - schoolReductionPercentage / 100);
     }
-
-    // Convert percentage reductions to actual emission values
-    const subGoalEmissions =
-      totalEmissions * (1 - subGoalReductionPercentage / 100);
-    const finalGoalEmissions =
-      totalEmissions * (1 - finalGoalReductionPercentage / 100);
 
     data.push({
       date: `${year}`,
-      currentEmissions: Math.max(currentEmissions, 0),
-      subGoalEmissions: Math.max(subGoalEmissions, 0),
-      finalGoalEmissions: Math.max(finalGoalEmissions, 0),
+      actualEmissions: Math.max(actualEmissions, 0),
+      schoolTrajectoryEmissions: Math.max(schoolTrajectoryEmissions, 0),
+      parisAgreementEmissions: Math.max(parisAgreementEmissions, 0),
       currentReduction: Math.min(cumulativeReductionPercentage, 100),
-      subGoalProgress: Math.min(Math.max(subGoalReductionPercentage, 0), 100),
-      finalGoalProgress: Math.min(
-        Math.max(finalGoalReductionPercentage, 0),
-        100,
-      ),
     });
   }
 
@@ -170,8 +166,10 @@ const generateChartData = (
   totalEmissions: number = 1000, // Default total emissions if not provided
 ) => {
   const data = [];
+  const parisAgreementYear = 2050;
   let current = 0;
   let currentAlt = 0;
+  
   for (let year = start; year <= end; year++) {
     current += baseRate;
     currentAlt += selectedRate ? selectedRate + baseRate : 0;
@@ -180,15 +178,32 @@ const generateChartData = (
       ? Math.min(currentAlt, 100)
       : Math.min(current, 100);
 
-    const currentEmissions =
+    // Actual emissions (purple line) - starts at totalEmissions
+    const actualEmissions =
       totalEmissions * (1 - currentReductionPercentage / 100);
+
+    // Paris Agreement trajectory (green line) - goes from totalEmissions to 0 by 2050
+    let parisAgreementEmissions = totalEmissions;
+    const targetYear = Math.min(parisAgreementYear, end);
+    if (year >= start && year <= targetYear) {
+      const progressFraction = (year - start) / (targetYear - start);
+      parisAgreementEmissions = totalEmissions * (1 - progressFraction);
+    } else if (year > targetYear) {
+      parisAgreementEmissions = 0;
+    }
+
+    // School trajectory (orange line) - for legacy, use the same as actual emissions
+    // This is a fallback, should use generateChartDataFromActions when possible
+    const schoolTrajectoryEmissions = actualEmissions;
 
     data.push({
       date: `${year}`,
       baseReduction: Math.min(current, 100),
       selectedReduction: selectedRate ? Math.min(currentAlt, 100) : undefined,
       currentReduction: currentReductionPercentage,
-      currentEmissions: Math.max(currentEmissions, 0),
+      actualEmissions: Math.max(actualEmissions, 0),
+      schoolTrajectoryEmissions: Math.max(schoolTrajectoryEmissions, 0),
+      parisAgreementEmissions: Math.max(parisAgreementEmissions, 0),
     });
   }
   return data;
@@ -266,10 +281,7 @@ const SchoolGoalCard: React.FC<SchoolGoalCardProps> = ({
             />
             <Tooltip
               formatter={(val: number, name: string) => {
-                if (
-                  name.includes("Emissions") ||
-                  name.includes("Progression")
-                ) {
+                if (name.includes("Emissions") || name.includes("Trajectory")) {
                   const percentage = (
                     ((totalEmissions - val) / totalEmissions) *
                     100
@@ -284,33 +296,33 @@ const SchoolGoalCard: React.FC<SchoolGoalCardProps> = ({
               wrapperClassName="hidden md:block"
             />
 
-            {/* Current Emissions line (shows actual emissions with action timeline reductions) */}
+            {/* Actual Emissions line (purple) - shows actual emissions influenced by actions */}
             <Line
               type="monotone"
-              dataKey="currentEmissions"
+              dataKey="actualEmissions"
               stroke="#9c27b0"
               strokeWidth={3}
-              name="Current Emissions"
+              name="Actual Emissions"
             />
 
-            {/* Sub-goal progression line (smooth linear progression from current year) */}
+            {/* School's Trajectory line (orange) - using goal & subgoal */}
             <Line
               type="monotone"
-              dataKey="subGoalEmissions"
+              dataKey="schoolTrajectoryEmissions"
               stroke="#f97316"
               strokeWidth={2}
               strokeDasharray="4 4"
-              name="Sub-Goal Progression"
+              name="School's Trajectory"
             />
 
-            {/* Final goal progression line (smooth linear progression from current year) */}
+            {/* Paris Agreement Trajectory line (green) - goes to carbon neutrality */}
             <Line
               type="monotone"
-              dataKey="finalGoalEmissions"
+              dataKey="parisAgreementEmissions"
               stroke="#10b981"
               strokeWidth={2}
               strokeDasharray="4 4"
-              name="Final Goal Progression"
+              name="Paris Agreement Trajectory"
             />
 
             {/* Sub-goal year vertical line */}
@@ -344,50 +356,30 @@ const SchoolGoalCard: React.FC<SchoolGoalCardProps> = ({
 
       {/* Legend */}
       <div className="flex flex-wrap justify-between gap-4 mt-3 text-muted-foreground text-sm">
-        {/* Current emissions line */}
+        {/* Actual Emissions line (purple) */}
         <div className="flex items-center gap-2">
           <span className="inline-block bg-purple-500 rounded-full w-3 h-3" />
           <span>
-            Current Emissions ({completedActions?.length || 0} completed
+            Actual Emissions ({completedActions?.length || 0} completed
             actions)
           </span>
         </div>
 
-        {/* Sub-goal progression line */}
+        {/* School's Trajectory line (orange) */}
         <div className="flex items-center gap-2">
           <span className="inline-block bg-orange-500 rounded-full w-3 h-3" />
           <span>
-            Sub-Goal Progression ({subGoal}% by {subGoalYearNum})
+            School&apos;s Trajectory ({subGoal}% by {subGoalYearNum}, {schoolGoal}% by {finalYearNum})
           </span>
         </div>
 
-        {/* Final goal progression line */}
+        {/* Paris Agreement Trajectory line (green) */}
         <div className="flex items-center gap-2">
           <span className="inline-block bg-green-500 rounded-full w-3 h-3" />
           <span>
-            Final Goal Progression ({schoolGoal}% by {finalYearNum})
+            Paris Agreement Trajectory (Carbon Neutrality by 2050)
           </span>
         </div>
-
-        {/* Legacy legend if no action data */}
-        {!(_availableActions || completedActions) && (
-          <>
-            {/* Legacy legend */}
-            <div className="flex items-center gap-2">
-              <span className="inline-block bg-purple-500 rounded-full w-3 h-3" />
-              <span>{t("schoolGoalLegendProgress")}</span>
-            </div>
-            {selectedActionReductionPerYear && (
-              <div className="flex items-center gap-2">
-                <span className="inline-block bg-blue-500 rounded-full w-3 h-3" />
-                <span>
-                  {t("schoolGoalLegendSelectedAction")}:{" "}
-                  {selectedActionReductionPerYear}%
-                </span>
-              </div>
-            )}
-          </>
-        )}
       </div>
     </div>
   );
