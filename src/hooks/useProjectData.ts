@@ -37,6 +37,8 @@ interface SchoolData {
   goal: number;
   deadlineYear: string;
   createdAt: string;
+  /** Total school emissions in kgCO2e (from DB emissionCategories). */
+  totalEmissions?: number;
 }
 
 interface ProjectEmissions {
@@ -192,7 +194,9 @@ export const useProjectData = (passcode?: string) => {
     [projectActions?.actions],
   );
 
-  // Calculate total reduction from both completed and available actions (to match graph)
+  // School total emissions from DB (teacher-entered emission categories). Use for chart scale.
+  const schoolTotalEmissions = schoolData?.totalEmissions;
+
   const totalReduction = useMemo(
     () =>
       [...completedActions, ...availableActions].reduce(
@@ -208,6 +212,7 @@ export const useProjectData = (passcode?: string) => {
     projectEmissions,
     projectActions,
     currentEmissions,
+    schoolTotalEmissions,
     totalReduction,
     availableActions,
     completedActions,

@@ -2,6 +2,23 @@ import { NextRequest, NextResponse } from "next/server";
 import { adminDb } from "../../../../firebaseAdmin";
 import { resolveProjectId } from "../../../../lib/project-utils";
 
+/** Sum category amounts from school emissionCategories to get total school emissions (kgCO2e). */
+function schoolTotalEmissionsFromCategories(
+  emissionCategories: Array<{ amount?: number; value?: number }> | undefined,
+): number {
+  if (!emissionCategories || !Array.isArray(emissionCategories)) return 0;
+  return emissionCategories.reduce(
+    (sum, cat) =>
+      sum +
+      (typeof cat.amount === "number"
+        ? cat.amount
+        : typeof (cat as { value?: number }).value === "number"
+          ? (cat as { value: number }).value
+          : 0),
+    0,
+  );
+}
+
 // Get project details by ID
 export async function GET(
   req: NextRequest,
@@ -24,7 +41,10 @@ export async function GET(
     }
 
     // Get project document
-    const projectDoc = await adminDb.collection("projects").doc(resolvedProjectId).get();
+    const projectDoc = await adminDb
+      .collection("projects")
+      .doc(resolvedProjectId)
+      .get();
 
     if (!projectDoc.exists) {
       return NextResponse.json({ error: "Project not found" }, { status: 404 });
@@ -53,14 +73,18 @@ export async function GET(
 
       if (schoolDoc.exists) {
         const schoolDocData = schoolDoc.data();
+        const emissionCategories = schoolDocData?.emissionCategories as
+          | Array<{ amount?: number; value?: number }>
+          | undefined;
 
-        // Complete school object
         schoolData = {
           id: schoolDoc.id,
           name: schoolDocData?.name || "Unknown School",
           goal: schoolDocData?.goal || 40,
           deadlineYear: schoolDocData?.deadlineYear || "2030",
           createdAt: schoolDocData?.createdAt || new Date().toISOString(),
+          totalEmissions:
+            schoolTotalEmissionsFromCategories(emissionCategories),
         };
 
         // Backwards compatibility for existing code
@@ -79,6 +103,9 @@ export async function GET(
         if (!schoolQuery.empty) {
           const schoolQueryDoc = schoolQuery.docs[0];
           const schoolQueryData = schoolQueryDoc.data();
+          const emissionCategories = schoolQueryData?.emissionCategories as
+            | Array<{ amount?: number; value?: number }>
+            | undefined;
 
           schoolData = {
             id: schoolQueryDoc.id,
@@ -86,6 +113,8 @@ export async function GET(
             goal: schoolQueryData.goal,
             deadlineYear: schoolQueryData.deadlineYear,
             createdAt: schoolQueryData.createdAt,
+            totalEmissions:
+              schoolTotalEmissionsFromCategories(emissionCategories),
           };
 
           schoolGoalData = {
@@ -113,6 +142,10 @@ export async function GET(
 
                 if (schoolDoc.exists) {
                   const schoolDocData = schoolDoc.data();
+                  const emissionCategories =
+                    schoolDocData?.emissionCategories as
+                      | Array<{ amount?: number; value?: number }>
+                      | undefined;
 
                   schoolData = {
                     id: schoolDoc.id,
@@ -124,6 +157,8 @@ export async function GET(
                     deadlineYear: schoolDocData?.deadlineYear || "2030",
                     createdAt:
                       schoolDocData?.createdAt || new Date().toISOString(),
+                    totalEmissions:
+                      schoolTotalEmissionsFromCategories(emissionCategories),
                   };
 
                   schoolGoalData = {

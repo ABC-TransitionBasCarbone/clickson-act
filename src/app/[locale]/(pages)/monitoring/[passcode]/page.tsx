@@ -32,6 +32,7 @@ const ProjectMonitoring: React.FC = () => {
     availableActions: projectAvailableActions,
     completedActions: projectCompletedActions,
     currentEmissions,
+    schoolTotalEmissions,
     totalReduction,
     loading,
     error,
@@ -98,7 +99,7 @@ const ProjectMonitoring: React.FC = () => {
       reduction:
         typeof action.reduction === "number"
           ? action.reduction
-          : action.calculatedReduction ?? 0,
+          : (action.calculatedReduction ?? 0),
       calculatedReduction: action.calculatedReduction ?? action.reduction,
       selected: action.selected ?? action.status === "Selected",
     }),
@@ -111,7 +112,10 @@ const ProjectMonitoring: React.FC = () => {
       return [];
     }
     return projectCompletedActions.map((action) =>
-      mapProjectActionToCustom(action, action.dateCompleted || action.dateAdded),
+      mapProjectActionToCustom(
+        action,
+        action.dateCompleted || action.dateAdded,
+      ),
     );
   }, [projectCompletedActions, mapProjectActionToCustom]);
 
@@ -241,7 +245,13 @@ const ProjectMonitoring: React.FC = () => {
 
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.error || tAction("failedToUpdateAction").replace("{error}", errorData.error || ""));
+        throw new Error(
+          errorData.error ||
+            tAction("failedToUpdateAction").replace(
+              "{error}",
+              errorData.error || "",
+            ),
+        );
       }
 
       // Update local state
@@ -267,7 +277,9 @@ const ProjectMonitoring: React.FC = () => {
     } catch (error) {
       console.error("Error updating action:", error);
       alert(
-        tAction("failedToUpdateAction", { error: error instanceof Error ? error.message : tAction("unknown") }),
+        tAction("failedToUpdateAction", {
+          error: error instanceof Error ? error.message : tAction("unknown"),
+        }),
       );
     }
   };
@@ -302,7 +314,13 @@ const ProjectMonitoring: React.FC = () => {
 
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.error || tAction("failedToApproveChanges").replace("{error}", errorData.error || ""));
+        throw new Error(
+          errorData.error ||
+            tAction("failedToApproveChanges").replace(
+              "{error}",
+              errorData.error || "",
+            ),
+        );
       }
 
       // Update local state
@@ -325,7 +343,9 @@ const ProjectMonitoring: React.FC = () => {
     } catch (error) {
       console.error("Error approving changes:", error);
       alert(
-        tAction("failedToApproveChanges", { error: error instanceof Error ? error.message : tAction("unknown") }),
+        tAction("failedToApproveChanges", {
+          error: error instanceof Error ? error.message : tAction("unknown"),
+        }),
       );
     }
   };
@@ -356,7 +376,13 @@ const ProjectMonitoring: React.FC = () => {
 
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.error || tAction("failedToRejectChanges").replace("{error}", errorData.error || ""));
+        throw new Error(
+          errorData.error ||
+            tAction("failedToRejectChanges").replace(
+              "{error}",
+              errorData.error || "",
+            ),
+        );
       }
 
       // Update local state
@@ -379,7 +405,9 @@ const ProjectMonitoring: React.FC = () => {
     } catch (error) {
       console.error("Error rejecting changes:", error);
       alert(
-        tAction("failedToRejectChanges", { error: error instanceof Error ? error.message : tAction("unknown") }),
+        tAction("failedToRejectChanges", {
+          error: error instanceof Error ? error.message : tAction("unknown"),
+        }),
       );
     }
   };
@@ -405,7 +433,13 @@ const ProjectMonitoring: React.FC = () => {
 
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.error || tAction("failedToCompleteAction").replace("{error}", errorData.error || ""));
+        throw new Error(
+          errorData.error ||
+            tAction("failedToCompleteAction").replace(
+              "{error}",
+              errorData.error || "",
+            ),
+        );
       }
 
       // Update local state
@@ -419,7 +453,9 @@ const ProjectMonitoring: React.FC = () => {
     } catch (error) {
       console.error("Error completing action:", error);
       alert(
-        tAction("failedToCompleteAction", { error: error instanceof Error ? error.message : tAction("unknown") }),
+        tAction("failedToCompleteAction", {
+          error: error instanceof Error ? error.message : tAction("unknown"),
+        }),
       );
     }
   };
@@ -438,7 +474,13 @@ const ProjectMonitoring: React.FC = () => {
 
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.error || tAction("failedToDeleteAction").replace("{error}", errorData.error || ""));
+        throw new Error(
+          errorData.error ||
+            tAction("failedToDeleteAction").replace(
+              "{error}",
+              errorData.error || "",
+            ),
+        );
       }
 
       // Update local state
@@ -456,7 +498,9 @@ const ProjectMonitoring: React.FC = () => {
     } catch (error) {
       console.error("Error deleting action:", error);
       alert(
-        tAction("failedToDeleteAction", { error: error instanceof Error ? error.message : tAction("unknown") }),
+        tAction("failedToDeleteAction", {
+          error: error instanceof Error ? error.message : tAction("unknown"),
+        }),
       );
     }
   };
@@ -471,7 +515,9 @@ const ProjectMonitoring: React.FC = () => {
         className="container mx-auto px-6 py-8"
       >
         <div className="mb-8">
-          <h1 className="text-3xl font-bold">{tMonitoring("projectMonitoringDashboard")}</h1>
+          <h1 className="text-3xl font-bold">
+            {tMonitoring("projectMonitoringDashboard")}
+          </h1>
           <p className="mt-1 text-gray-500">
             {tMonitoring("trackProgressAndPlan")}
             {projectData && ` - ${projectData.name}`}
@@ -491,7 +537,8 @@ const ProjectMonitoring: React.FC = () => {
                 ? String(projectData.startDate)
                 : projectData.startDate?.split("T")[0]?.split("-")[0] || "2024"
             }
-            totalEmissions={currentEmissions || 1000} // Use current emissions as total
+            totalEmissions={currentEmissions || 1000}
+            schoolTotalEmissions={schoolTotalEmissions}
             currentEmissions={currentEmissions}
             totalReduction={totalReduction}
             availableActions={projectAvailableActions}
@@ -500,10 +547,15 @@ const ProjectMonitoring: React.FC = () => {
         )}
 
         {loading ? (
-          <LoadingState message={tMonitoring("loadingProjectData")} spinnerSize="large" />
+          <LoadingState
+            message={tMonitoring("loadingProjectData")}
+            spinnerSize="large"
+          />
         ) : error ? (
           <div className="mb-8 rounded-lg bg-red-50 p-4">
-            <p className="text-red-700">{tMonitoring("errorColon")} {error}</p>
+            <p className="text-red-700">
+              {tMonitoring("errorColon")} {error}
+            </p>
             <button
               onClick={refetch}
               className="mt-2 rounded bg-red-100 px-3 py-1 text-red-700 hover:bg-red-200"

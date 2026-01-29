@@ -18,12 +18,16 @@ interface ProjectAction {
   description: string;
   category: string;
   reduction: number;
+  /** Percentage reduction: either % of subcategory (when categoryContext exists) or % of total */
   calculatedReduction: number;
   status: "Available" | "Selected" | "In Progress" | "Completed";
   studentName: string;
   dateAdded: string;
   dateCompleted?: string;
   timeline?: number; // Number of years the action will take place (default: 1)
+  categoryContext?: {
+    subcategoryData?: Array<{ id?: string; name?: string; value?: string }>;
+  };
 }
 
 type SchoolGoalCardProps = {
@@ -35,7 +39,10 @@ type SchoolGoalCardProps = {
   selectedActionReductionPerYear?: number;
   startYear: string;
   currentEmissions?: number;
-  totalEmissions?: number; // Total school emissions in kgCO2
+  /** Emissions base for the chart (project or school). Used for actual-emissions curve when no school total is provided. */
+  totalEmissions?: number;
+  /** When provided, chart scale and trajectories use this as the total (e.g. full school emissions). Use this if you have school-level total. */
+  schoolTotalEmissions?: number;
   totalReduction?: number;
   availableActions?: ProjectAction[];
   completedActions?: ProjectAction[];
@@ -58,52 +65,70 @@ const generateChartDataFromActions = (
   // Paris Agreement target year (carbon neutrality by 2050)
   const parisAgreementYear = 2050;
 
-  // Create a map to track cumulative reduction achieved by each year
+  // Cumulative reduction in kg (when action has subcategory data: reduction % applies to subcategory)
+  const cumulativeKgReductions = new Map<number, number>();
+  // Cumulative reduction as % of total (fallback when no subcategory data)
   const cumulativeReductions = new Map<number, number>();
 
-  // Initialize all years with zero reductions
   for (let year = startYear; year <= endYear; year++) {
+    cumulativeKgReductions.set(year, 0);
     cumulativeReductions.set(year, 0);
   }
 
   // Process ONLY completed actions to show their cumulative impact
-  // Available actions should not affect the graph until they are completed
-  // Only count actions from startYear onwards to ensure all trajectories start at the same point
   completedActions.forEach((action) => {
-    // Use dateCompleted if available, otherwise fall back to dateAdded
     const completionDate = action.dateCompleted || action.dateAdded;
     const actionStartYear = new Date(completionDate).getFullYear();
-    const timeline = action.timeline || 1; // Default to 1 year if not specified
+    const timeline = action.timeline || 1;
 
-    // Only process actions that start from startYear onwards
-    // This ensures all trajectories start at totalEmissions in startYear
-    if (actionStartYear < startYear) {
-      return; // Skip actions completed before startYear
-    }
+    if (actionStartYear < startYear) return;
 
-    // For each year, add the reduction from this action during its timeline period
-    for (let year = startYear; year <= endYear; year++) {
-      let actionContribution = 0;
+    const subcategoryData = action.categoryContext?.subcategoryData;
+    const hasSubcategoryAmounts =
+      subcategoryData?.length &&
+      subcategoryData.some((s) => s.value != null && s.value !== "");
 
-      // Check if this year is within the action's timeline period
-      if (year >= actionStartYear && year < actionStartYear + timeline) {
-        // The action contributes its full reduction during its timeline period
-        actionContribution = action.calculatedReduction;
+    if (hasSubcategoryAmounts && subcategoryData) {
+      // Reduction is % of subcategory → convert to kg using subcategory amount(s)
+      const amounts = subcategoryData
+        .map((s) => parseFloat(String(s.value || "0")))
+        .filter((n) => !Number.isNaN(n));
+      const subcategoryAmount =
+        amounts.length > 0
+          ? amounts.reduce((a, b) => a + b, 0) / amounts.length
+          : 0;
+      const kgReduction =
+        (action.calculatedReduction / 100) * subcategoryAmount;
+
+      for (let year = startYear; year <= endYear; year++) {
+        if (year >= actionStartYear && year < actionStartYear + timeline) {
+          const current = cumulativeKgReductions.get(year) || 0;
+          cumulativeKgReductions.set(year, current + kgReduction);
+        }
       }
-
-      const currentReduction = cumulativeReductions.get(year) || 0;
-      cumulativeReductions.set(year, currentReduction + actionContribution);
+    } else {
+      // No subcategory data: treat calculatedReduction as % of total (legacy)
+      for (let year = startYear; year <= endYear; year++) {
+        if (year >= actionStartYear && year < actionStartYear + timeline) {
+          const current = cumulativeReductions.get(year) || 0;
+          cumulativeReductions.set(year, current + action.calculatedReduction);
+        }
+      }
     }
   });
 
-  // Generate yearly progress data for chart (emissions-based with cumulative reductions)
+  // Generate yearly progress data for chart
   for (let year = startYear; year <= endYear; year++) {
+    const cumulativeKg = cumulativeKgReductions.get(year) || 0;
     const cumulativeReductionPercentage = cumulativeReductions.get(year) || 0;
 
-    // Calculate actual emissions after cumulative reduction (purple line)
-    // Starts at totalEmissions in startYear and decreases based on actions from that point
-    const actualEmissions =
-      totalEmissions * (1 - cumulativeReductionPercentage / 100);
+    // Actual emissions (purple line): total minus kg reductions, minus %-of-total reductions
+    const actualEmissions = Math.max(
+      0,
+      totalEmissions -
+        cumulativeKg -
+        totalEmissions * (cumulativeReductionPercentage / 100),
+    );
 
     // Calculate Paris Agreement trajectory (green line)
     // Goes from totalEmissions at startYear to 0 (carbon neutrality) by 2050
@@ -121,10 +146,10 @@ const generateChartDataFromActions = (
     // Calculate School's trajectory (orange line) - using goal & subgoal
     // Starts at totalEmissions and follows the school's goal progression
     let schoolTrajectoryEmissions = totalEmissions;
-    
+
     if (year >= startYear) {
       let schoolReductionPercentage = 0;
-      
+
       if (subGoalYear > startYear && year <= subGoalYear) {
         // First phase: linear progression from startYear to sub-goal
         const progressFraction = (year - startYear) / (subGoalYear - startYear);
@@ -137,20 +162,26 @@ const generateChartDataFromActions = (
           subGoal + (finalGoal - subGoal) * progressFraction;
       } else if (subGoalYear <= startYear && finalGoalYear > startYear) {
         // Direct linear progression from startYear to final goal (skip sub-goal if it's in the past)
-        const progressFraction = (year - startYear) / (finalGoalYear - startYear);
+        const progressFraction =
+          (year - startYear) / (finalGoalYear - startYear);
         schoolReductionPercentage = finalGoal * progressFraction;
       }
-      
+
       schoolTrajectoryEmissions =
         totalEmissions * (1 - schoolReductionPercentage / 100);
     }
 
+    const effectiveReductionPct =
+      totalEmissions > 0
+        ? ((totalEmissions - actualEmissions) / totalEmissions) * 100
+        : 0;
+
     data.push({
       date: `${year}`,
-      actualEmissions: Math.max(actualEmissions, 0),
+      actualEmissions,
       schoolTrajectoryEmissions: Math.max(schoolTrajectoryEmissions, 0),
       parisAgreementEmissions: Math.max(parisAgreementEmissions, 0),
-      currentReduction: Math.min(cumulativeReductionPercentage, 100),
+      currentReduction: Math.min(effectiveReductionPct, 100),
     });
   }
 
@@ -169,7 +200,7 @@ const generateChartData = (
   const parisAgreementYear = 2050;
   let current = 0;
   let currentAlt = 0;
-  
+
   for (let year = start; year <= end; year++) {
     current += baseRate;
     currentAlt += selectedRate ? selectedRate + baseRate : 0;
@@ -217,7 +248,8 @@ const SchoolGoalCard: React.FC<SchoolGoalCardProps> = ({
   baseReductionPerYear,
   selectedActionReductionPerYear,
   startYear,
-  totalEmissions = 1000, // Default total emissions if not provided
+  totalEmissions = 1000,
+  schoolTotalEmissions,
   availableActions: _availableActions,
   completedActions,
 }) => {
@@ -227,7 +259,9 @@ const SchoolGoalCard: React.FC<SchoolGoalCardProps> = ({
   const finalYearNum = Number(finalGoalYear.slice(0, 4));
   const subGoalYearNum = Number(subGoalYear.slice(0, 4));
 
-  // Always use project-specific chart data if we have the required parameters
+  // Use school total for chart scale when provided (e.g. 5000), else project/current emissions (e.g. 1000)
+  const chartBase = schoolTotalEmissions ?? totalEmissions;
+
   const chartData = generateChartDataFromActions(
     startYearNum,
     finalYearNum,
@@ -237,10 +271,9 @@ const SchoolGoalCard: React.FC<SchoolGoalCardProps> = ({
     subGoalYearNum,
     schoolGoal,
     finalYearNum,
-    totalEmissions,
+    chartBase,
   );
 
-  // If no action data and chart data is empty, use legacy method
   const finalChartData =
     chartData.length > 0
       ? chartData
@@ -249,25 +282,25 @@ const SchoolGoalCard: React.FC<SchoolGoalCardProps> = ({
           finalYearNum,
           baseReductionPerYear,
           selectedActionReductionPerYear,
-          totalEmissions,
+          chartBase,
         );
 
   return (
-    <div className="bg-primary-50! mb-8 border-primary-200! card">
+    <div className="bg-primary-50! border-primary-200! card mb-8">
       <div className="pb-4">
-        <div className="flex max-lg:flex-col justify-between lg:items-center mb-2.5">
-          <h3 className="flex items-center gap-2 font-bold text-xl lg:text-2xl">
-            <Target className="w-5 h-5 text-primary-600" />
+        <div className="mb-2.5 flex justify-between max-lg:flex-col lg:items-center">
+          <h3 className="flex items-center gap-2 text-xl font-bold lg:text-2xl">
+            <Target className="text-primary-600 h-5 w-5" />
             {t("schoolGoalTitle")}
           </h3>
-          <span className="font-bold text-md text-primary lg:text-xl">
+          <span className="text-md text-primary font-bold lg:text-xl">
             {subGoal}% {t("schoolGoalReduction")} ({subGoalYear})
           </span>
         </div>
         <p>{t("schoolGoalDescription")}</p>
       </div>
 
-      <div className="mx-auto w-full h-64">
+      <div className="mx-auto h-64 w-full">
         <ResponsiveContainer width="100%" height="100%">
           <LineChart
             data={finalChartData}
@@ -275,7 +308,7 @@ const SchoolGoalCard: React.FC<SchoolGoalCardProps> = ({
           >
             <XAxis dataKey="date" />
             <YAxis
-              domain={[0, totalEmissions]}
+              domain={[0, chartBase]}
               reversed={false}
               tickFormatter={(val) => `${Math.round(val)} kgCO₂`}
             />
@@ -283,7 +316,7 @@ const SchoolGoalCard: React.FC<SchoolGoalCardProps> = ({
               formatter={(val: number, name: string) => {
                 if (name.includes("Emissions") || name.includes("Trajectory")) {
                   const percentage = (
-                    ((totalEmissions - val) / totalEmissions) *
+                    ((chartBase - val) / chartBase) *
                     100
                   ).toFixed(1);
                   return [
@@ -355,30 +388,28 @@ const SchoolGoalCard: React.FC<SchoolGoalCardProps> = ({
       </div>
 
       {/* Legend */}
-      <div className="flex flex-wrap justify-between gap-4 mt-3 text-muted-foreground text-sm">
+      <div className="text-muted-foreground mt-3 flex flex-wrap justify-between gap-4 text-sm">
         {/* Actual Emissions line (purple) */}
         <div className="flex items-center gap-2">
-          <span className="inline-block bg-purple-500 rounded-full w-3 h-3" />
+          <span className="inline-block h-3 w-3 rounded-full bg-purple-500" />
           <span>
-            Actual Emissions ({completedActions?.length || 0} completed
-            actions)
+            Actual Emissions ({completedActions?.length || 0} completed actions)
           </span>
         </div>
 
         {/* School's Trajectory line (orange) */}
         <div className="flex items-center gap-2">
-          <span className="inline-block bg-orange-500 rounded-full w-3 h-3" />
+          <span className="inline-block h-3 w-3 rounded-full bg-orange-500" />
           <span>
-            School&apos;s Trajectory ({subGoal}% by {subGoalYearNum}, {schoolGoal}% by {finalYearNum})
+            School&apos;s Trajectory ({subGoal}% by {subGoalYearNum},{" "}
+            {schoolGoal}% by {finalYearNum})
           </span>
         </div>
 
         {/* Paris Agreement Trajectory line (green) */}
         <div className="flex items-center gap-2">
-          <span className="inline-block bg-green-500 rounded-full w-3 h-3" />
-          <span>
-            Paris Agreement Trajectory (Carbon Neutrality by 2050)
-          </span>
+          <span className="inline-block h-3 w-3 rounded-full bg-green-500" />
+          <span>Paris Agreement Trajectory (Carbon Neutrality by 2050)</span>
         </div>
       </div>
     </div>

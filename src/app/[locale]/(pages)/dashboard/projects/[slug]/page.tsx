@@ -52,6 +52,7 @@ const ProjectDetails = () => {
     completedActions,
     totalReduction,
     currentEmissions,
+    schoolTotalEmissions,
     loading,
     error,
     refetch,
@@ -280,41 +281,41 @@ const ProjectDetails = () => {
       try {
         // Submit action directly without approval since teacher is creating it
         const response = await fetch(`/api/project/${projectId}/actions`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        customActionData: {
-          title: newAction.title,
-          description: newAction.description,
-          category: newAction.category,
-          subcategory: newAction.subcategory || "",
-          reduction: newAction.reduction,
-          effort: newAction.effort,
-          manager: newAction.manager,
-          assignedTo: newAction.assignedTo || "",
-          nature: newAction.nature,
-          objectives: newAction.objectives,
-          keyContacts: newAction.keyContacts,
-          steps: newAction.steps,
-          calendar: newAction.calendar,
-          indicators: newAction.indicators,
-          monitoring: newAction.monitoring,
-          performance: newAction.performance,
-          timeline: newAction.timeline || 1,
-          type: newAction.type || "Direct",
-        },
-        studentName: user?.username || t("teacher"),
-        studentId: user?.uid || "",
-        calculatedReduction: newAction.reduction,
-        actionType: newAction.type || "Direct",
-        categoryData: {
-          categoryId: newAction.category,
-          categoryName: newAction.category,
-        },
-          isTeacherAction: true, // Teacher action doesn't need approval
-        }),
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            customActionData: {
+              title: newAction.title,
+              description: newAction.description,
+              category: newAction.category,
+              subcategory: newAction.subcategory || "",
+              reduction: newAction.reduction,
+              effort: newAction.effort,
+              manager: newAction.manager,
+              assignedTo: newAction.assignedTo || "",
+              nature: newAction.nature,
+              objectives: newAction.objectives,
+              keyContacts: newAction.keyContacts,
+              steps: newAction.steps,
+              calendar: newAction.calendar,
+              indicators: newAction.indicators,
+              monitoring: newAction.monitoring,
+              performance: newAction.performance,
+              timeline: newAction.timeline || 1,
+              type: newAction.type || "Direct",
+            },
+            studentName: user?.username || t("teacher"),
+            studentId: user?.uid || "",
+            calculatedReduction: newAction.reduction,
+            actionType: newAction.type || "Direct",
+            categoryData: {
+              categoryId: newAction.category,
+              categoryName: newAction.category,
+            },
+            isTeacherAction: true, // Teacher action doesn't need approval
+          }),
         });
 
         if (!response.ok) {
@@ -377,12 +378,12 @@ const ProjectDetails = () => {
 
   // Check if user is admin
   const isAdmin = user?.role === "admin";
-  
+
   // Check if user is the project owner
   // Owner is: teacher from same school, admin, or the creator
-  const isProjectOwner = 
-    isAdmin || 
-    user?.uid === project?.teacherId || 
+  const isProjectOwner =
+    isAdmin ||
+    user?.uid === project?.teacherId ||
     (user?.schoolId && project?.schoolId && user.schoolId === project.schoolId);
 
   const normalizeAction = (action: ActionData): CustomAction => ({
@@ -403,10 +404,9 @@ const ProjectDetails = () => {
     indicators: action.indicators || "",
     monitoring: action.monitoring || "",
     performance: action.performance || "",
-    date:
-      (action.date || action.dateAdded)?.includes("T")
-        ? (action.date || action.dateAdded).split("T")[0]
-        : action.date || action.dateAdded,
+    date: (action.date || action.dateAdded)?.includes("T")
+      ? (action.date || action.dateAdded).split("T")[0]
+      : action.date || action.dateAdded,
     timeline: action.timeline || 1,
     type: action.type,
     pendingChanges: action.pendingChanges,
@@ -426,9 +426,9 @@ const ProjectDetails = () => {
 
   if (error) {
     return (
-      <div className="flex justify-center items-center min-h-screen">
+      <div className="flex min-h-screen items-center justify-center">
         <div className="text-center">
-          <h2 className="mb-2 font-bold text-red-600 text-2xl">{t("error")}</h2>
+          <h2 className="mb-2 text-2xl font-bold text-red-600">{t("error")}</h2>
           <p className="text-gray-600">{error}</p>
         </div>
       </div>
@@ -444,46 +444,46 @@ const ProjectDetails = () => {
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
         transition={{ duration: 0.5 }}
-        className="mx-auto px-6 py-8 container"
+        className="container mx-auto px-6 py-8"
       >
         {/* Simple Header */}
         <div className="mb-8">
           <button
             onClick={() => router.back()}
-            className="flex items-center gap-2 mb-4 text-muted-foreground hover:text-foreground transition-colors"
+            className="text-muted-foreground hover:text-foreground mb-4 flex items-center gap-2 transition-colors"
           >
-            <ArrowLeft className="w-4 h-4" />
+            <ArrowLeft className="h-4 w-4" />
             <span>{t("back")}</span>
           </button>
-          <h1 className="font-bold text-3xl tracking-tight">{project?.name}</h1>
-          <p className="mt-1 text-muted-foreground">{t("subtitle")}</p>
+          <h1 className="text-3xl font-bold tracking-tight">{project?.name}</h1>
+          <p className="text-muted-foreground mt-1">{t("subtitle")}</p>
         </div>
 
         {/* Project Overview Card */}
         <div className="mb-8">
-          <div className="relative card">
-            <div className="flex justify-between items-start">
+          <div className="card relative">
+            <div className="flex items-start justify-between">
               <div className="flex-1">
-                <h3 className="mb-6 font-bold text-lg lg:text-2xl">
+                <h3 className="mb-6 text-lg font-bold lg:text-2xl">
                   {t("overview.title")}
                 </h3>
                 <div className="space-y-4">
-                  <div className="flex max-lg:flex-col gap-x-2.5">
-                    <h3 className="font-medium text-sm lg:text-base">
+                  <div className="flex gap-x-2.5 max-lg:flex-col">
+                    <h3 className="text-sm font-medium lg:text-base">
                       {t("overview.projectName")}
                     </h3>
                     <span>{project?.name}</span>
                   </div>
-                  <div className="flex max-lg:flex-col gap-x-2.5">
-                    <h3 className="font-medium text-sm lg:text-base">
+                  <div className="flex gap-x-2.5 max-lg:flex-col">
+                    <h3 className="text-sm font-medium lg:text-base">
                       {t("overview.currentStatus")}
                     </h3>
                     <span className={`font-medium`}>
                       {t(`status.${project?.status || "active"}`)}
                     </span>
                   </div>
-                  <div className="flex max-lg:flex-col gap-x-2.5">
-                    <h3 className="font-medium text-sm lg:text-base">
+                  <div className="flex gap-x-2.5 max-lg:flex-col">
+                    <h3 className="text-sm font-medium lg:text-base">
                       {t("overview.subGoalTarget")}
                     </h3>
                     <span>
@@ -492,8 +492,8 @@ const ProjectDetails = () => {
                     </span>
                   </div>
                   {school && (
-                    <div className="flex max-lg:flex-col gap-x-2.5">
-                      <h3 className="font-medium text-sm lg:text-base">
+                    <div className="flex gap-x-2.5 max-lg:flex-col">
+                      <h3 className="text-sm font-medium lg:text-base">
                         {t("overview.schoolGoal")}
                       </h3>
                       <span>
@@ -504,7 +504,7 @@ const ProjectDetails = () => {
                 </div>
                 {/* Passcode and Buttons in horizontal flex container */}
                 {isProjectOwner && (
-                  <div className="flex flex-wrap items-center gap-4 mt-5">
+                  <div className="mt-5 flex flex-wrap items-center gap-4">
                     {/* Passcode Display */}
                     {project?.passcode && (
                       <div className="flex flex-col items-center gap-2">
@@ -529,9 +529,9 @@ const ProjectDetails = () => {
                       {/* Share Button */}
                       <button
                         onClick={handleShareClick}
-                        className="flex items-center gap-2 btn btn-secondary"
+                        className="btn btn-secondary flex items-center gap-2"
                       >
-                        <Share2 className="w-4 h-4" />
+                        <Share2 className="h-4 w-4" />
                         {shareButtonText}
                       </button>
 
@@ -539,9 +539,9 @@ const ProjectDetails = () => {
                       {isAdmin && (
                         <button
                           onClick={() => setIsEditModalOpen(true)}
-                          className="flex items-center gap-2 btn btn-primary"
+                          className="btn btn-primary flex items-center gap-2"
                         >
-                          <Edit className="w-4 h-4" />
+                          <Edit className="h-4 w-4" />
                           {t("overview.editProject")}
                         </button>
                       )}
@@ -551,13 +551,13 @@ const ProjectDetails = () => {
               </div>
 
               {/* Total Reduction Display and Actions */}
-              <div className="flex flex-col justify-start items-end gap-5">
+              <div className="flex flex-col items-end justify-start gap-5">
                 {/* Total Reduction at the top */}
                 <div className="text-center">
-                  <div className="font-bold text-purple-600 text-2xl lg:text-5xl">
+                  <div className="text-2xl font-bold text-purple-600 lg:text-5xl">
                     {totalReduction.toFixed(1)}%
                   </div>
-                  <div className="font-medium text-purple-800 text-xs lg:text-lg">
+                  <div className="text-xs font-medium text-purple-800 lg:text-lg">
                     {t("overview.totalReduction")}
                   </div>
                 </div>
@@ -567,7 +567,7 @@ const ProjectDetails = () => {
         </div>
 
         {/* Current and Completed Actions - same as monitoring page */}
-        <div className="gap-6 grid md:grid-cols-2 mb-8">
+        <div className="mb-8 grid gap-6 md:grid-cols-2">
           <CurrentActions
             currentActions={convertedAvailableActions}
             onEdit={(action) => handleEditClick(action)}
@@ -601,7 +601,8 @@ const ProjectDetails = () => {
                 )
               : "2023"
           }
-          totalEmissions={currentEmissions || 1000} // Use current emissions as total
+          totalEmissions={currentEmissions || 1000}
+          schoolTotalEmissions={schoolTotalEmissions}
           availableActions={availableActions}
           completedActions={completedActions}
         />
@@ -677,7 +678,7 @@ const ProjectDetails = () => {
       {isEditModalOpen && (
         <div className="modal modal-open">
           <div className="modal-box">
-            <h3 className="mb-4 font-bold text-lg">{t("editModal.title")}</h3>
+            <h3 className="mb-4 text-lg font-bold">{t("editModal.title")}</h3>
             <form
               className="space-y-4"
               onSubmit={(e) => {
@@ -686,7 +687,7 @@ const ProjectDetails = () => {
               }}
             >
               <div>
-                <label htmlFor="projectName" className="block mb-1 font-medium">
+                <label htmlFor="projectName" className="mb-1 block font-medium">
                   {t("editModal.projectName")}
                 </label>
                 <input
@@ -696,7 +697,7 @@ const ProjectDetails = () => {
                   onChange={(e) =>
                     setEditForm((prev) => ({ ...prev, name: e.target.value }))
                   }
-                  className="w-full input-bordered input"
+                  className="input-bordered input w-full"
                   placeholder={t("editModal.projectNamePlaceholder")}
                   required
                 />
@@ -705,7 +706,7 @@ const ProjectDetails = () => {
               <div>
                 <label
                   htmlFor="subGoalReduction"
-                  className="block mb-1 font-medium"
+                  className="mb-1 block font-medium"
                 >
                   {t("editModal.subGoalReduction")}
                 </label>
@@ -719,7 +720,7 @@ const ProjectDetails = () => {
                       subGoalReductionAmount: Number(e.target.value),
                     }))
                   }
-                  className="w-full input-bordered input"
+                  className="input-bordered input w-full"
                   min="0"
                   max="100"
                   required
@@ -729,7 +730,7 @@ const ProjectDetails = () => {
               <div>
                 <label
                   htmlFor="subGoalDeadline"
-                  className="block mb-1 font-medium"
+                  className="mb-1 block font-medium"
                 >
                   {t("editModal.subGoalDeadline")}
                 </label>
@@ -743,7 +744,7 @@ const ProjectDetails = () => {
                       subGoalDeadline: e.target.value,
                     }))
                   }
-                  className="w-full input-bordered input"
+                  className="input-bordered input w-full"
                   min={new Date().getFullYear()}
                   max={new Date().getFullYear() + 50}
                   required
@@ -751,7 +752,7 @@ const ProjectDetails = () => {
               </div>
 
               <div>
-                <label htmlFor="status" className="block mb-1 font-medium">
+                <label htmlFor="status" className="mb-1 block font-medium">
                   {t("editModal.status")}
                 </label>
                 <select
@@ -766,7 +767,7 @@ const ProjectDetails = () => {
                         | "pending",
                     }))
                   }
-                  className="w-full select-bordered select"
+                  className="select-bordered select w-full"
                 >
                   <option value="active">{t("status.active")}</option>
                   <option value="pending">{t("status.pending")}</option>
