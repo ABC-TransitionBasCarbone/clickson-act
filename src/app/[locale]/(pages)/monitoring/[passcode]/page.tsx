@@ -151,8 +151,6 @@ const ProjectMonitoring: React.FC = () => {
   ) => {
     setEditingAction(action);
     setEditingType(type);
-    const modal = document.getElementById("custom_action") as HTMLDialogElement;
-    if (modal) modal.showModal();
   };
 
   const handleAddAction = () => {

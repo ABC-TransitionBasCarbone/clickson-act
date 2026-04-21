@@ -101,6 +101,18 @@ const ActionModal: React.FC<ActionModalProps> = ({
     }
   }, [initialAction, mode]);
 
+  // Edit modal mounts only after `editingAction` is set; calling showModal in the same
+  // click handler runs before React commits the <dialog>, so getElementById misses it.
+  useEffect(() => {
+    if (mode !== "edit" || !initialAction?.id) return;
+    const el = document.getElementById(
+      "custom_action",
+    ) as HTMLDialogElement | null;
+    if (el && !el.open) {
+      el.showModal();
+    }
+  }, [mode, initialAction?.id]);
+
   const handleSubmit = async () => {
     if (!newAction.category || !newAction.title || !newAction.reduction) return;
 
