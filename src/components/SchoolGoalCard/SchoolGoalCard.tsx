@@ -11,14 +11,19 @@ import {
 } from "recharts";
 import { Target } from "lucide-react";
 import { useTranslations } from "next-intl";
+import {
+  type SubcategoryKgLookup,
+  lookupSubcategoryKg,
+} from "@/lib/subcategoryEmissionsKg";
 
 interface ProjectAction {
   id: string;
   title: string;
   description: string;
   category: string;
+  subcategory?: string;
   reduction: number;
-  /** Percentage reduction: either % of subcategory (when categoryContext exists) or % of total */
+  /** % reduction relative to the subcategory kg base (from inventory or entered values). */
   calculatedReduction: number;
   status: "Available" | "Selected" | "In Progress" | "Completed";
   studentName: string;
@@ -26,6 +31,8 @@ interface ProjectAction {
   dateCompleted?: string;
   timeline?: number; // Number of years the action will take place (default: 1)
   categoryContext?: {
+    categoryId?: string;
+    categoryName?: string;
     subcategoryData?: Array<{ id?: string; name?: string; value?: string }>;
   };
 }
@@ -46,7 +53,65 @@ type SchoolGoalCardProps = {
   totalReduction?: number;
   availableActions?: ProjectAction[];
   completedActions?: ProjectAction[];
+  /** kg CO₂e per subcategory (school inventory + project emissions); used to apply % on subcategory, not on school total. */
+  subcategoryEmissionsKg?: SubcategoryKgLookup;
 };
+
+/** Annual impact: kg removed from total footprint, or legacy %-of-school-total (only when action has no subcategory scope). */
+function actionYearlyContribution(
+  action: ProjectAction,
+  lookup: SubcategoryKgLookup | undefined,
+): { kgReduction: number } | { pctOfTotal: number } {
+  const pct = action.calculatedReduction;
+  const subData = action.categoryContext?.subcategoryData;
+  const categoryId =
+    action.categoryContext?.categoryId || action.category || undefined;
+
+  const valuesFromRows: number[] = [];
+  for (const s of subData || []) {
+    if (s.value == null || s.value === "") continue;
+    const n = parseFloat(String(s.value));
+    if (!Number.isNaN(n)) valuesFromRows.push(n);
+  }
+  if (valuesFromRows.length > 0) {
+    const base = valuesFromRows.reduce((a, b) => a + b, 0);
+    return { kgReduction: (pct / 100) * base };
+  }
+
+  if (lookup && Object.keys(lookup).length > 0) {
+    let base = 0;
+    let matched = false;
+    if (subData?.length) {
+      for (const s of subData) {
+        if (!s?.id) continue;
+        const v = lookupSubcategoryKg(lookup, String(s.id), categoryId);
+        if (v != null && v > 0) {
+          base += v;
+          matched = true;
+        }
+      }
+    }
+    if (!matched && action.subcategory) {
+      const v = lookupSubcategoryKg(lookup, action.subcategory, categoryId);
+      if (v != null && v > 0) {
+        base = v;
+        matched = true;
+      }
+    }
+    if (matched) {
+      return { kgReduction: (pct / 100) * base };
+    }
+  }
+
+  const hasSubcategoryScope =
+    !!action.categoryContext ||
+    !!(action.subcategory && String(action.subcategory).length > 0);
+  if (hasSubcategoryScope) {
+    return { kgReduction: 0 };
+  }
+
+  return { pctOfTotal: pct };
+}
 
 const generateChartDataFromActions = (
   startYear: number,
@@ -59,6 +124,7 @@ const generateChartDataFromActions = (
   finalGoal: number = 0,
   finalGoalYear: number = 0,
   totalEmissions: number = 0,
+  subcategoryKgLookup: SubcategoryKgLookup | undefined = undefined,
 ) => {
   const data = [];
 
@@ -75,43 +141,25 @@ const generateChartDataFromActions = (
     cumulativeReductions.set(year, 0);
   }
 
-  // Process ONLY completed actions to show their cumulative impact
+  // Process ONLY completed actions to show their cumulative impact.
+  // Reductions persist for all later years (do not drop when timeline ends), so the
+  // actual-emissions line does not rise again after savings are realized.
   completedActions.forEach((action) => {
     const completionDate = action.dateCompleted || action.dateAdded;
     const actionStartYear = new Date(completionDate).getFullYear();
-    const timeline = action.timeline || 1;
 
     if (actionStartYear < startYear) return;
 
-    const subcategoryData = action.categoryContext?.subcategoryData;
-    const hasSubcategoryAmounts =
-      subcategoryData?.length &&
-      subcategoryData.some((s) => s.value != null && s.value !== "");
+    const contrib = actionYearlyContribution(action, subcategoryKgLookup);
 
-    if (hasSubcategoryAmounts && subcategoryData) {
-      // Reduction is % of subcategory → convert to kg using subcategory amount(s)
-      const amounts = subcategoryData
-        .map((s) => parseFloat(String(s.value || "0")))
-        .filter((n) => !Number.isNaN(n));
-      const subcategoryAmount =
-        amounts.length > 0
-          ? amounts.reduce((a, b) => a + b, 0) / amounts.length
-          : 0;
-      const kgReduction =
-        (action.calculatedReduction / 100) * subcategoryAmount;
-
-      for (let year = startYear; year <= endYear; year++) {
-        if (year >= actionStartYear && year < actionStartYear + timeline) {
+    for (let year = startYear; year <= endYear; year++) {
+      if (year >= actionStartYear) {
+        if ("kgReduction" in contrib) {
           const current = cumulativeKgReductions.get(year) || 0;
-          cumulativeKgReductions.set(year, current + kgReduction);
-        }
-      }
-    } else {
-      // No subcategory data: treat calculatedReduction as % of total (legacy)
-      for (let year = startYear; year <= endYear; year++) {
-        if (year >= actionStartYear && year < actionStartYear + timeline) {
+          cumulativeKgReductions.set(year, current + contrib.kgReduction);
+        } else {
           const current = cumulativeReductions.get(year) || 0;
-          cumulativeReductions.set(year, current + action.calculatedReduction);
+          cumulativeReductions.set(year, current + contrib.pctOfTotal);
         }
       }
     }
@@ -252,6 +300,7 @@ const SchoolGoalCard: React.FC<SchoolGoalCardProps> = ({
   schoolTotalEmissions,
   availableActions: _availableActions,
   completedActions,
+  subcategoryEmissionsKg,
 }) => {
   const t = useTranslations("StudentCalculator");
 
@@ -272,6 +321,7 @@ const SchoolGoalCard: React.FC<SchoolGoalCardProps> = ({
     schoolGoal,
     finalYearNum,
     chartBase,
+    subcategoryEmissionsKg,
   );
 
   const finalChartData =
@@ -320,7 +370,10 @@ const SchoolGoalCard: React.FC<SchoolGoalCardProps> = ({
                     100
                   ).toFixed(1);
                   return [
-                    `${Math.round(val)} kgCO₂ (${percentage}% reduction)`,
+                    t("schoolGoalTooltipSchoolTotalShare", {
+                      emissions: Math.round(val),
+                      pct: percentage,
+                    }),
                     `${name}`,
                   ];
                 }

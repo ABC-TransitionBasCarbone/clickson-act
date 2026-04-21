@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { adminDb } from "../../../../firebaseAdmin";
 import { resolveProjectId } from "../../../../lib/project-utils";
+import { buildSubcategoryKgLookupFromSchoolCategories } from "@/lib/subcategoryEmissionsKg";
+import type { SchoolEmissionCategory } from "@/types/School";
 
 /** Sum category amounts from school emissionCategories to get total school emissions (kgCO2e). */
 function schoolTotalEmissionsFromCategories(
@@ -74,7 +76,7 @@ export async function GET(
       if (schoolDoc.exists) {
         const schoolDocData = schoolDoc.data();
         const emissionCategories = schoolDocData?.emissionCategories as
-          | Array<{ amount?: number; value?: number }>
+          | SchoolEmissionCategory[]
           | undefined;
 
         schoolData = {
@@ -85,6 +87,8 @@ export async function GET(
           createdAt: schoolDocData?.createdAt || new Date().toISOString(),
           totalEmissions:
             schoolTotalEmissionsFromCategories(emissionCategories),
+          subcategoryEmissionsKg:
+            buildSubcategoryKgLookupFromSchoolCategories(emissionCategories),
         };
 
         // Backwards compatibility for existing code
@@ -104,7 +108,7 @@ export async function GET(
           const schoolQueryDoc = schoolQuery.docs[0];
           const schoolQueryData = schoolQueryDoc.data();
           const emissionCategories = schoolQueryData?.emissionCategories as
-            | Array<{ amount?: number; value?: number }>
+            | SchoolEmissionCategory[]
             | undefined;
 
           schoolData = {
@@ -115,6 +119,8 @@ export async function GET(
             createdAt: schoolQueryData.createdAt,
             totalEmissions:
               schoolTotalEmissionsFromCategories(emissionCategories),
+            subcategoryEmissionsKg:
+              buildSubcategoryKgLookupFromSchoolCategories(emissionCategories),
           };
 
           schoolGoalData = {
@@ -144,7 +150,7 @@ export async function GET(
                   const schoolDocData = schoolDoc.data();
                   const emissionCategories =
                     schoolDocData?.emissionCategories as
-                      | Array<{ amount?: number; value?: number }>
+                      | SchoolEmissionCategory[]
                       | undefined;
 
                   schoolData = {
@@ -159,6 +165,10 @@ export async function GET(
                       schoolDocData?.createdAt || new Date().toISOString(),
                     totalEmissions:
                       schoolTotalEmissionsFromCategories(emissionCategories),
+                    subcategoryEmissionsKg:
+                      buildSubcategoryKgLookupFromSchoolCategories(
+                        emissionCategories,
+                      ),
                   };
 
                   schoolGoalData = {

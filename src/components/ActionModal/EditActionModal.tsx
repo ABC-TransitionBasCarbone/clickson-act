@@ -290,15 +290,36 @@ const EditActionModal: React.FC<EditActionModalProps> = ({
               }
               className="w-full input"
             >
-              <option value="Available">{t("available")}</option>
-              <option value="Selected">{t("selected")}</option>
-              <option value="Completed">{t("completed")}</option>
+              <option
+                value="Available"
+                title={t("statusOptionAvailableTooltip")}
+              >
+                {t("available")}
+              </option>
+              <option
+                value="Selected"
+                title={t("statusOptionSelectedTooltip")}
+              >
+                {t("selected")}
+              </option>
+              <option
+                value="Completed"
+                title={t("statusOptionCompletedTooltip")}
+              >
+                {t("completed")}
+              </option>
             </select>
           </div>
 
           {/* Assigned To */}
           <div className="gap-2 grid">
-            <label htmlFor="assignedTo">{t("assignedTo")}</label>
+            <label
+              htmlFor="assignedTo"
+              className="cursor-help"
+              title={t("assignedToTooltip")}
+            >
+              {t("assignedTo")}
+            </label>
             <input
               id="assignedTo"
               value={editedAction.assignedTo || ""}
@@ -438,7 +459,13 @@ const EditActionModal: React.FC<EditActionModalProps> = ({
 
           {/* Reduction */}
           <div className="gap-2 grid">
-            <label htmlFor="reduction">{t("estimatedReduction")}</label>
+            <label
+              htmlFor="reduction"
+              className="cursor-help"
+              title={t("estimatedReductionTooltip")}
+            >
+              {t("estimatedReduction")}
+            </label>
             <input
               id="reduction"
               type="number"
@@ -468,9 +495,15 @@ const EditActionModal: React.FC<EditActionModalProps> = ({
             />
           </div>
 
-          {/* Nature */}
+          {/* Nature (Type) */}
           <div className="gap-2 grid">
-            <label htmlFor="nature">{t("nature")}</label>
+            <label
+              htmlFor="nature"
+              className="cursor-help"
+              title={t("natureFieldTooltip")}
+            >
+              {t("nature")}
+            </label>
             <input
               id="nature"
               value={editedAction.nature}
@@ -514,7 +547,13 @@ const EditActionModal: React.FC<EditActionModalProps> = ({
 
           {/* Steps */}
           <div className="gap-2 grid">
-            <label htmlFor="steps">{t("steps")}</label>
+            <label
+              htmlFor="steps"
+              className="cursor-help"
+              title={t("stepsFieldTooltip")}
+            >
+              {t("steps")}
+            </label>
             <textarea
               rows={3}
               id="steps"
@@ -540,9 +579,15 @@ const EditActionModal: React.FC<EditActionModalProps> = ({
             />
           </div>
 
-          {/* Monitoring */}
+          {/* Monitoring indicators */}
           <div className="gap-2 grid">
-            <label htmlFor="monitoring">{t("monitoring")}</label>
+            <label
+              htmlFor="monitoring"
+              className="cursor-help"
+              title={t("monitoringFieldTooltip")}
+            >
+              {t("monitoringIndicators")}
+            </label>
             <textarea
               rows={3}
               id="monitoring"
@@ -554,9 +599,15 @@ const EditActionModal: React.FC<EditActionModalProps> = ({
             />
           </div>
 
-          {/* Performance */}
+          {/* Performance Indicators */}
           <div className="gap-2 grid">
-            <label htmlFor="performance">{t("performance")}</label>
+            <label
+              htmlFor="performance"
+              className="cursor-help"
+              title={t("performanceFieldTooltip")}
+            >
+              {t("performanceIndicators")}
+            </label>
             <textarea
               rows={3}
               id="performance"

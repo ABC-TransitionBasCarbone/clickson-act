@@ -3,6 +3,11 @@
 import { useState, useEffect, useMemo } from "react";
 import { useUser } from "@/context/UserContext";
 import { Action } from "@/types/Action";
+import {
+  buildSubcategoryKgLookupFromProjectEmissions,
+  mergeSubcategoryKgLookups,
+  type SubcategoryKgLookup,
+} from "@/lib/subcategoryEmissionsKg";
 
 interface ProjectData {
   id: string;
@@ -39,6 +44,8 @@ interface SchoolData {
   createdAt: string;
   /** Total school emissions in kgCO2e (from DB emissionCategories). */
   totalEmissions?: number;
+  /** Teacher-entered kg CO₂e per subcategory (ids + categoryId-subcategoryId). */
+  subcategoryEmissionsKg?: SubcategoryKgLookup;
 }
 
 interface ProjectEmissions {
@@ -197,6 +204,18 @@ export const useProjectData = (passcode?: string) => {
   // School total emissions from DB (teacher-entered emission categories). Use for chart scale.
   const schoolTotalEmissions = schoolData?.totalEmissions;
 
+  /** Merged lookup: school inventory overrides/supplements project calculator subcategory totals. */
+  const subcategoryEmissionsKg = useMemo(
+    () =>
+      mergeSubcategoryKgLookups(
+        buildSubcategoryKgLookupFromProjectEmissions(
+          projectEmissions?.emissionsData,
+        ),
+        schoolData?.subcategoryEmissionsKg,
+      ),
+    [projectEmissions?.emissionsData, schoolData?.subcategoryEmissionsKg],
+  );
+
   const totalReduction = useMemo(
     () =>
       [...completedActions, ...availableActions].reduce(
@@ -213,6 +232,7 @@ export const useProjectData = (passcode?: string) => {
     projectActions,
     currentEmissions,
     schoolTotalEmissions,
+    subcategoryEmissionsKg,
     totalReduction,
     availableActions,
     completedActions,

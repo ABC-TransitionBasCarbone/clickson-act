@@ -44,6 +44,7 @@ const Monitoring: React.FC = () => {
     completedActions: projectCompletedActions,
     currentEmissions,
     schoolTotalEmissions,
+    subcategoryEmissionsKg,
     totalReduction,
     loading,
     error,
@@ -682,6 +683,7 @@ const Monitoring: React.FC = () => {
             totalReduction={totalReduction}
             availableActions={projectAvailableActions}
             completedActions={projectCompletedActions}
+            subcategoryEmissionsKg={subcategoryEmissionsKg}
           />
         )}
 

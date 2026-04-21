@@ -53,6 +53,7 @@ const ProjectDetails = () => {
     totalReduction,
     currentEmissions,
     schoolTotalEmissions,
+    subcategoryEmissionsKg,
     loading,
     error,
     refetch,
@@ -605,6 +606,7 @@ const ProjectDetails = () => {
           schoolTotalEmissions={schoolTotalEmissions}
           availableActions={availableActions}
           completedActions={completedActions}
+          subcategoryEmissionsKg={subcategoryEmissionsKg}
         />
       </motion.div>
 

@@ -278,15 +278,36 @@ const ActionModal: React.FC<ActionModalProps> = ({
               className="input w-full"
               disabled={fieldDisabled || !canEditField("status")}
             >
-              <option value="Available">{t("available")}</option>
-              <option value="Selected">{t("selected")}</option>
-              <option value="Completed">{t("completed")}</option>
+              <option
+                value="Available"
+                title={t("statusOptionAvailableTooltip")}
+              >
+                {t("available")}
+              </option>
+              <option
+                value="Selected"
+                title={t("statusOptionSelectedTooltip")}
+              >
+                {t("selected")}
+              </option>
+              <option
+                value="Completed"
+                title={t("statusOptionCompletedTooltip")}
+              >
+                {t("completed")}
+              </option>
             </select>
           </div>
 
           {/* Assigned To */}
           <div className="grid gap-2">
-            <label htmlFor="assignedTo">{t("assignedTo")}</label>
+            <label
+              htmlFor="assignedTo"
+              className="cursor-help"
+              title={t("assignedToTooltip")}
+            >
+              {t("assignedTo")}
+            </label>
             <input
               id="assignedTo"
               value={newAction.assignedTo || ""}
@@ -417,7 +438,13 @@ const ActionModal: React.FC<ActionModalProps> = ({
 
           {/* Reduction */}
           <div className="grid gap-2">
-            <label htmlFor="reduction">{t("estimatedReduction")}</label>
+            <label
+              htmlFor="reduction"
+              className="cursor-help"
+              title={t("estimatedReductionTooltip")}
+            >
+              {t("estimatedReduction")}
+            </label>
             <input
               id="reduction"
               type="number"
@@ -449,9 +476,15 @@ const ActionModal: React.FC<ActionModalProps> = ({
             />
           </div>
 
-          {/* Nature */}
+          {/* Nature (Type) */}
           <div className="grid gap-2">
-            <label htmlFor="nature">{t("nature")}</label>
+            <label
+              htmlFor="nature"
+              className="cursor-help"
+              title={t("natureFieldTooltip")}
+            >
+              {t("nature")}
+            </label>
             <textarea
               id="nature"
               value={newAction.nature}
@@ -510,7 +543,11 @@ const ActionModal: React.FC<ActionModalProps> = ({
 
           {/* Steps */}
           <div className="grid gap-2">
-            <label htmlFor="steps" className="flex items-center gap-2">
+            <label
+              htmlFor="steps"
+              className="flex cursor-help items-center gap-2"
+              title={t("stepsFieldTooltip")}
+            >
               {t("steps")}
               {isTeacher &&
                 initialAction?.pendingChanges?.steps &&
@@ -551,10 +588,14 @@ const ActionModal: React.FC<ActionModalProps> = ({
             />
           </div>
 
-          {/* Monitoring */}
+          {/* Monitoring indicators */}
           <div className="grid gap-2">
-            <label htmlFor="monitoring" className="flex items-center gap-2">
-              {t("monitoring")}
+            <label
+              htmlFor="monitoring"
+              className="flex cursor-help items-center gap-2"
+              title={t("monitoringFieldTooltip")}
+            >
+              {t("monitoringIndicators")}
               {isTeacher &&
                 initialAction?.pendingChanges?.monitoring &&
                 initialAction.pendingChanges.monitoring !==
@@ -581,10 +622,14 @@ const ActionModal: React.FC<ActionModalProps> = ({
             />
           </div>
 
-          {/* Performance */}
+          {/* Performance Indicators */}
           <div className="grid gap-2">
-            <label htmlFor="performance" className="flex items-center gap-2">
-              {t("performance")}
+            <label
+              htmlFor="performance"
+              className="flex cursor-help items-center gap-2"
+              title={t("performanceFieldTooltip")}
+            >
+              {t("performanceIndicators")}
               {isTeacher &&
                 initialAction?.pendingChanges?.performance &&
                 initialAction.pendingChanges.performance !==
