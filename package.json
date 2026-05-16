@@ -18,7 +18,7 @@
     "react": "^19.2.3",
     "react-dom": "^19.2.3",
     "recharts": "^2.15.3",
-    "uuid": "^11.1.0"
+    "uuid": "^14.0.0"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3.3.3",
@@ -30,10 +30,16 @@
     "daisyui": "^5.0.0",
     "eslint": "^9.39.2",
     "eslint-config-next": "^16.0.10",
-    "postcss": "^8.5.3",
+    "postcss": "^8.5.10",
     "prettier": "^3.5.2",
     "prettier-plugin-tailwindcss": "^0.6.11",
     "tailwindcss": "^4.0.9",
     "typescript": "^5"
+  },
+  "overrides": {
+    "uuid": "^14.0.0",
+    "postcss": "^8.5.10",
+    "retry-request": "^8.0.2",
+    "teeny-request": "^10.1.2"
   }
 }
