@@ -48,6 +48,21 @@ const getSecureStorage = () => {
   };
 };
 
+function clearAllStorage() {
+  if (typeof window === "undefined") return;
+  const secureStorage = getSecureStorage();
+
+  localStorage.removeItem("username");
+  localStorage.removeItem("passcode");
+  localStorage.removeItem("studentId");
+  localStorage.removeItem("uid");
+  localStorage.removeItem("role");
+  localStorage.removeItem("schoolId");
+
+  secureStorage.removeToken();
+  secureStorage.removeExpiry();
+}
+
 export const UserProvider = ({ children }: { children: React.ReactNode }) => {
   const [user, setUserState] = useState<UserData | null>(null);
   const [isLoaded, setIsLoaded] = useState(false);
@@ -139,34 +154,16 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
               setIsLoaded(true);
             });
         } else {
-          // Student user or no token, set user data directly
-          setUserState(userData);
-          setIsLoaded(true);
+          queueMicrotask(() => {
+            setUserState(userData);
+            setIsLoaded(true);
+          });
         }
       } else {
-        setIsLoaded(true);
+        queueMicrotask(() => setIsLoaded(true));
       }
     }
   }, []);
-
-  // Helper function to clear all storage
-  const clearAllStorage = () => {
-    if (typeof window !== "undefined") {
-      const secureStorage = getSecureStorage();
-
-      // Clear localStorage
-      localStorage.removeItem("username");
-      localStorage.removeItem("passcode");
-      localStorage.removeItem("studentId");
-      localStorage.removeItem("uid");
-      localStorage.removeItem("role");
-      localStorage.removeItem("schoolId");
-
-      // Clear secure storage
-      secureStorage.removeToken();
-      secureStorage.removeExpiry();
-    }
-  };
 
   const setUser = (newUser: UserData | null) => {
     // Only access storage on client side

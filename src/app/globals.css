@@ -1,6 +1,5 @@
 @import "tailwindcss";
 @plugin "daisyui";
-@import url("https://fonts.googleapis.com/css2?family=Manrope:wght@200..800&display=swap");
 @import "./overrides.css";
 
 @theme {
@@ -42,7 +41,6 @@
 body {
   color: var(--foreground);
   background: var(--background);
-  font-family: Manrope, sans-serif;
 }
 
 .transition-200 {

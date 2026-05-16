@@ -720,6 +720,7 @@ const Monitoring: React.FC = () => {
 
       {editingAction && (
         <CustomActionFormModal
+          key={editingAction.id}
           mode="edit"
           onSubmit={handleSubmitEdit}
           onApproveChanges={handleApproveChanges}

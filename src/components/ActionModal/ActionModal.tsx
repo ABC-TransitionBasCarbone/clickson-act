@@ -37,6 +37,45 @@ interface ActionModalProps {
   allowAllFieldsEdit?: boolean; // Allow students to edit all fields (for data reporting screen)
 }
 
+const emptyCustomAction = (): CustomAction => ({
+  id: "",
+  date: "",
+  category: "",
+  subcategory: "",
+  title: "",
+  description: "",
+  reduction: 0,
+  effort: "",
+  manager: "",
+  nature: "",
+  objectives: "",
+  keyContacts: "",
+  steps: "",
+  calendar: "",
+  indicators: "",
+  monitoring: "",
+  performance: "",
+  status: "Available",
+  assignedTo: "",
+  timeline: 1,
+  selected: false,
+});
+
+function buildInitialActionFormState(
+  mode: "create" | "edit",
+  initialAction?: CustomAction,
+): CustomAction {
+  if (mode === "edit" && initialAction) {
+    return {
+      ...initialAction,
+      assignedTo: initialAction.assignedTo || "",
+      timeline: initialAction.timeline || 1,
+      subcategory: initialAction.subcategory || "",
+    };
+  }
+  return emptyCustomAction();
+}
+
 const ActionModal: React.FC<ActionModalProps> = ({
   mode,
   onSubmit,
@@ -56,29 +95,9 @@ const ActionModal: React.FC<ActionModalProps> = ({
   // Check if user is a teacher (has role "teacher" or "admin")
   const isTeacher = user?.role === "teacher" || user?.role === "admin";
 
-  const [newAction, setNewAction] = useState<CustomAction>({
-    id: "",
-    date: "",
-    category: "",
-    subcategory: "",
-    title: "",
-    description: "",
-    reduction: 0,
-    effort: "",
-    manager: "",
-    nature: "",
-    objectives: "",
-    keyContacts: "",
-    steps: "",
-    calendar: "",
-    indicators: "",
-    monitoring: "",
-    performance: "",
-    status: "Available",
-    assignedTo: "",
-    timeline: 1,
-    selected: false,
-  });
+  const [newAction, setNewAction] = useState<CustomAction>(() =>
+    buildInitialActionFormState(mode, initialAction),
+  );
 
   const [isEditing, setIsEditing] = useState(mode === "create");
   const [pendingChanges, setPendingChanges] = useState<{
@@ -88,18 +107,6 @@ const ActionModal: React.FC<ActionModalProps> = ({
     keyContacts?: string;
   }>({});
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
-
-  useEffect(() => {
-    if (initialAction && mode === "edit") {
-      setNewAction({
-        ...initialAction,
-        assignedTo: initialAction.assignedTo || "",
-        timeline: initialAction.timeline || 1,
-        subcategory: initialAction.subcategory || "",
-      });
-      setIsEditing(false);
-    }
-  }, [initialAction, mode]);
 
   // Edit modal mounts only after `editingAction` is set; calling showModal in the same
   // click handler runs before React commits the <dialog>, so getElementById misses it.

@@ -117,7 +117,7 @@ const generateChartDataFromActions = (
   startYear: number,
   endYear: number,
   completedActions: ProjectAction[] = [],
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+   
   _availableActions: ProjectAction[] = [],
   subGoal: number = 0,
   subGoalYear: number = 0,

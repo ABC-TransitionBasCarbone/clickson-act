@@ -2,7 +2,7 @@
 import Image from "next/image";
 import { motion } from "motion/react";
 import React, { useState, useRef, useEffect } from "react";
-import { Link, usePathname } from "@/i18n/navigation";
+import { Link, usePathname, useRouter } from "@/i18n/navigation";
 import { useSearchParams } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { useUser } from "@/context/UserContext";
@@ -21,14 +21,26 @@ import UnifiedAuthModal from "../../User/UnifiedAuthModal";
 
 const Header = () => {
   const pathname = usePathname();
+  const router = useRouter();
   const t = useTranslations("User");
   const { user, setUser } = useUser();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [showLogoutModal, setShowLogoutModal] = useState(false);
   const [showUserDropdown, setShowUserDropdown] = useState(false);
-  const [showAuthModal, setShowAuthModal] = useState(false);
+  const [manualAuthModalOpen, setManualAuthModalOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const searchParams = useSearchParams();
+  const loginFromAuthParam = searchParams.get("auth") === "login";
+  const authModalVisible = manualAuthModalOpen || loginFromAuthParam;
+
+  const closeAuthModal = () => {
+    setManualAuthModalOpen(false);
+    if (!loginFromAuthParam) return;
+    const params = new URLSearchParams(searchParams.toString());
+    params.delete("auth");
+    const query = params.toString();
+    router.replace(query ? `${pathname}?${query}` : pathname);
+  };
 
   const handleLogout = () => {
     setUser(null);
@@ -52,14 +64,6 @@ const Header = () => {
       document.removeEventListener("mousedown", handleClickOutside);
     };
   }, []);
-
-  // Open auth modal automatically when redirected with auth query parameter
-  useEffect(() => {
-    const auth = searchParams.get("auth");
-    if (auth === "login") {
-      setShowAuthModal(true);
-    }
-  }, [searchParams]);
 
   return (
     <>
@@ -85,7 +89,7 @@ const Header = () => {
           {/* Desktop Navigation */}
           <NavLinks
             className="hidden w-full justify-center lg:flex"
-            onProtectedRouteClick={() => setShowAuthModal(true)}
+            onProtectedRouteClick={() => setManualAuthModalOpen(true)}
           />
 
           {/* Right side items */}
@@ -150,7 +154,7 @@ const Header = () => {
               </div>
             ) : (
               <button
-                onClick={() => setShowAuthModal(true)}
+                onClick={() => setManualAuthModalOpen(true)}
                 className="hidden items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-100 lg:flex"
               >
                 <LogIn size={16} />
@@ -176,7 +180,7 @@ const Header = () => {
         onClose={() => setIsMenuOpen(false)}
         showLogoutModal={showLogoutModal}
         setShowLogoutModal={setShowLogoutModal}
-        onOpenAuthModal={() => setShowAuthModal(true)}
+        onOpenAuthModal={() => setManualAuthModalOpen(true)}
       />
 
       {/* Logout Confirmation Modal */}
@@ -208,8 +212,8 @@ const Header = () => {
 
       {/* Unified Auth Modal */}
       <UnifiedAuthModal
-        isOpen={showAuthModal}
-        onClose={() => setShowAuthModal(false)}
+        isOpen={authModalVisible}
+        onClose={closeAuthModal}
       />
     </>
   );

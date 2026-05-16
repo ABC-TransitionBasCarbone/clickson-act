@@ -23,9 +23,10 @@ const UnifiedAuthModal: React.FC<UnifiedAuthModalProps> = ({
   useEffect(() => {
     if (isOpen && dialogRef.current) {
       dialogRef.current.showModal();
-      // Reset state when opening
-      setShowRegister(false);
-      setActiveTab("teacher");
+      queueMicrotask(() => {
+        setShowRegister(false);
+        setActiveTab("teacher");
+      });
     } else if (!isOpen && dialogRef.current) {
       dialogRef.current.close();
     }

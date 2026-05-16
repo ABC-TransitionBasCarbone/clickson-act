@@ -218,10 +218,10 @@ export function withCSRFProtection(
       return handler(req);
     }
 
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+     
     const _csrfToken = req.headers.get("x-csrf-token");
     const origin = req.headers.get("origin");
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+     
     const _referer = req.headers.get("referer");
 
     // Validate origin/referer for same-origin requests

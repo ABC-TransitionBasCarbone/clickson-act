@@ -68,7 +68,7 @@ interface ProjectAction {
 }
 
 // Submit actions to a project for teacher approval (students)
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
+ 
 async function handlePost(req: NextRequest, _context: SecurityContext) {
   try {
     // Extract project ID from URL since we're not using auth context
@@ -456,7 +456,7 @@ async function handlePost(req: NextRequest, _context: SecurityContext) {
 }
 
 // Get actions for a project
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
+ 
 async function handleGet(req: NextRequest, _context: SecurityContext) {
   try {
     // Extract project ID from URL since we're not using auth context
@@ -501,7 +501,7 @@ async function handleGet(req: NextRequest, _context: SecurityContext) {
 }
 
 // Update a specific action in a project
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
+ 
 async function handlePut(req: NextRequest, _context: SecurityContext) {
   try {
     // Extract project ID from URL since we're not using auth context

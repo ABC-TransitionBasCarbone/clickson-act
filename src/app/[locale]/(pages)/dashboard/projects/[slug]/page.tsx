@@ -613,6 +613,7 @@ const ProjectDetails = () => {
       {/* Action Edit Modal */}
       {editingAction && (
         <CustomActionFormModal
+          key={editingAction.id}
           mode="edit"
           initialAction={editingAction}
           onSubmit={async (updatedAction: CustomAction) => {
