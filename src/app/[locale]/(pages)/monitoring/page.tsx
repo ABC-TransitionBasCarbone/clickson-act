@@ -452,6 +452,7 @@ const Monitoring: React.FC = () => {
           error: error instanceof Error ? error.message : tAction("unknown"),
         }),
       );
+      throw error;
     }
   };
 
@@ -594,6 +595,9 @@ const Monitoring: React.FC = () => {
     const updatedAction = {
       ...action,
       status: "Completed" as const,
+      reduction: action.reduction,
+      calculatedReduction: action.reduction,
+      dateCompleted: new Date().toISOString(),
     };
 
     handleSubmitEdit(updatedAction);
@@ -715,7 +719,7 @@ const Monitoring: React.FC = () => {
 
             <CompletedActions
               completedActions={completedActions}
-              onEdit={(action) => handleEditClick(action, "completed")}
+              onView={(action) => handleEditClick(action, "completed")}
             />
           </div>
         )}

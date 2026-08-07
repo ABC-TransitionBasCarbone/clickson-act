@@ -33,6 +33,7 @@ interface ActionData extends Action {
 interface CustomAction extends Action {
   selected: boolean;
   status?: "Available" | "Selected" | "In Progress" | "Completed";
+  calculatedReduction?: number;
 }
 
 const ProjectDetails = () => {
@@ -239,6 +240,8 @@ const ProjectDetails = () => {
         ...action,
         status: "Completed" as const,
         dateCompleted: new Date().toISOString(),
+        reduction: action.reduction,
+        calculatedReduction: action.reduction,
       };
 
       const response = await fetch(`/api/project/${projectId}/actions`, {
@@ -425,6 +428,7 @@ const ProjectDetails = () => {
     title: action.title,
     description: action.description,
     reduction: action.reduction,
+    calculatedReduction: action.calculatedReduction ?? action.reduction,
     effort: action.effort || "medium",
     manager: action.manager || action.studentName,
     assignedTo: action.assignedTo || "",
@@ -607,7 +611,7 @@ const ProjectDetails = () => {
           />
           <CompletedActions
             completedActions={convertedCompletedActions}
-            onEdit={(action) => handleEditClick(action)}
+            onView={(action) => handleEditClick(action)}
           />
         </div>
 
@@ -677,6 +681,7 @@ const ProjectDetails = () => {
                     error instanceof Error ? error.message : t("unknownError"),
                 }),
               );
+              throw error;
             }
           }}
           onApproveChanges={handleApproveChanges}

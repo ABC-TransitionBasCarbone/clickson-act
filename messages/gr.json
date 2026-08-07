@@ -456,6 +456,8 @@
     "validationError": "Σφάλμα Επικύρωσης",
     "fillAllRequiredFields": "Παρακαλώ συμπληρώστε όλα τα απαιτούμενα πεδία.",
     "missingRequiredFields": "Παρακαλώ συμπληρώστε: {fields}",
+    "cannotEditCompletedAction": "Οι ολοκληρωμένες ενέργειες δεν μπορούν να επεξεργαστούν.",
+    "viewOnlyCompletedAction": "Μόνο προβολή — οι ολοκληρωμένες ενέργειες δεν μπορούν να αλλάξουν.",
     "failedToCreateCustomAction": "Αποτυχία δημιουργίας προσαρμοσμένης ενέργειας",
     "actionSubmitted": "Η Ενέργεια Υποβλήθηκε!",
     "actionSubmittedForApproval": "Η ενέργεια \"{title}\" έχει υποβληθεί για έγκριση από τον καθηγητή.",

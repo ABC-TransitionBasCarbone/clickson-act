@@ -283,6 +283,7 @@ const ProjectMonitoring: React.FC = () => {
           error: error instanceof Error ? error.message : tAction("unknown"),
         }),
       );
+      throw error;
     }
   };
 
@@ -423,6 +424,8 @@ const ProjectMonitoring: React.FC = () => {
         ...action,
         status: "Completed",
         dateCompleted: new Date().toISOString(),
+        reduction: action.reduction,
+        calculatedReduction: action.reduction,
       };
 
       const response = await fetch(`/api/project/${passcode}/actions`, {
@@ -576,7 +579,7 @@ const ProjectMonitoring: React.FC = () => {
 
             <CompletedActions
               completedActions={completedActions}
-              onEdit={(action) => handleEditClick(action, "completed")}
+              onView={(action) => handleEditClick(action, "completed")}
             />
           </div>
         )}

@@ -13,6 +13,8 @@ interface CustomAction extends Action {
   assignedTo?: string;
   timeline?: number;
   subcategory?: string;
+  /** % used by trajectory chart (must stay in sync with reduction for Direct actions). */
+  calculatedReduction?: number;
   pendingChanges?: {
     steps?: string;
     monitoring?: string;
@@ -105,8 +107,8 @@ const ActionModal: React.FC<ActionModalProps> = ({
 
   const [isEditing, setIsEditing] = useState(
     mode === "create" ||
-      user?.role === "teacher" ||
-      user?.role === "admin",
+      ((user?.role === "teacher" || user?.role === "admin") &&
+        initialAction?.status !== "Completed"),
   );
   const [pendingChanges, setPendingChanges] = useState<{
     steps?: string;
@@ -172,7 +174,15 @@ const ActionModal: React.FC<ActionModalProps> = ({
     return missing;
   };
 
+  const isCompletedAction =
+    mode === "edit" && initialAction?.status === "Completed";
+
   const handleSubmit = async () => {
+    if (isCompletedAction) {
+      alert(t("cannotEditCompletedAction"));
+      return;
+    }
+
     if (requiresFullFields) {
       const missing = getMissingRequiredFields();
       if (missing.length > 0) {
@@ -188,34 +198,27 @@ const ActionModal: React.FC<ActionModalProps> = ({
       return;
     }
 
+    const syncedAction: CustomAction = {
+      ...newAction,
+      // Keep chart impact in sync with the edited estimated reduction %
+      calculatedReduction: newAction.reduction,
+      id:
+        mode === "edit" && initialAction
+          ? initialAction.id
+          : Date.now().toString(),
+      selected: initialAction?.selected ?? false,
+      date:
+        mode === "edit" && initialAction
+          ? initialAction.date
+          : new Date().toISOString(),
+    };
+
     try {
       if (isTeacher || allowAllFieldsEdit || mode === "create") {
-        // Teachers, create flow, and data reporting can submit the full action
-        await onSubmit({
-          ...newAction,
-          id:
-            mode === "edit" && initialAction
-              ? initialAction.id
-              : Date.now().toString(),
-          selected: initialAction?.selected ?? false,
-          date:
-            mode === "edit" && initialAction
-              ? initialAction.date
-              : new Date().toISOString(),
-        });
+        await onSubmit(syncedAction);
       } else {
-        // Students submit pending changes for approval
         await onSubmit({
-          ...newAction,
-          id:
-            mode === "edit" && initialAction
-              ? initialAction.id
-              : Date.now().toString(),
-          selected: initialAction?.selected ?? false,
-          date:
-            mode === "edit" && initialAction
-              ? initialAction.date
-              : new Date().toISOString(),
+          ...syncedAction,
           pendingChanges: {
             ...pendingChanges,
             changedBy: user?.username || "",
@@ -231,13 +234,11 @@ const ActionModal: React.FC<ActionModalProps> = ({
       if (modal) modal.close();
     } catch (error) {
       console.error("Error submitting action:", error);
-      // Show error to user
       alert(
         error instanceof Error
           ? error.message
           : "Failed to save action. Please try again.",
       );
-      // Don't close modal on error so user can retry
     }
   };
 
@@ -250,10 +251,11 @@ const ActionModal: React.FC<ActionModalProps> = ({
     }
   };
 
-  const fieldDisabled = mode === "edit" && !isEditing;
+  const fieldDisabled = isCompletedAction || (mode === "edit" && !isEditing);
 
   // Helper function to check if a field can be edited by current user
   const canEditField = (fieldName: string): boolean => {
+    if (isCompletedAction) return false;
     if (mode === "create") return true; // Create is teacher-only UI; allow all fields
     if (isTeacher) return true; // Teachers can edit all fields
     if (allowAllFieldsEdit) return true; // Allow all fields for data reporting screen
@@ -893,29 +895,58 @@ const ActionModal: React.FC<ActionModalProps> = ({
           </div>
         )}
 
-        <div className="mt-6 flex flex-wrap justify-center gap-3">
-          {/* Delete button in edit mode - only for teachers */}
-          {mode === "edit" && !isEditing && isTeacher && onDelete && (
-            <button
-              className="btn btn-error"
-              onClick={() => onDelete(newAction)}
-            >
-              {t("delete")}
-            </button>
+        {isCompletedAction && (
+          <div className="alert alert-warning mt-4">
+            <div className="text-sm">{t("viewOnlyCompletedAction")}</div>
+          </div>
+        )}
+
+        {!fieldDisabled &&
+          !isCompletedAction &&
+          requiresFullFields &&
+          missingRequiredFields.length > 0 && (
+            <p className="mt-4 text-center text-error text-sm" role="status">
+              {t("missingRequiredFields", {
+                fields: missingRequiredFields.join(", "),
+              })}
+            </p>
           )}
 
-          {/* Complete Action button - only for teachers */}
-          {mode === "edit" && isTeacher && onCompleteAction && (
-            <button
-              className="btn btn-success"
-              onClick={() => onCompleteAction(newAction)}
-            >
-              {t("completeAction")}
-            </button>
-          )}
-
+        <div className="mt-4 flex flex-wrap justify-center gap-3">
+          {/* Delete button in edit mode - only for teachers on non-completed actions */}
+          {mode === "edit" &&
+            !isCompletedAction &&
+            !isEditing &&
+            isTeacher &&
+            onDelete && (
+              <button
+                className="btn btn-error"
+                onClick={() => onDelete(newAction)}
+              >
+                {t("delete")}
+              </button>
+            )}
+          {/* Complete Action — teachers only, not already completed */}
+          {mode === "edit" &&
+            !isCompletedAction &&
+            isTeacher &&
+            onCompleteAction && (
+              <button
+                className="btn btn-success"
+                onClick={() =>
+                  onCompleteAction({
+                    ...newAction,
+                    calculatedReduction: newAction.reduction,
+                    status: "Completed",
+                  })
+                }
+              >
+                {t("completeAction")}
+              </button>
+            )}
           {/* Approve Changes button - only for teachers when there are pending changes */}
           {mode === "edit" &&
+            !isCompletedAction &&
             isTeacher &&
             initialAction?.needsApproval &&
             onApproveChanges && (
@@ -926,9 +957,9 @@ const ActionModal: React.FC<ActionModalProps> = ({
                 {t("approveChanges")}
               </button>
             )}
-
           {/* Reject Changes button - only for teachers when there are pending changes */}
           {mode === "edit" &&
+            !isCompletedAction &&
             isTeacher &&
             initialAction?.needsApproval &&
             onRejectChanges && (
@@ -939,9 +970,8 @@ const ActionModal: React.FC<ActionModalProps> = ({
                 {t("rejectChanges")}
               </button>
             )}
-
-          {/* Edit button - only show if user can edit */}
-          {mode === "edit" && !isEditing && (
+          {/* Edit button — not for completed actions */}
+          {mode === "edit" && !isEditing && !isCompletedAction && (
             <button
               className="btn-outline btn"
               onClick={() => setIsEditing(true)}
@@ -949,31 +979,20 @@ const ActionModal: React.FC<ActionModalProps> = ({
               {t("edit")}
             </button>
           )}
-
           {/* Submit button */}
-          {!fieldDisabled && (
-            <div className="flex flex-col gap-2 sm:col-span-2">
-              {requiresFullFields && missingRequiredFields.length > 0 && (
-                <p className="text-error text-sm" role="status">
-                  {t("missingRequiredFields", {
-                    fields: missingRequiredFields.join(", "),
-                  })}
-                </p>
-              )}
-              <button
-                className="btn btn-primary"
-                onClick={handleSubmit}
-                disabled={isInvalid}
-              >
-                {mode === "create" || isTeacher || allowAllFieldsEdit
-                  ? mode === "edit"
-                    ? t("saveChanges")
-                    : t("addAction")
-                  : t("submitForApproval")}
-              </button>
-            </div>
+          {!fieldDisabled && !isCompletedAction && (
+            <button
+              className="btn btn-primary"
+              onClick={handleSubmit}
+              disabled={isInvalid}
+            >
+              {mode === "create" || isTeacher || allowAllFieldsEdit
+                ? mode === "edit"
+                  ? t("saveChanges")
+                  : t("addAction")
+                : t("submitForApproval")}
+            </button>
           )}
-
           <button className="btn" onClick={handleCancel}>
             {t("cancel")}
           </button>

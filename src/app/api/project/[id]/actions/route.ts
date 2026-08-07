@@ -559,18 +559,53 @@ async function handlePut(req: NextRequest, _context: SecurityContext) {
       return NextResponse.json({ error: "Action not found" }, { status: 404 });
     }
 
+    const existingAction = actionDoc.data() as {
+      status?: string;
+      reduction?: number;
+      calculatedReduction?: number;
+    };
+
+    const body = sanitizedData as {
+      id?: string;
+      status?: string;
+      reduction?: number;
+      calculatedReduction?: number;
+      [key: string]: unknown;
+    };
+
+    // Completed actions are immutable
+    if (existingAction.status === "Completed") {
+      return NextResponse.json(
+        { error: "Completed actions cannot be edited" },
+        { status: 403 },
+      );
+    }
+
+    // Keep chart % in sync with estimated reduction when reduction is sent
+    if (typeof body.reduction === "number") {
+      body.calculatedReduction = body.reduction;
+    }
+
+    // Strip client-only / undefined fields that break Firestore .update()
+    const firestoreUpdate: Record<string, unknown> = {};
+    for (const [key, value] of Object.entries(body)) {
+      if (value !== undefined && key !== "id") {
+        firestoreUpdate[key] = value;
+      }
+    }
+
     // Update the action in the project
     await adminDb
       .collection("projects")
       .doc(resolvedProjectId)
       .collection("actions")
       .doc(updateData.id)
-      .update(updateData);
+      .update(firestoreUpdate);
 
     return NextResponse.json({
       success: true,
       message: "Action updated successfully",
-      action: updateData,
+      action: { id: updateData.id, ...firestoreUpdate },
     });
   } catch (error) {
     console.error("Error updating project action:", error);

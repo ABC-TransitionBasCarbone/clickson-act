@@ -480,6 +480,8 @@
     "validationError": "Validation Error",
     "fillAllRequiredFields": "Please fill in all required fields.",
     "missingRequiredFields": "Please complete: {fields}",
+    "cannotEditCompletedAction": "Completed actions cannot be edited.",
+    "viewOnlyCompletedAction": "View only — completed actions cannot be changed.",
     "failedToCreateCustomAction": "Failed to create custom action",
     "actionSubmitted": "Action Submitted!",
     "actionSubmittedForApproval": "\"{title}\" has been submitted for teacher approval.",
