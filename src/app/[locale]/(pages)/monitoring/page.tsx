@@ -15,6 +15,7 @@ import { useProjectData } from "@/hooks/useProjectData";
 import { useEmissionCategories } from "@/hooks/useEmissionCategories";
 import Project from "@/types/ProjectType";
 import LoadingState from "@/components/ui/LoadingState";
+import { buildCategoryDataPayload } from "@/lib/actionCategoryContext";
 
 // Custom action interface that extends Action
 interface CustomAction extends Action {
@@ -71,6 +72,7 @@ const Monitoring: React.FC = () => {
     category.subcategories.map((subcategory) => ({
       value: `${category.category}-${subcategory.id}`, // Format: categoryId-subcategoryId
       label: subcategory.name,
+      categoryId: category.category,
     })),
   );
 
@@ -359,14 +361,15 @@ const Monitoring: React.FC = () => {
             timeline: newAction.timeline || 1,
             type: newAction.type || "Direct",
           },
-          studentName: user?.username || "",
+          studentName: user?.username || "Teacher",
           studentId: user?.studentId || user?.uid || "",
           calculatedReduction: newAction.reduction,
           actionType: newAction.type || "Direct",
-          categoryData: {
+          categoryData: buildCategoryDataPayload({
             categoryId: newAction.category,
             categoryName: newAction.category,
-          },
+            subcategory: newAction.subcategory || undefined,
+          }),
           // Teachers' custom actions are auto‑approved, students go to pending
           isTeacherAction: user?.role === "teacher" || user?.role === "admin",
         }),
@@ -727,12 +730,16 @@ const Monitoring: React.FC = () => {
           onRejectChanges={handleRejectChanges}
           onCompleteAction={handleCompleteAction}
           onDelete={handleDeleteAction}
+          onClose={() => {
+            setEditingAction(null);
+            setEditingType(null);
+          }}
           categories={categories}
           subcategoryOptions={subcategoryOptions}
           effortCategories={[
-            { value: "easy", label: tAction("Easy") },
-            { value: "medium", label: tAction("Medium") },
-            { value: "hard", label: tAction("Hard") },
+            { value: "easy", label: "Easy" },
+            { value: "medium", label: "Medium" },
+            { value: "hard", label: "Hard" },
           ]}
           initialAction={editingAction}
         />
@@ -741,12 +748,13 @@ const Monitoring: React.FC = () => {
         <CustomActionFormModal
           mode="create"
           onSubmit={handleSubmitCreate}
+          onClose={() => setShowCreateModal(false)}
           categories={categories}
           subcategoryOptions={subcategoryOptions}
           effortCategories={[
-            { value: "easy", label: tAction("Easy") },
-            { value: "medium", label: tAction("Medium") },
-            { value: "hard", label: tAction("Hard") },
+            { value: "easy", label: "Easy" },
+            { value: "medium", label: "Medium" },
+            { value: "hard", label: "Hard" },
           ]}
           initialAction={undefined}
         />

@@ -17,6 +17,7 @@ import {
 } from "@/hooks/useSchoolEmissionData";
 import { useActions } from "@/hooks/useActions";
 import { useToast } from "@/context/ToastContext";
+import { buildCategoryDataPayload } from "@/lib/actionCategoryContext";
 
 interface CustomAction extends Action {
   selected: boolean;
@@ -105,73 +106,37 @@ const StudentCalculator: React.FC = () => {
   const calculateDisplayReduction = (action: CustomAction): number => {
     const actionType = action.type || "Direct";
 
-    // For Indirect actions, always return 1% (flat reduction on total emissions)
+    // Indirect: fixed 1% of total school emissions (product rule)
     if (actionType === "Indirect") {
-      console.log(
-        `Indirect action "${action.title}": Fixed 1% reduction on total emissions`,
-      );
-      return 1; // Always 1% for indirect actions
+      return 1;
     }
 
-    // For Direct actions, calculate based on the action's impact on the subcategory
-    // relative to total school emissions
-    if (
-      actionType === "Direct" &&
-      selectedCategory &&
-      selectedSubcategories.length > 0
-    ) {
-      // Get selected subcategory percentages
-      const selectedSubcategoryData = selectedCategory.subcategories.filter(
-        (sub) => selectedSubcategories.includes(sub.id),
-      );
-
-      if (selectedSubcategoryData.length > 0 && selectedCategory.amount > 0) {
-        // Calculate average subcategory amount (in kgCO2e)
-        const avgSubcategoryAmount =
-          selectedSubcategoryData.reduce((sum, sub) => sum + sub.amount, 0) /
-          selectedSubcategoryData.length;
-
-        // Get total school emissions
-        const totalSchoolEmissions = schoolCategories.reduce(
-          (sum, cat) => sum + cat.amount,
-          0,
-        );
-
-        if (totalSchoolEmissions > 0) {
-          // Calculate the reduction as:
-          // (action_reduction% × subcategory_emissions) / total_emissions
-          // This gives us the % reduction relative to total school emissions
-          const reductionInKgCO2 =
-            (action.reduction / 100) * avgSubcategoryAmount;
-          const reductionPercentageOfTotal =
-            (reductionInKgCO2 / totalSchoolEmissions) * 100;
-
-          console.log(`Direct action "${action.title}" calculation:`, {
-            actionReduction: action.reduction + "%",
-            avgSubcategoryAmount: avgSubcategoryAmount.toFixed(2) + " kgCO2e",
-            reductionInKgCO2: reductionInKgCO2.toFixed(2) + " kgCO2e",
-            totalSchoolEmissions: totalSchoolEmissions.toFixed(2) + " kgCO2e",
-            reductionPercentageOfTotal:
-              reductionPercentageOfTotal.toFixed(4) + "%",
-            formula: `(${action.reduction}% × ${avgSubcategoryAmount.toFixed(2)}) / ${totalSchoolEmissions.toFixed(2)} = ${reductionPercentageOfTotal.toFixed(4)}%`,
-          });
-
-          return reductionPercentageOfTotal;
-        }
-      } else {
-        console.warn(
-          `Cannot calculate reduction for "${action.title}": missing emission amounts.`,
-        );
-      }
-    }
-
-    // Fallback: return original reduction if calculation not possible
+    // Direct: template % applies to the selected subcategory kgCO₂ — show that %
+    // (not converted to % of school total). Chart uses the same subcategory basis.
     return action.reduction;
   };
 
   // Handle custom action submission
   const handleAddCustomAction = async (action: CustomAction) => {
     try {
+      const selectedRows =
+        selectedCategory && selectedSubcategories.length > 0
+          ? selectedCategory.subcategories
+              .filter((sub) => selectedSubcategories.includes(sub.id))
+              .map((sub) => ({
+                id: `${selectedCategory.category}-${sub.id}`,
+                name: sub.name,
+                amount: sub.amount,
+              }))
+          : undefined;
+
+      const categoryData = buildCategoryDataPayload({
+        categoryId: action.category || selectedCategory?.category || "",
+        categoryName: selectedCategory?.name || action.category,
+        subcategory: action.subcategory || undefined,
+        subcategoryRows: selectedRows,
+      });
+
       // Submit as custom action to project
       const response = await fetch(`/api/project/${projectId}/actions`, {
         method: "POST",
@@ -187,7 +152,7 @@ const StudentCalculator: React.FC = () => {
             reduction: action.reduction,
             effort: action.effort,
             manager: action.manager,
-              assignedTo: action.assignedTo || "",
+            assignedTo: action.assignedTo || "",
             nature: action.nature,
             objectives: action.objectives,
             keyContacts: action.keyContacts,
@@ -203,10 +168,7 @@ const StudentCalculator: React.FC = () => {
           studentId: user?.studentId || "",
           calculatedReduction: action.reduction,
           actionType: action.type || "Direct",
-          categoryData: {
-            categoryId: action.category,
-            categoryName: action.category,
-          },
+          categoryData,
           isTeacherAction: user?.role === "teacher" || user?.role === "admin",
         }),
       });

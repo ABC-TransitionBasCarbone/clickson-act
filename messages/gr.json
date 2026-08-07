@@ -321,6 +321,8 @@
     "failedToCreateActionWithError": "Αποτυχία δημιουργίας ενέργειας: {error}",
     "failedToUpdateAction": "Αποτυχία ενημέρωσης ενέργειας",
     "failedToUpdateActionWithError": "Αποτυχία ενημέρωσης ενέργειας: {error}",
+    "failedToCompleteAction": "Αποτυχία ολοκλήρωσης ενέργειας",
+    "failedToCompleteActionWithError": "Αποτυχία ολοκλήρωσης ενέργειας: {error}",
     "failedToCopyLink": "Αποτυχία αντιγραφής συνδέσμου",
     "failedToCopyPasscode": "Αποτυχία αντιγραφής κωδικού πρόσβασης",
     "notFound": {
@@ -453,6 +455,7 @@
     "modifyAction": "Τροποποίηση Ενέργειας",
     "validationError": "Σφάλμα Επικύρωσης",
     "fillAllRequiredFields": "Παρακαλώ συμπληρώστε όλα τα απαιτούμενα πεδία.",
+    "missingRequiredFields": "Παρακαλώ συμπληρώστε: {fields}",
     "failedToCreateCustomAction": "Αποτυχία δημιουργίας προσαρμοσμένης ενέργειας",
     "actionSubmitted": "Η Ενέργεια Υποβλήθηκε!",
     "actionSubmittedForApproval": "Η ενέργεια \"{title}\" έχει υποβληθεί για έγκριση από τον καθηγητή.",

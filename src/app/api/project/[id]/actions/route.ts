@@ -221,10 +221,16 @@ async function handlePost(req: NextRequest, _context: SecurityContext) {
             actionDescription: customActionData.description,
             actionType: "Custom",
             calculatedReduction: customActionData.reduction,
-            categoryData: {
-              categoryId: customActionData.category,
-              categoryName: customActionData.category,
-            },
+            categoryData: categoryData
+              ? {
+                  categoryId: categoryData.categoryId,
+                  categoryName: categoryData.categoryName,
+                  subcategoryData: categoryData.subcategoryData,
+                }
+              : {
+                  categoryId: customActionData.category,
+                  categoryName: customActionData.category,
+                },
             customActionData,
             subcategory: customActionData.subcategory || "",
           });

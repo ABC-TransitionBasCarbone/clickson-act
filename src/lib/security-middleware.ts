@@ -242,10 +242,12 @@ export function validateProjectId(projectId: string): boolean {
 }
 
 export function validateStudentName(name: string): boolean {
+  const trimmed = name.trim();
   return (
-    name.trim().length >= 1 &&
-    name.trim().length <= 100 &&
-    /^[a-zA-Z0-9\s\-'\.]+$/.test(name.trim())
+    trimmed.length >= 1 &&
+    trimmed.length <= 100 &&
+    // Unicode letters (incl. Greek), digits, spaces, hyphen, apostrophe, period
+    /^[\p{L}\p{M}0-9\s\-'.]+$/u.test(trimmed)
   );
 }
 

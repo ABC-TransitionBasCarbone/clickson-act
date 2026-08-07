@@ -1,9 +1,10 @@
 "use client";
 
 import Modal from "@/components/Modal";
+import Tooltip from "@/components/ui/Tooltip";
 import { Action } from "@/types/Action";
 import { useTranslations } from "next-intl";
-import { useEffect, useState, useMemo } from "react";
+import { useEffect, useState, useMemo, useRef } from "react";
 import { useUser } from "@/context/UserContext";
 
 interface CustomAction extends Action {
@@ -35,6 +36,8 @@ interface ActionModalProps {
   onRejectChanges?: (action: CustomAction) => void;
   onCompleteAction?: (action: CustomAction) => void;
   allowAllFieldsEdit?: boolean; // Allow students to edit all fields (for data reporting screen)
+  /** Called when the dialog closes (Cancel, backdrop, or after successful submit). */
+  onClose?: () => void;
 }
 
 const emptyCustomAction = (): CustomAction => ({
@@ -88,6 +91,7 @@ const ActionModal: React.FC<ActionModalProps> = ({
   onRejectChanges,
   onCompleteAction,
   allowAllFieldsEdit = false,
+  onClose,
 }) => {
   const t = useTranslations("Action");
   const { user } = useUser();
@@ -99,7 +103,11 @@ const ActionModal: React.FC<ActionModalProps> = ({
     buildInitialActionFormState(mode, initialAction),
   );
 
-  const [isEditing, setIsEditing] = useState(mode === "create");
+  const [isEditing, setIsEditing] = useState(
+    mode === "create" ||
+      user?.role === "teacher" ||
+      user?.role === "admin",
+  );
   const [pendingChanges, setPendingChanges] = useState<{
     steps?: string;
     monitoring?: string;
@@ -107,6 +115,8 @@ const ActionModal: React.FC<ActionModalProps> = ({
     keyContacts?: string;
   }>({});
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
+  const onCloseRef = useRef(onClose);
+  onCloseRef.current = onClose;
 
   // Edit modal mounts only after `editingAction` is set; calling showModal in the same
   // click handler runs before React commits the <dialog>, so getElementById misses it.
@@ -120,12 +130,67 @@ const ActionModal: React.FC<ActionModalProps> = ({
     }
   }, [mode, initialAction?.id]);
 
+  // When the native dialog closes (Cancel, backdrop, Escape, or after submit),
+  // clear parent state so the same action can be opened again.
+  useEffect(() => {
+    const el = document.getElementById(
+      "custom_action",
+    ) as HTMLDialogElement | null;
+    if (!el) return;
+
+    const handleDialogClose = () => {
+      onCloseRef.current?.();
+    };
+
+    el.addEventListener("close", handleDialogClose);
+    return () => el.removeEventListener("close", handleDialogClose);
+  }, [mode, initialAction?.id]);
+
+  // Create modal: open when mounted (parent may keep showCreateModal true across closes)
+  useEffect(() => {
+    if (mode !== "create") return;
+    const el = document.getElementById(
+      "custom_action",
+    ) as HTMLDialogElement | null;
+    if (el && !el.open) {
+      el.showModal();
+    }
+  }, [mode]);
+
+  const requiresFullFields =
+    mode === "create" || isTeacher || allowAllFieldsEdit;
+
+  const getMissingRequiredFields = (): string[] => {
+    const missing: string[] = [];
+    if (newAction.category === "") missing.push(t("category"));
+    if (newAction.title.trim() === "") missing.push(t("actionTitle"));
+    if (newAction.description.trim() === "") missing.push(t("description"));
+    if (!newAction.reduction || newAction.reduction <= 0) {
+      missing.push(t("estimatedReduction"));
+    }
+    if (newAction.effort === "") missing.push(t("effort"));
+    return missing;
+  };
+
   const handleSubmit = async () => {
-    if (!newAction.category || !newAction.title || !newAction.reduction) return;
+    if (requiresFullFields) {
+      const missing = getMissingRequiredFields();
+      if (missing.length > 0) {
+        alert(
+          t("missingRequiredFields", {
+            fields: missing.join(", "),
+          }),
+        );
+        return;
+      }
+    } else if (!hasUnsavedChanges) {
+      alert(t("fillAllRequiredFields"));
+      return;
+    }
 
     try {
-      if (isTeacher || allowAllFieldsEdit) {
-        // Teachers and data reporting screen can directly submit changes
+      if (isTeacher || allowAllFieldsEdit || mode === "create") {
+        // Teachers, create flow, and data reporting can submit the full action
         await onSubmit({
           ...newAction,
           id:
@@ -178,14 +243,18 @@ const ActionModal: React.FC<ActionModalProps> = ({
 
   const handleCancel = () => {
     const modal = document.getElementById("custom_action") as HTMLDialogElement;
-    if (modal) modal.close();
-    setIsEditing(false);
+    if (modal?.open) {
+      modal.close(); // fires "close" → onClose clears parent state
+    } else {
+      onCloseRef.current?.();
+    }
   };
 
   const fieldDisabled = mode === "edit" && !isEditing;
 
   // Helper function to check if a field can be edited by current user
   const canEditField = (fieldName: string): boolean => {
+    if (mode === "create") return true; // Create is teacher-only UI; allow all fields
     if (isTeacher) return true; // Teachers can edit all fields
     if (allowAllFieldsEdit) return true; // Allow all fields for data reporting screen
     if (!isTeacher) {
@@ -199,8 +268,8 @@ const ActionModal: React.FC<ActionModalProps> = ({
 
   // Helper function to handle field changes
   const handleFieldChange = (fieldName: string, value: string) => {
-    if (isTeacher || allowAllFieldsEdit) {
-      // Teachers and data reporting screen can directly modify the action
+    if (mode === "create" || isTeacher || allowAllFieldsEdit) {
+      // Teachers, create flow, and data reporting screen can directly modify the action
       setNewAction({ ...newAction, [fieldName]: value });
     } else {
       // Students create pending changes
@@ -211,7 +280,7 @@ const ActionModal: React.FC<ActionModalProps> = ({
 
   // Helper function to get field value (original or pending)
   const getFieldValue = (fieldName: string): string => {
-    if (isTeacher || allowAllFieldsEdit) {
+    if (mode === "create" || isTeacher || allowAllFieldsEdit) {
       return (newAction[fieldName as keyof CustomAction] as string) || "";
     } else {
       return (
@@ -260,17 +329,21 @@ const ActionModal: React.FC<ActionModalProps> = ({
     return filtered;
   }, [newAction.category, subcategoryOptions]);
 
-  // Different validation for teachers vs students
-  const isInvalid =
-    isTeacher || allowAllFieldsEdit
-      ? // Teachers and data reporting screen: validate all required fields (subcategory is optional)
-        newAction.category === "" ||
-        newAction.title === "" ||
-        newAction.description === "" ||
-        newAction.reduction === 0 ||
-        newAction.effort === ""
-      : // Students: only validate that they have made some changes
-        !hasUnsavedChanges;
+  // Create / teachers / data-reporting: full required fields.
+  // Students editing: require pending field changes.
+  const missingRequiredFields = requiresFullFields
+    ? getMissingRequiredFields()
+    : [];
+  const isInvalid = requiresFullFields
+    ? missingRequiredFields.length > 0
+    : !hasUnsavedChanges;
+
+  const requiredMark = (
+    <span className="text-error" aria-hidden="true">
+      {" "}
+      *
+    </span>
+  );
 
   return (
     <Modal
@@ -281,7 +354,25 @@ const ActionModal: React.FC<ActionModalProps> = ({
         <div className="grid grid-cols-2 gap-4">
           {/* Status */}
           <div className="grid gap-2">
-            <label htmlFor="status">{t("status")}</label>
+            <div className="flex items-center gap-1">
+              <label htmlFor="status">{t("status")}</label>
+              <Tooltip label={t("status")}>
+                <ul className="space-y-2">
+                  <li>
+                    <span className="font-medium">{t("available")}:</span>{" "}
+                    {t("statusOptionAvailableTooltip")}
+                  </li>
+                  <li>
+                    <span className="font-medium">{t("selected")}:</span>{" "}
+                    {t("statusOptionSelectedTooltip")}
+                  </li>
+                  <li>
+                    <span className="font-medium">{t("completed")}:</span>{" "}
+                    {t("statusOptionCompletedTooltip")}
+                  </li>
+                </ul>
+              </Tooltip>
+            </div>
             <select
               id="status"
               value={newAction.status}
@@ -297,24 +388,9 @@ const ActionModal: React.FC<ActionModalProps> = ({
               className="input w-full"
               disabled={fieldDisabled || !canEditField("status")}
             >
-              <option
-                value="Available"
-                title={t("statusOptionAvailableTooltip")}
-              >
-                {t("available")}
-              </option>
-              <option
-                value="Selected"
-                title={t("statusOptionSelectedTooltip")}
-              >
-                {t("selected")}
-              </option>
-              <option
-                value="Completed"
-                title={t("statusOptionCompletedTooltip")}
-              >
-                {t("completed")}
-              </option>
+              <option value="Available">{t("available")}</option>
+              <option value="Selected">{t("selected")}</option>
+              <option value="Completed">{t("completed")}</option>
             </select>
           </div>
 
@@ -340,7 +416,10 @@ const ActionModal: React.FC<ActionModalProps> = ({
 
           {/* Category */}
           <div className="grid gap-2">
-            <label htmlFor="category">{t("category")}</label>
+            <label htmlFor="category">
+              {t("category")}
+              {requiredMark}
+            </label>
             <select
               id="category"
               value={newAction.category}
@@ -353,6 +432,7 @@ const ActionModal: React.FC<ActionModalProps> = ({
               }
               className="input w-full"
               disabled={fieldDisabled || !canEditField("category")}
+              required
             >
               <option value="">{t("selectCategory")}</option>
               {categories.map((cat) => (
@@ -408,7 +488,10 @@ const ActionModal: React.FC<ActionModalProps> = ({
 
           {/* Title */}
           <div className="grid gap-2">
-            <label htmlFor="title">{t("actionTitle")}</label>
+            <label htmlFor="title">
+              {t("actionTitle")}
+              {requiredMark}
+            </label>
             <input
               id="title"
               value={newAction.title}
@@ -417,12 +500,16 @@ const ActionModal: React.FC<ActionModalProps> = ({
               }
               className="input w-full"
               disabled={fieldDisabled || !canEditField("title")}
+              required
             />
           </div>
 
           {/* Description */}
           <div className="grid gap-2">
-            <label htmlFor="description">{t("description")}</label>
+            <label htmlFor="description">
+              {t("description")}
+              {requiredMark}
+            </label>
             <input
               id="description"
               value={newAction.description}
@@ -431,12 +518,16 @@ const ActionModal: React.FC<ActionModalProps> = ({
               }
               className="input w-full"
               disabled={fieldDisabled || !canEditField("description")}
+              required
             />
           </div>
 
           {/* Effort */}
           <div className="grid gap-2">
-            <label htmlFor="effort">{t("effort")}</label>
+            <label htmlFor="effort">
+              {t("effort")}
+              {requiredMark}
+            </label>
             <select
               id="effort"
               value={newAction.effort}
@@ -445,6 +536,7 @@ const ActionModal: React.FC<ActionModalProps> = ({
               }
               className="input w-full"
               disabled={fieldDisabled || !canEditField("effort")}
+              required
             >
               <option value="">{t("selectEffort")}</option>
               {effortCategories.map((effort) => (
@@ -463,21 +555,23 @@ const ActionModal: React.FC<ActionModalProps> = ({
               title={t("estimatedReductionTooltip")}
             >
               {t("estimatedReduction")}
+              {requiredMark}
             </label>
             <input
               id="reduction"
               type="number"
-              value={newAction.reduction}
+              value={newAction.reduction || ""}
               onChange={(e) =>
                 setNewAction({
                   ...newAction,
-                  reduction: Number(e.target.value),
+                  reduction: Number(e.target.value) || 0,
                 })
               }
               min={1}
               max={100}
               className="input w-full"
               disabled={fieldDisabled || !canEditField("reduction")}
+              required
             />
           </div>
 
@@ -858,17 +952,26 @@ const ActionModal: React.FC<ActionModalProps> = ({
 
           {/* Submit button */}
           {!fieldDisabled && (
-            <button
-              className="btn btn-primary"
-              onClick={handleSubmit}
-              disabled={isInvalid}
-            >
-              {isTeacher || allowAllFieldsEdit
-                ? mode === "edit"
-                  ? t("saveChanges")
-                  : t("addAction")
-                : t("submitForApproval")}
-            </button>
+            <div className="flex flex-col gap-2 sm:col-span-2">
+              {requiresFullFields && missingRequiredFields.length > 0 && (
+                <p className="text-error text-sm" role="status">
+                  {t("missingRequiredFields", {
+                    fields: missingRequiredFields.join(", "),
+                  })}
+                </p>
+              )}
+              <button
+                className="btn btn-primary"
+                onClick={handleSubmit}
+                disabled={isInvalid}
+              >
+                {mode === "create" || isTeacher || allowAllFieldsEdit
+                  ? mode === "edit"
+                    ? t("saveChanges")
+                    : t("addAction")
+                  : t("submitForApproval")}
+              </button>
+            </div>
           )}
 
           <button className="btn" onClick={handleCancel}>

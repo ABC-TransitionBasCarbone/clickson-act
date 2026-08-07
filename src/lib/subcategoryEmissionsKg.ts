@@ -108,3 +108,83 @@ export function lookupSubcategoryKg(
 
   return undefined;
 }
+
+type ActionImpactInput = {
+  calculatedReduction: number;
+  category?: string;
+  subcategory?: string;
+  categoryContext?: {
+    categoryId?: string;
+    subcategoryData?: Array<{ id?: string; name?: string; value?: string }>;
+  };
+};
+
+/**
+ * Annual kg CO₂ removed for an action.
+ * Direct + subcategory scope: (calculatedReduction% × subcategory kg).
+ * Indirect / no subcategory: treated as % of school total (caller converts if needed).
+ */
+export function actionImpactKg(
+  action: ActionImpactInput,
+  lookup: SubcategoryKgLookup | undefined,
+  schoolTotalKg?: number,
+): { kg: number; asPctOfSchoolTotal: number } {
+  const pct = action.calculatedReduction || 0;
+  const subData = action.categoryContext?.subcategoryData;
+  const categoryId =
+    action.categoryContext?.categoryId || action.category || undefined;
+
+  const valuesFromRows: number[] = [];
+  for (const s of subData || []) {
+    if (s.value == null || s.value === "") continue;
+    const n = parseFloat(String(s.value));
+    if (!Number.isNaN(n) && n > 0) valuesFromRows.push(n);
+  }
+  if (valuesFromRows.length > 0) {
+    const base = valuesFromRows.reduce((a, b) => a + b, 0);
+    const kg = (pct / 100) * base;
+    const asPctOfSchoolTotal =
+      schoolTotalKg && schoolTotalKg > 0 ? (kg / schoolTotalKg) * 100 : 0;
+    return { kg, asPctOfSchoolTotal };
+  }
+
+  if (lookup && Object.keys(lookup).length > 0) {
+    let base = 0;
+    let matched = false;
+    if (subData?.length) {
+      for (const s of subData) {
+        if (!s?.id) continue;
+        const v = lookupSubcategoryKg(lookup, String(s.id), categoryId);
+        if (v != null && v > 0) {
+          base += v;
+          matched = true;
+        }
+      }
+    }
+    if (!matched && action.subcategory) {
+      const v = lookupSubcategoryKg(lookup, action.subcategory, categoryId);
+      if (v != null && v > 0) {
+        base = v;
+        matched = true;
+      }
+    }
+    if (matched) {
+      const kg = (pct / 100) * base;
+      const asPctOfSchoolTotal =
+        schoolTotalKg && schoolTotalKg > 0 ? (kg / schoolTotalKg) * 100 : 0;
+      return { kg, asPctOfSchoolTotal };
+    }
+  }
+
+  const hasSubcategoryScope =
+    !!action.categoryContext ||
+    !!(action.subcategory && String(action.subcategory).length > 0);
+  if (hasSubcategoryScope) {
+    return { kg: 0, asPctOfSchoolTotal: 0 };
+  }
+
+  // Legacy / Indirect: pct of school total
+  const kg =
+    schoolTotalKg && schoolTotalKg > 0 ? (pct / 100) * schoolTotalKg : 0;
+  return { kg, asPctOfSchoolTotal: pct };
+}

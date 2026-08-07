@@ -1,11 +1,13 @@
 "use client";
 
 import Modal from "@/components/Modal";
+import Tooltip from "@/components/ui/Tooltip";
 import { Action } from "@/types/Action";
 import { useTranslations } from "next-intl";
 import { useState, useMemo } from "react";
 import { useUser } from "@/context/UserContext";
 import { useToast } from "@/context/ToastContext";
+import { buildCategoryDataPayload } from "@/lib/actionCategoryContext";
 
 interface CustomAction extends Action {
   selected: boolean;
@@ -170,10 +172,11 @@ const EditActionModal: React.FC<EditActionModalProps> = ({
             studentId: user?.studentId || "",
             calculatedReduction: editedAction.reduction,
             actionType: editedAction.type || "Direct",
-            categoryData: {
+            categoryData: buildCategoryDataPayload({
               categoryId: editedAction.category,
               categoryName: editedAction.category,
-            },
+              subcategory: editedAction.subcategory || undefined,
+            }),
             isTeacherAction: isTeacher,
           }),
         });
@@ -275,7 +278,25 @@ const EditActionModal: React.FC<EditActionModalProps> = ({
         <div className="gap-4 grid grid-cols-2">
           {/* Status */}
           <div className="gap-2 grid">
-            <label htmlFor="status">{t("status")}</label>
+            <div className="flex items-center gap-1">
+              <label htmlFor="status">{t("status")}</label>
+              <Tooltip label={t("status")}>
+                <ul className="space-y-2">
+                  <li>
+                    <span className="font-medium">{t("available")}:</span>{" "}
+                    {t("statusOptionAvailableTooltip")}
+                  </li>
+                  <li>
+                    <span className="font-medium">{t("selected")}:</span>{" "}
+                    {t("statusOptionSelectedTooltip")}
+                  </li>
+                  <li>
+                    <span className="font-medium">{t("completed")}:</span>{" "}
+                    {t("statusOptionCompletedTooltip")}
+                  </li>
+                </ul>
+              </Tooltip>
+            </div>
             <select
               id="status"
               value={editedAction.status}
@@ -290,24 +311,9 @@ const EditActionModal: React.FC<EditActionModalProps> = ({
               }
               className="w-full input"
             >
-              <option
-                value="Available"
-                title={t("statusOptionAvailableTooltip")}
-              >
-                {t("available")}
-              </option>
-              <option
-                value="Selected"
-                title={t("statusOptionSelectedTooltip")}
-              >
-                {t("selected")}
-              </option>
-              <option
-                value="Completed"
-                title={t("statusOptionCompletedTooltip")}
-              >
-                {t("completed")}
-              </option>
+              <option value="Available">{t("available")}</option>
+              <option value="Selected">{t("selected")}</option>
+              <option value="Completed">{t("completed")}</option>
             </select>
           </div>
 

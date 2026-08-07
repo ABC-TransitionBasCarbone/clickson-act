@@ -3,6 +3,7 @@ import { adminDb } from "../../../../../firebaseAdmin";
 import { v4 as uuidv4 } from "uuid";
 import { PendingAction } from "../../../../../types/PendingAction";
 import { ActionTranslation } from "../../../../../types/TranslatableAction";
+import { toChartSubcategoryData } from "../../../../../lib/actionCategoryContext";
 import {
   withSecurity,
   SecurityContext,
@@ -273,11 +274,11 @@ async function handlePatch(req: NextRequest, _context: SecurityContext) {
         dateAdded: currentDate,
         notes: reviewNotes || "",
 
-        // Store category context if provided
+        // Store category context if provided (chart shape: id/name/value)
         categoryContext: {
           categoryId: pendingAction.categoryData.categoryId,
           categoryName: pendingAction.categoryData.categoryName,
-          subcategoryData:
+          subcategoryData: toChartSubcategoryData(
             pendingAction.categoryData.subcategoryData?.length
               ? pendingAction.categoryData.subcategoryData
               : pendingAction.subcategory
@@ -289,6 +290,7 @@ async function handlePatch(req: NextRequest, _context: SecurityContext) {
                     },
                   ]
                 : [],
+          ),
         },
       };
 

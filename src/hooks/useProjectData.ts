@@ -6,6 +6,7 @@ import { Action } from "@/types/Action";
 import {
   buildSubcategoryKgLookupFromProjectEmissions,
   mergeSubcategoryKgLookups,
+  actionImpactKg,
   type SubcategoryKgLookup,
 } from "@/lib/subcategoryEmissionsKg";
 
@@ -78,6 +79,11 @@ interface ProjectActionRecord extends Action {
   dateAdded: string;
   dateCompleted?: string;
   selected?: boolean;
+  categoryContext?: {
+    categoryId?: string;
+    categoryName?: string;
+    subcategoryData?: Array<{ id?: string; name?: string; value?: string }>;
+  };
 }
 
 interface ProjectActions {
@@ -216,14 +222,22 @@ export const useProjectData = (passcode?: string) => {
     [projectEmissions?.emissionsData, schoolData?.subcategoryEmissionsKg],
   );
 
-  const totalReduction = useMemo(
-    () =>
-      [...completedActions, ...availableActions].reduce(
-        (sum, action) => sum + action.calculatedReduction,
-        0,
-      ),
-    [completedActions, availableActions],
-  );
+  const totalReduction = useMemo(() => {
+    const schoolTotal = schoolData?.totalEmissions;
+    return [...completedActions, ...availableActions].reduce((sum, action) => {
+      const { asPctOfSchoolTotal } = actionImpactKg(
+        action,
+        subcategoryEmissionsKg,
+        schoolTotal,
+      );
+      return sum + asPctOfSchoolTotal;
+    }, 0);
+  }, [
+    completedActions,
+    availableActions,
+    subcategoryEmissionsKg,
+    schoolData?.totalEmissions,
+  ]);
 
   return {
     projectData,

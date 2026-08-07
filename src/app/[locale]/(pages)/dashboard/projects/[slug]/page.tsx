@@ -17,6 +17,7 @@ import { useUser } from "@/context/UserContext";
 import { useRouter } from "@/i18n/navigation";
 import { useLocale, useTranslations } from "next-intl";
 import { Action } from "@/types/Action";
+import { buildCategoryDataPayload } from "@/lib/actionCategoryContext";
 
 // Action interface for type safety - matches the data from the hook
 interface ActionData extends Action {
@@ -83,6 +84,7 @@ const ProjectDetails = () => {
     category.subcategories.map((subcategory) => ({
       value: `${category.category}-${subcategory.id}`, // Format: categoryId-subcategoryId
       label: subcategory.name,
+      categoryId: category.category,
     })),
   );
 
@@ -231,9 +233,37 @@ const ProjectDetails = () => {
   };
 
   // Handle completing an action
-  const handleCompleteAction = () => {
-    setEditingAction(null);
-    refetch();
+  const handleCompleteAction = async (action: CustomAction) => {
+    try {
+      const completedAction = {
+        ...action,
+        status: "Completed" as const,
+        dateCompleted: new Date().toISOString(),
+      };
+
+      const response = await fetch(`/api/project/${projectId}/actions`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(completedAction),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || t("failedToCompleteAction"));
+      }
+
+      setEditingAction(null);
+      refetch();
+    } catch (error) {
+      console.error("Error completing action:", error);
+      alert(
+        t("failedToCompleteActionWithError", {
+          error: error instanceof Error ? error.message : t("unknownError"),
+        }),
+      );
+    }
   };
 
   const handleDeleteAction = async (action: CustomAction) => {
@@ -307,14 +337,15 @@ const ProjectDetails = () => {
               timeline: newAction.timeline || 1,
               type: newAction.type || "Direct",
             },
-            studentName: user?.username || t("teacher"),
+            studentName: user?.username || "Teacher",
             studentId: user?.uid || "",
             calculatedReduction: newAction.reduction,
             actionType: newAction.type || "Direct",
-            categoryData: {
+            categoryData: buildCategoryDataPayload({
               categoryId: newAction.category,
               categoryName: newAction.category,
-            },
+              subcategory: newAction.subcategory || undefined,
+            }),
             isTeacherAction: true, // Teacher action doesn't need approval
           }),
         });
@@ -652,6 +683,7 @@ const ProjectDetails = () => {
           onRejectChanges={handleRejectChanges}
           onCompleteAction={handleCompleteAction}
           onDelete={handleDeleteAction}
+          onClose={() => setEditingAction(null)}
           categories={categories}
           subcategoryOptions={subcategoryOptions}
           effortCategories={[
@@ -667,6 +699,7 @@ const ProjectDetails = () => {
         <CustomActionFormModal
           mode="create"
           onSubmit={handleSubmitCreate}
+          onClose={() => setShowCreateModal(false)}
           categories={categories}
           subcategoryOptions={subcategoryOptions}
           effortCategories={[
