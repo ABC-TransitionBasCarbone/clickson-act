@@ -18,7 +18,7 @@
     "react": "^19.2.3",
     "react-dom": "^19.2.3",
     "recharts": "^2.15.3",
-    "uuid": "^14.0.0"
+    "uuid": "^11.1.0"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3.3.3",
@@ -37,7 +37,7 @@
     "typescript": "^5"
   },
   "overrides": {
-    "uuid": "^14.0.0",
+    "uuid": "^11.1.0",
     "postcss": "^8.5.10",
     "retry-request": "^8.0.2",
     "teeny-request": "^10.1.2"

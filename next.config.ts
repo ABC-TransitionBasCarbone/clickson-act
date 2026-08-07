@@ -2,6 +2,14 @@ import { NextConfig } from "next";
 import createNextIntlPlugin from "next-intl/plugin";
 
 const nextConfig: NextConfig = {
+  // Keep firebase-admin outside the bundle so Node can load its CJS deps correctly on Vercel.
+  serverExternalPackages: [
+    "firebase-admin",
+    "@google-cloud/firestore",
+    "google-gax",
+    "gaxios",
+    "uuid",
+  ],
   // Suppress source map warnings from node_modules
   webpack: (config, { dev }) => {
     if (dev) {
