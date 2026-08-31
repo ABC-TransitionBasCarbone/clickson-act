@@ -24,6 +24,9 @@ export const SelectedActionsSummary: React.FC<SelectedActionsSummaryProps> = ({
                 {t("totalReductionDescription")} {selectedActionsCount}{" "}
                 {t("totalReductionDescriptionActions")}
               </p>
+              <p className="text-muted-foreground mt-1 text-xs">
+                {t("totalReductionTitleHint")}
+              </p>
             </div>
             <div className="text-3xl font-bold text-green-600">
               -{totalReductionPercent}%

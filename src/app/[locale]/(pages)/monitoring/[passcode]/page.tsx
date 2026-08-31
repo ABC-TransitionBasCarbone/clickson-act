@@ -465,6 +465,45 @@ const ProjectMonitoring: React.FC = () => {
     }
   };
 
+  const handleUncompleteAction = async (action: CustomAction) => {
+    try {
+      const response = await fetch(`/api/project/${passcode}/actions`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          id: action.id,
+          status: "Available",
+        }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(
+          errorData.error ||
+            tAction("failedToUncompleteAction", { error: "" }),
+        );
+      }
+
+      setCompletedActions((prev) => prev.filter((a) => a.id !== action.id));
+      setAvailableActions((prev) => [
+        ...prev,
+        { ...action, status: "Available", dateCompleted: undefined },
+      ]);
+      setEditingAction(null);
+      setEditingType(null);
+      refetch();
+    } catch (error) {
+      console.error("Error uncompleting action:", error);
+      alert(
+        tAction("failedToUncompleteAction", {
+          error: error instanceof Error ? error.message : tAction("unknown"),
+        }),
+      );
+    }
+  };
+
   const handleDeleteAction = async (action: CustomAction) => {
     try {
       console.log("Deleting action:", action.id);
@@ -593,6 +632,7 @@ const ProjectMonitoring: React.FC = () => {
           onApproveChanges={handleApproveChanges}
           onRejectChanges={handleRejectChanges}
           onCompleteAction={handleCompleteAction}
+          onUncompleteAction={handleUncompleteAction}
           onDelete={handleDeleteAction}
           onClose={() => {
             setEditingAction(null);

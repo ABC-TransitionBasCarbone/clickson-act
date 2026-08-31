@@ -269,6 +269,36 @@ const ProjectDetails = () => {
     }
   };
 
+  const handleUncompleteAction = async (action: CustomAction) => {
+    try {
+      const response = await fetch(`/api/project/${projectId}/actions`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          id: action.id,
+          status: "Available",
+        }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || t("failedToUncompleteAction", { error: "" }));
+      }
+
+      setEditingAction(null);
+      refetch();
+    } catch (error) {
+      console.error("Error uncompleting action:", error);
+      alert(
+        t("failedToUncompleteAction", {
+          error: error instanceof Error ? error.message : t("unknownError"),
+        }),
+      );
+    }
+  };
+
   const handleDeleteAction = async (action: CustomAction) => {
     try {
       console.log("Deleting action:", action.id);
@@ -596,6 +626,9 @@ const ProjectDetails = () => {
                   <div className="text-xs font-medium text-purple-800 lg:text-lg">
                     {t("overview.totalReduction")}
                   </div>
+                  <p className="mt-1 max-w-[14rem] text-[10px] leading-snug text-purple-700/80 lg:max-w-xs lg:text-xs">
+                    {t("overview.totalReductionHint")}
+                  </p>
                 </div>
               </div>
             </div>
@@ -687,6 +720,7 @@ const ProjectDetails = () => {
           onApproveChanges={handleApproveChanges}
           onRejectChanges={handleRejectChanges}
           onCompleteAction={handleCompleteAction}
+          onUncompleteAction={handleUncompleteAction}
           onDelete={handleDeleteAction}
           onClose={() => setEditingAction(null)}
           categories={categories}

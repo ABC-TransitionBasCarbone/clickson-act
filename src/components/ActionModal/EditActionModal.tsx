@@ -191,9 +191,13 @@ const EditActionModal: React.FC<EditActionModalProps> = ({
 
         showToast(
           "success",
-          t("actionSubmitted"),
-          t("actionSubmittedForApproval", { title: editedAction.title }),
-          4000,
+          isTeacher
+            ? t("actionAddedToProjectTitle")
+            : t("actionSubmitted"),
+          isTeacher
+            ? t("actionAddedToProject", { title: editedAction.title })
+            : t("actionSubmittedForApproval", { title: editedAction.title }),
+          6000,
         );
       } else {
         // For school-level custom actions (if needed)
@@ -265,12 +269,16 @@ const EditActionModal: React.FC<EditActionModalProps> = ({
       editedAction.title === "" ||
       editedAction.description === "" ||
       editedAction.reduction === 0 ||
-      editedAction.effort === ""
+      editedAction.effort === "" ||
+      !editedAction.timeline ||
+      editedAction.timeline < 1
     : // Students: validate basic required fields
       editedAction.category === "" ||
       editedAction.title === "" ||
       editedAction.description === "" ||
-      editedAction.reduction === 0;
+      editedAction.reduction === 0 ||
+      !editedAction.timeline ||
+      editedAction.timeline < 1;
 
   return (
     <Modal id="edit_action_modal" title={t("modifyAction")}>
@@ -396,21 +404,27 @@ const EditActionModal: React.FC<EditActionModalProps> = ({
 
           {/* Timeline */}
           <div className="gap-2 grid">
-            <label htmlFor="timeline">{t("timeline")}</label>
+            <label htmlFor="timeline">
+              {t("timeline")}{" "}
+              <span className="text-error" aria-hidden="true">
+                *
+              </span>
+            </label>
             <input
               id="timeline"
               type="number"
-              value={editedAction.timeline || 1}
+              value={editedAction.timeline || ""}
               onChange={(e) =>
                 setEditedAction({
                   ...editedAction,
-                  timeline: Number(e.target.value),
+                  timeline: Number(e.target.value) || 0,
                 })
               }
               min={1}
               max={50}
               placeholder={t("numberOfYears")}
               className="w-full input"
+              required
             />
           </div>
 

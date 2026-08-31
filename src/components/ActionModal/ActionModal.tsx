@@ -37,6 +37,7 @@ interface ActionModalProps {
   onApproveChanges?: (action: CustomAction) => void;
   onRejectChanges?: (action: CustomAction) => void;
   onCompleteAction?: (action: CustomAction) => void;
+  onUncompleteAction?: (action: CustomAction) => void;
   allowAllFieldsEdit?: boolean; // Allow students to edit all fields (for data reporting screen)
   /** Called when the dialog closes (Cancel, backdrop, or after successful submit). */
   onClose?: () => void;
@@ -62,7 +63,7 @@ const emptyCustomAction = (): CustomAction => ({
   performance: "",
   status: "Available",
   assignedTo: "",
-  timeline: 1,
+  timeline: undefined as unknown as number,
   selected: false,
 });
 
@@ -92,6 +93,7 @@ const ActionModal: React.FC<ActionModalProps> = ({
   onApproveChanges,
   onRejectChanges,
   onCompleteAction,
+  onUncompleteAction,
   allowAllFieldsEdit = false,
   onClose,
 }) => {
@@ -120,8 +122,9 @@ const ActionModal: React.FC<ActionModalProps> = ({
   const onCloseRef = useRef(onClose);
   onCloseRef.current = onClose;
 
-  // Edit modal mounts only after `editingAction` is set; calling showModal in the same
-  // click handler runs before React commits the <dialog>, so getElementById misses it.
+  // Edit modal: open when mounted after editingAction is set.
+  // Create modal: parent opens explicitly via showModal() (do not auto-open on mount —
+  // student calculator keeps the create dialog mounted and must stay closed until Add is clicked).
   useEffect(() => {
     if (mode !== "edit" || !initialAction?.id) return;
     const el = document.getElementById(
@@ -148,17 +151,6 @@ const ActionModal: React.FC<ActionModalProps> = ({
     return () => el.removeEventListener("close", handleDialogClose);
   }, [mode, initialAction?.id]);
 
-  // Create modal: open when mounted (parent may keep showCreateModal true across closes)
-  useEffect(() => {
-    if (mode !== "create") return;
-    const el = document.getElementById(
-      "custom_action",
-    ) as HTMLDialogElement | null;
-    if (el && !el.open) {
-      el.showModal();
-    }
-  }, [mode]);
-
   const requiresFullFields =
     mode === "create" || isTeacher || allowAllFieldsEdit;
 
@@ -171,6 +163,9 @@ const ActionModal: React.FC<ActionModalProps> = ({
       missing.push(t("estimatedReduction"));
     }
     if (newAction.effort === "") missing.push(t("effort"));
+    if (!newAction.timeline || newAction.timeline < 1) {
+      missing.push(t("timeline"));
+    }
     return missing;
   };
 
@@ -472,19 +467,26 @@ const ActionModal: React.FC<ActionModalProps> = ({
 
           {/* Timeline */}
           <div className="grid gap-2">
-            <label htmlFor="timeline">{t("timeline")}</label>
+            <label htmlFor="timeline">
+              {t("timeline")}
+              {requiredMark}
+            </label>
             <input
               id="timeline"
               type="number"
-              value={newAction.timeline || 1}
+              value={newAction.timeline || ""}
               onChange={(e) =>
-                setNewAction({ ...newAction, timeline: Number(e.target.value) })
+                setNewAction({
+                  ...newAction,
+                  timeline: Number(e.target.value) || 0,
+                })
               }
               min={1}
               max={50}
               placeholder={t("numberOfYears")}
               className="input w-full"
               disabled={fieldDisabled || !canEditField("timeline")}
+              required
             />
           </div>
 
@@ -913,6 +915,20 @@ const ActionModal: React.FC<ActionModalProps> = ({
           )}
 
         <div className="mt-4 flex flex-wrap justify-center gap-3">
+          {/* Uncomplete — teachers only, on completed (view-only) actions */}
+          {isCompletedAction && isTeacher && onUncompleteAction && (
+            <button
+              className="btn btn-warning"
+              onClick={() =>
+                onUncompleteAction({
+                  ...newAction,
+                  status: "Available",
+                })
+              }
+            >
+              {t("uncompleteAction")}
+            </button>
+          )}
           {/* Delete button in edit mode - only for teachers on non-completed actions */}
           {mode === "edit" &&
             !isCompletedAction &&

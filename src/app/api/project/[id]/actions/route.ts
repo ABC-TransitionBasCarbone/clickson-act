@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { adminDb } from "../../../../../firebaseAdmin";
+import { FieldValue } from "firebase-admin/firestore";
 import { v4 as uuidv4 } from "uuid";
 import { resolveProjectId } from "../../../../../lib/project-utils";
 import {
@@ -573,12 +574,32 @@ async function handlePut(req: NextRequest, _context: SecurityContext) {
       [key: string]: unknown;
     };
 
-    // Completed actions are immutable
+    // Completed actions are immutable except for teacher "uncomplete"
     if (existingAction.status === "Completed") {
-      return NextResponse.json(
-        { error: "Completed actions cannot be edited" },
-        { status: 403 },
-      );
+      const isUncomplete =
+        body.status === "Available" || body.status === "Selected";
+      if (!isUncomplete) {
+        return NextResponse.json(
+          { error: "Completed actions cannot be edited" },
+          { status: 403 },
+        );
+      }
+
+      await adminDb
+        .collection("projects")
+        .doc(resolvedProjectId)
+        .collection("actions")
+        .doc(updateData.id)
+        .update({
+          status: body.status,
+          dateCompleted: FieldValue.delete(),
+        });
+
+      return NextResponse.json({
+        success: true,
+        message: "Action reopened successfully",
+        action: { id: updateData.id, status: body.status },
+      });
     }
 
     // Keep chart % in sync with estimated reduction when reduction is sent

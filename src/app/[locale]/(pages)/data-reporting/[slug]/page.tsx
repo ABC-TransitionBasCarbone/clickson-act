@@ -25,6 +25,7 @@ interface CustomAction extends Action {
 
 const StudentCalculator: React.FC = () => {
   const t = useTranslations("StudentCalculator");
+  const tAction = useTranslations("Action");
   const { user } = useUser();
   const { showToast } = useToast();
   const params = useParams();
@@ -181,23 +182,33 @@ const StudentCalculator: React.FC = () => {
       const result = await response.json();
       console.log("Successfully created custom action:", result);
 
-      showToast(
-        "success",
-        "Action Submitted!",
-        `"${action.title}" has been submitted for teacher approval.`,
-        4000,
-      );
-
-      // Add to local state for immediate UI update
-      setActions((prev) => [...prev, action]);
+      const isTeacher =
+        user?.role === "teacher" || user?.role === "admin";
+      if (isTeacher) {
+        showToast(
+          "success",
+          tAction("actionAddedToProjectTitle"),
+          tAction("actionAddedToProject", { title: action.title }),
+          6000,
+        );
+      } else {
+        showToast(
+          "success",
+          tAction("actionSubmitted"),
+          tAction("actionSubmittedForApproval", { title: action.title }),
+          6000,
+        );
+      }
+      // Do not append to template list — custom actions live on the project
+      // (Current Actions) or pending Approvals, not in the calculator template bank.
     } catch (error) {
       console.error("Error creating custom action:", error);
       const errorMessage =
         error instanceof Error ? error.message : "Unknown error";
       showToast(
         "error",
-        "Failed to Create Custom Action",
-        `Could not create custom action: ${errorMessage}`,
+        tAction("failedToCreateCustomActionTitle"),
+        tAction("couldNotCreateCustomAction", { error: errorMessage }),
         6000,
       );
     }
