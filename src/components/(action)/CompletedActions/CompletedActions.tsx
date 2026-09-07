@@ -2,22 +2,32 @@ import React from "react";
 import { Check, ChevronRight } from "lucide-react";
 import { Action } from "@/types/Action";
 import { useTranslations } from "next-intl";
+import { ProjectActionReductionBadge } from "@/components/(action)/ActionReductionBadge";
+import { type SubcategoryKgLookup } from "@/lib/subcategoryEmissionsKg";
 
 interface CustomAction extends Action {
   selected: boolean;
   calculatedReduction?: number;
   status?: "Completed" | "Selected" | "Available" | "In Progress";
+  categoryContext?: {
+    categoryId?: string;
+    subcategoryData?: Array<{ id?: string; name?: string; value?: string }>;
+  };
 }
 
 interface CompletedActionsProps {
   completedActions: CustomAction[];
   /** Opens the action in view-only mode (completed actions are not editable). */
   onView: (action: CustomAction) => void;
+  subcategoryEmissionsKg?: SubcategoryKgLookup;
+  schoolTotalEmissions?: number;
 }
 
 const CompletedActions: React.FC<CompletedActionsProps> = ({
   completedActions,
   onView,
+  subcategoryEmissionsKg,
+  schoolTotalEmissions,
 }) => {
   const t = useTranslations("currentActions");
 
@@ -60,9 +70,11 @@ const CompletedActions: React.FC<CompletedActionsProps> = ({
               </div>
             </div>
             <div className="flex items-center gap-2">
-              <span className="font-medium text-green-600">
-                -{action.calculatedReduction ?? action.reduction}%
-              </span>
+              <ProjectActionReductionBadge
+                action={action}
+                subcategoryEmissionsKg={subcategoryEmissionsKg}
+                schoolTotalEmissions={schoolTotalEmissions}
+              />
               <ChevronRight className="w-4 h-4 text-gray-600" />
             </div>
           </div>

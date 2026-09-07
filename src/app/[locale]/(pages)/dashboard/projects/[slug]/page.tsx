@@ -27,6 +27,11 @@ interface ActionData extends Action {
   dateAdded: string;
   dateCompleted?: string;
   selected?: boolean;
+  categoryContext?: {
+    categoryId?: string;
+    categoryName?: string;
+    subcategoryData?: Array<{ id?: string; name?: string; value?: string }>;
+  };
 }
 
 // Custom action interface that extends Action and adds selected property
@@ -34,6 +39,7 @@ interface CustomAction extends Action {
   selected: boolean;
   status?: "Available" | "Selected" | "In Progress" | "Completed";
   calculatedReduction?: number;
+  categoryContext?: ActionData["categoryContext"];
 }
 
 const ProjectDetails = () => {
@@ -479,6 +485,7 @@ const ProjectDetails = () => {
     needsApproval: action.needsApproval,
     status: action.status,
     selected: action.selected ?? action.status === "Selected",
+    categoryContext: action.categoryContext,
   });
 
   // Convert actions to the format expected by the action components
@@ -641,10 +648,14 @@ const ProjectDetails = () => {
             currentActions={convertedAvailableActions}
             onEdit={(action) => handleEditClick(action)}
             onAddAction={handleAddAction}
+            subcategoryEmissionsKg={subcategoryEmissionsKg}
+            schoolTotalEmissions={schoolTotalEmissions}
           />
           <CompletedActions
             completedActions={convertedCompletedActions}
             onView={(action) => handleEditClick(action)}
+            subcategoryEmissionsKg={subcategoryEmissionsKg}
+            schoolTotalEmissions={schoolTotalEmissions}
           />
         </div>
 

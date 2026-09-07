@@ -104,17 +104,25 @@ const StudentCalculator: React.FC = () => {
     setCurrentStep("category");
   };
 
-  const calculateDisplayReduction = (action: CustomAction): number => {
-    const actionType = action.type || "Direct";
+  const schoolTotalKg = useMemo(
+    () => schoolCategories.reduce((sum, cat) => sum + (cat.amount || 0), 0),
+    [schoolCategories],
+  );
 
-    // Indirect: fixed 1% of total school emissions (product rule)
-    if (actionType === "Indirect") {
+  const calculateSchoolPct = (action: Action): number | null => {
+    if (action.type === "Indirect") {
       return 1;
     }
-
-    // Direct: template % applies to the selected subcategory kgCO₂ — show that %
-    // (not converted to % of school total). Chart uses the same subcategory basis.
-    return action.reduction;
+    if (!selectedCategory || schoolTotalKg <= 0) {
+      return null;
+    }
+    const selectedKg = selectedCategory.subcategories
+      .filter((sub) => selectedSubcategories.includes(sub.id))
+      .reduce((sum, sub) => sum + (sub.amount || 0), 0);
+    if (selectedKg <= 0) {
+      return null;
+    }
+    return ((action.reduction || 0) * selectedKg) / schoolTotalKg;
   };
 
   // Handle custom action submission
@@ -346,13 +354,7 @@ const StudentCalculator: React.FC = () => {
                       )?.showModal()
                     }
                     showAddButton={!!user} // Show custom action button for both teachers and students
-                    calculateDisplayReduction={(action: Action) => {
-                      const customAction: CustomAction = {
-                        ...action,
-                        selected: false,
-                      };
-                      return calculateDisplayReduction(customAction);
-                    }}
+                    calculateSchoolPct={calculateSchoolPct}
                     projectId={projectId}
                     // Convert schoolCategories to the format expected by the modal
                     categories={schoolCategories.map((cat) => ({

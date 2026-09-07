@@ -10,7 +10,7 @@ type ActionsSectionProps = {
   onAddActionClick: () => void;
   showAddButton: boolean;
   t: (key: string) => string;
-  calculateDisplayReduction?: (action: Action) => number;
+  calculateSchoolPct?: (action: Action) => number | null;
   projectId?: string;
   categories?: { value: string; label: string }[];
   effortCategories?: { value: string; label: string }[];
@@ -24,7 +24,7 @@ export const ActionsSection: React.FC<ActionsSectionProps> = ({
   onAddActionClick,
   showAddButton,
   t,
-  calculateDisplayReduction,
+  calculateSchoolPct,
   projectId,
   categories = [],
   effortCategories = [
@@ -77,7 +77,7 @@ export const ActionsSection: React.FC<ActionsSectionProps> = ({
             actions={filteredActions}
             selectedActions={selectedActions}
             onActionSelect={onActionSelect}
-            calculateDisplayReduction={calculateDisplayReduction}
+            calculateSchoolPct={calculateSchoolPct}
             projectId={projectId}
             categories={categories}
             effortCategories={effortCategories}

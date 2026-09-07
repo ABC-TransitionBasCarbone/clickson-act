@@ -5,21 +5,32 @@ import { PlusCircle } from "lucide-react";
 import { Action } from "@/types/Action";
 import { useTranslations } from "next-intl";
 import { useUser } from "@/context/UserContext";
+import { ProjectActionReductionBadge } from "@/components/(action)/ActionReductionBadge";
+import { type SubcategoryKgLookup } from "@/lib/subcategoryEmissionsKg";
 
 interface CustomAction extends Action {
   selected: boolean;
+  calculatedReduction?: number;
+  categoryContext?: {
+    categoryId?: string;
+    subcategoryData?: Array<{ id?: string; name?: string; value?: string }>;
+  };
 }
 
 interface CurrentActionsProps {
   currentActions: CustomAction[];
   onEdit: (action: CustomAction) => void;
   onAddAction: () => void;
+  subcategoryEmissionsKg?: SubcategoryKgLookup;
+  schoolTotalEmissions?: number;
 }
 
 const CurrentActions: React.FC<CurrentActionsProps> = ({
   currentActions,
   onEdit,
   onAddAction,
+  subcategoryEmissionsKg,
+  schoolTotalEmissions,
 }) => {
   const t = useTranslations();
   const { user } = useUser();
@@ -69,9 +80,11 @@ const CurrentActions: React.FC<CurrentActionsProps> = ({
               </span>
             </div>
             <div className="flex items-center gap-2">
-              <span className="font-medium text-green-600">
-                -{action.reduction}%
-              </span>
+              <ProjectActionReductionBadge
+                action={action}
+                subcategoryEmissionsKg={subcategoryEmissionsKg}
+                schoolTotalEmissions={schoolTotalEmissions}
+              />
               <ChevronRight className="w-4 h-4 text-gray-600 cursor-pointer" />
             </div>
           </div>

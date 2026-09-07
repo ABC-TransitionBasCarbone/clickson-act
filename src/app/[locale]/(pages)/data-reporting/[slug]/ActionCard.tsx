@@ -22,12 +22,13 @@ import {
   Plus,
 } from "lucide-react";
 import EditActionModal from "@/components/ActionModal/EditActionModal";
+import ActionReductionBadge from "@/components/(action)/ActionReductionBadge";
 
 interface Props {
   action: Action;
   isSelected: boolean;
   onSelect: (id: string) => void;
-  calculatedReduction?: number; // Optional calculated reduction for display
+  schoolPct?: number | null;
   projectId?: string; // Project ID for creating custom actions
   categories?: { value: string; label: string }[]; // Categories for the edit modal
   effortCategories?: { value: string; label: string }[]; // Effort categories for the edit modal
@@ -45,7 +46,7 @@ const ActionCard: React.FC<Props> = ({
   action,
   isSelected,
   onSelect,
-  calculatedReduction,
+  schoolPct = null,
   projectId,
   categories = [],
   effortCategories = [
@@ -139,23 +140,14 @@ const ActionCard: React.FC<Props> = ({
             </div>
           </div>
           <div className="flex items-center gap-3 text-right">
-            <div className="flex flex-col items-end">
-              <span className="font-bold text-green-600 text-lg">
-                -
-                {Math.round(
-                  (calculatedReduction !== undefined
-                    ? calculatedReduction
-                    : action.reduction) * 100,
-                ) / 100}
-                %
-              </span>
-              {calculatedReduction !== undefined &&
-                calculatedReduction !== action.reduction && (
-                  <span className="text-gray-400 text-xs">
-                    (base: -{action.reduction}%)
-                  </span>
-                )}
-            </div>
+            <ActionReductionBadge
+              subcategoryPct={action.reduction}
+              schoolPct={
+                action.type === "Indirect" ? (schoolPct ?? 1) : schoolPct
+              }
+              isIndirect={action.type === "Indirect"}
+              size="md"
+            />
 
             <div className="flex items-center gap-2">
               {/* Modify Action Button */}

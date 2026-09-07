@@ -2,6 +2,9 @@ import React, { useState, useEffect } from "react";
 import { PendingAction } from "@/types/PendingAction";
 import { useToast } from "@/context/ToastContext";
 import { useTranslations } from "next-intl";
+import { ProjectActionReductionBadge } from "@/components/(action)/ActionReductionBadge";
+import { toChartSubcategoryData } from "@/lib/actionCategoryContext";
+import { type SubcategoryKgLookup } from "@/lib/subcategoryEmissionsKg";
 
 interface PendingActionsManagerProps {
   projectId: string;
@@ -23,6 +26,28 @@ const PendingActionsManager: React.FC<PendingActionsManagerProps> = ({
   const [reviewingActions, setReviewingActions] = useState<Set<string>>(
     new Set(),
   );
+  const [schoolTotalKg, setSchoolTotalKg] = useState<number | undefined>();
+  const [subcategoryEmissionsKg, setSubcategoryEmissionsKg] = useState<
+    SubcategoryKgLookup | undefined
+  >();
+
+  useEffect(() => {
+    const fetchSchoolContext = async () => {
+      try {
+        const response = await fetch(`/api/project/${projectId}`);
+        if (!response.ok) return;
+        const data = await response.json();
+        setSchoolTotalKg(data.school?.totalEmissions);
+        setSubcategoryEmissionsKg(data.school?.subcategoryEmissionsKg);
+      } catch (err) {
+        console.error("Error fetching school reduction context:", err);
+      }
+    };
+
+    if (projectId) {
+      fetchSchoolContext();
+    }
+  }, [projectId]);
 
   // Load pending actions
   useEffect(() => {
@@ -176,9 +201,30 @@ const PendingActionsManager: React.FC<PendingActionsManagerProps> = ({
               </div>
               <div className="text-right">
                 <div className="text-gray-500 text-sm">{t("impact")}</div>
-                <div className="font-bold text-green-600 text-lg">
-                  {action.calculatedReduction.toFixed(2)}%
-                </div>
+                <ProjectActionReductionBadge
+                  action={{
+                    calculatedReduction: action.calculatedReduction,
+                    reduction:
+                      action.customActionData?.reduction ??
+                      action.calculatedReduction,
+                    type:
+                      action.actionType === "Indirect" ||
+                      action.customActionData?.type === "Indirect"
+                        ? "Indirect"
+                        : "Direct",
+                    category: action.categoryData?.categoryId,
+                    subcategory: action.subcategory,
+                    categoryContext: {
+                      categoryId: action.categoryData?.categoryId,
+                      subcategoryData: toChartSubcategoryData(
+                        action.categoryData?.subcategoryData,
+                      ),
+                    },
+                  }}
+                  subcategoryEmissionsKg={subcategoryEmissionsKg}
+                  schoolTotalEmissions={schoolTotalKg}
+                  size="md"
+                />
               </div>
             </div>
 

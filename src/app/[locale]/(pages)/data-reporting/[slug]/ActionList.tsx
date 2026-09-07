@@ -7,7 +7,7 @@ const ActionList: React.FC<{
   actions: Action[];
   selectedActions: string[];
   onActionSelect: (id: string) => void;
-  calculateDisplayReduction?: (action: Action) => number;
+  calculateSchoolPct?: (action: Action) => number | null;
   projectId?: string;
   categories?: { value: string; label: string }[];
   effortCategories?: { value: string; label: string }[];
@@ -16,7 +16,7 @@ const ActionList: React.FC<{
   actions,
   selectedActions,
   onActionSelect,
-  calculateDisplayReduction,
+  calculateSchoolPct,
   projectId,
   categories = [],
   effortCategories = [
@@ -28,33 +28,16 @@ const ActionList: React.FC<{
 }) => {
   const t = useTranslations("StudentCalculator");
 
-  // console.log("ActionList rendering with:", {
-  //   actionsCount: actions.length,
-  //   actionTitles: actions.map((a) => a.title),
-  //   selectedActions,
-  // });
-
   return (
     <div className="gap-4 grid">
       {actions.map((action) => {
-        const calculatedReduction = calculateDisplayReduction
-          ? calculateDisplayReduction(action)
-          : undefined;
-
-        // Debug log
-        // console.log(`ActionList rendering action "${action.title}":`, {
-        //   originalReduction: action.reduction,
-        //   calculatedReduction,
-        //   actionType: action.type,
-        // });
-
         return (
           <ActionCard
             key={action.id}
             action={action}
             isSelected={selectedActions.includes(action.id)}
             onSelect={() => onActionSelect(action.id)}
-            calculatedReduction={calculatedReduction}
+            schoolPct={calculateSchoolPct ? calculateSchoolPct(action) : null}
             projectId={projectId}
             categories={categories}
             effortCategories={effortCategories}

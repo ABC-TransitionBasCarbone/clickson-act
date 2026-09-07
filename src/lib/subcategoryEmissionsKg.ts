@@ -188,3 +188,56 @@ export function actionImpactKg(
     schoolTotalKg && schoolTotalKg > 0 ? (pct / 100) * schoolTotalKg : 0;
   return { kg, asPctOfSchoolTotal: pct };
 }
+
+/** Format a reduction % for UI (1 decimal, or 2 when the value would round to 0.0). */
+export function formatReductionPct(value: number): string {
+  if (!Number.isFinite(value)) return "0";
+  const abs = Math.abs(value);
+  if (abs !== 0 && abs < 0.1) {
+    return (Math.round(value * 100) / 100).toFixed(2);
+  }
+  const rounded = Math.round(value * 10) / 10;
+  return Number.isInteger(rounded) ? String(rounded) : rounded.toFixed(1);
+}
+
+export type ActionReductionDisplay = {
+  subcategoryPct: number;
+  schoolPct: number | null;
+  isIndirect: boolean;
+};
+
+/** Subcategory % (action label) and equivalent % of school total for display. */
+export function getActionReductionDisplay(
+  action: ActionImpactInput & { reduction?: number; type?: string },
+  lookup?: SubcategoryKgLookup,
+  schoolTotalKg?: number,
+): ActionReductionDisplay {
+  const isIndirect = action.type === "Indirect";
+  const subcategoryPct =
+    Number(action.calculatedReduction ?? action.reduction ?? 0) || 0;
+
+  if (isIndirect) {
+    return {
+      subcategoryPct,
+      schoolPct: subcategoryPct || 1,
+      isIndirect: true,
+    };
+  }
+
+  if (schoolTotalKg == null || schoolTotalKg <= 0) {
+    return { subcategoryPct, schoolPct: null, isIndirect: false };
+  }
+
+  const { kg, asPctOfSchoolTotal } = actionImpactKg(
+    action,
+    lookup,
+    schoolTotalKg,
+  );
+  const canShowSchool = kg > 0 || asPctOfSchoolTotal > 0;
+
+  return {
+    subcategoryPct,
+    schoolPct: canShowSchool ? asPctOfSchoolTotal : null,
+    isIndirect: false,
+  };
+}

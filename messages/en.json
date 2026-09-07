@@ -121,7 +121,7 @@
     "addToMonitoring": "Add All To Monitoring Screen",
 
     "totalReductionTitle": "Impact on school emissions",
-    "totalReductionTitleHint": "Each action’s % is of its subcategory; the total converts those to % of school emissions (not a raw sum of the labels).",
+    "totalReductionTitleHint": "Each action shows % of subcategory and % of school. This total is the sum of the school figures.",
 
     "totalReductionDescription": "You have selected",
     "totalReductionDescriptionActions": "actions",
@@ -363,7 +363,7 @@
       "schoolGoal": "School Goal:",
       "by": "by",
       "totalReduction": "Impact on school emissions",
-      "totalReductionHint": "Sum of each action’s reduction as a share of school total (action % × subcategory ÷ school). Not a raw sum of the % labels on actions.",
+      "totalReductionHint": "Sum of each action’s school-emissions share. The “of school” figures on actions add up to this total.",
       "editProject": "Edit Project",
       "clickToCopyPasscode": "Click to copy passcode",
       "startDate": "Start Date",
@@ -429,7 +429,9 @@
     "Hard": "Hard",
     "selectEffort": "Select effort",
     "estimatedReduction": "Estimated Reduction (%)",
-    "estimatedReductionTooltip": "Percent reduction of the action’s subcategory emissions (kgCO₂), researched separately. Project totals convert this to share of school emissions — they do not add the % labels directly.",
+    "estimatedReductionTooltip": "Percent reduction of the action’s subcategory emissions (kgCO₂). Action lists also show the equivalent % of total school emissions.",
+    "pctOfSchool": "of school",
+    "pctOfSubcategory": "of subcategory",
     "manager": "Manager",
     "nature": "Type",
     "natureFieldTooltip": "Type of action. Examples: Awareness-raising, emissions reduction, organisational change, etc.",

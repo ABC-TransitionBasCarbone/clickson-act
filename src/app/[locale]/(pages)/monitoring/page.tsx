@@ -758,11 +758,15 @@ const Monitoring: React.FC = () => {
               currentActions={availableActions}
               onEdit={(action) => handleEditClick(action, "available")}
               onAddAction={handleAddAction}
+              subcategoryEmissionsKg={subcategoryEmissionsKg}
+              schoolTotalEmissions={schoolTotalEmissions}
             />
 
             <CompletedActions
               completedActions={completedActions}
               onView={(action) => handleEditClick(action, "completed")}
+              subcategoryEmissionsKg={subcategoryEmissionsKg}
+              schoolTotalEmissions={schoolTotalEmissions}
             />
           </div>
         )}
