@@ -28,7 +28,7 @@ export interface TranslatableAction {
 export function getTranslatedAction(
   action: TranslatableAction,
   locale: string,
-  availableLocales?: string[],
+  availableLocales?: readonly string[],
 ): TranslatableAction & ActionTranslation {
   // Check if translations exist
   if (!action.translations) {
@@ -86,7 +86,7 @@ export function createTranslatableAction(
 }
 
 // Helper function to create empty translations for all available locales
-export function createEmptyTranslations(locales: string[]): {
+export function createEmptyTranslations(locales: readonly string[]): {
   [locale: string]: ActionTranslation;
 } {
   const translations: { [locale: string]: ActionTranslation } = {};

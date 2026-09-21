@@ -1,2 +1,3 @@
-export const locales = ["en", "gr"]; // Needs change to middleware too
-export const defaultLocale = "en";
+export const locales = ["gr", "fr", "ro", "hu", "hr", "en"] as const;
+export type Locale = (typeof locales)[number];
+export const defaultLocale: Locale = "en";

@@ -55,7 +55,7 @@ export interface EmissionCategory {
 export function getTranslatedCategory(
   category: TranslatableCategory | EmissionCategory,
   locale: string,
-  availableLocales?: string[],
+  availableLocales?: readonly string[],
 ): (TranslatableCategory | EmissionCategory) & CategoryTranslation {
   // Handle legacy format (old categories with direct name/description)
   if ("name" in category && typeof category.name === "string") {
@@ -117,7 +117,7 @@ export function getTranslatedCategory(
 export function getTranslatedSubcategory(
   subcategory: TranslatableSubcategory | EmissionSubcategory,
   locale: string,
-  availableLocales?: string[],
+  availableLocales?: readonly string[],
 ): (TranslatableSubcategory | EmissionSubcategory) & SubcategoryTranslation {
   // Handle legacy format (old subcategories with direct name/description)
   if ("name" in subcategory && typeof subcategory.name === "string") {
@@ -177,7 +177,7 @@ export function getTranslatedSubcategory(
 }
 
 // Helper function to create empty category translations
-export function createEmptyCategoryTranslations(locales: string[]): {
+export function createEmptyCategoryTranslations(locales: readonly string[]): {
   [locale: string]: CategoryTranslation;
 } {
   const translations: { [locale: string]: CategoryTranslation } = {};
@@ -193,7 +193,7 @@ export function createEmptyCategoryTranslations(locales: string[]): {
 }
 
 // Helper function to create empty subcategory translations
-export function createEmptySubcategoryTranslations(locales: string[]): {
+export function createEmptySubcategoryTranslations(locales: readonly string[]): {
   [locale: string]: SubcategoryTranslation;
 } {
   const translations: { [locale: string]: SubcategoryTranslation } = {};

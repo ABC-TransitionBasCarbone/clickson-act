@@ -57,6 +57,11 @@
     "button1": "Get Started",
     "button2": "Learn More"
   },
+  "NotFoundPage": {
+    "title": "Page not found",
+    "description": "The page you're looking for doesn't exist or has been moved.",
+    "backHome": "Back to home"
+  },
   "DataReporting": {
     "titleText1": "DATA REPORTING",
     "titleText2": "Let's measure the greenhouse gas emissions of your institution!",
